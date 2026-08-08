@@ -1,30 +1,45 @@
-# Byte-compiled / cache
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
+.eggs/
 build/
 dist/
-.eggs/
-
-# Test artifacts
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
 htmlcov/
-.tox/
 
-# Local databases and runtime files
-*.db
-*.db-journal
-*.sqlite3
-logs/
-checkpoints/
-
-# Virtual environments
+# Environments
 .venv/
 venv/
 env/
+.env
 
-# Editor / OS
-.vscode/
-.idea/
+# AWEAI runtime data
+~/.aweai/
+.aweai/
+*.db
+*.sqlite3
+memory/
+
+# ML artifacts
+*.pt
+*.bin
+*.safetensors
+models_cache/
+datasets/
+
+# Android / buildozer
+bin/
+.buildozer/
+*.apk
+*.aab
+
+# OS / editors
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
