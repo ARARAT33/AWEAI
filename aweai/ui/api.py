@@ -18,6 +18,15 @@ Endpoints:
   /api/autotest     run autotest (the Autotest button)
   /api/languages    list languages
   /api/config       get/set config
+  /api/quantize     quantize a model
+  /api/export/edge  edge export
+  /api/edge/footprint  edge footprint estimate
+  /api/market       marketplace (publish/search/list/info/download/rate/stats)
+  /api/integrations AI-tool integrations list
+  /api/integrations/chat  chat via a provider
+  /api/terminal     in-app terminal
+  /api/allc         10,000+ command catalog
+  /api/autoallc     5,000+ automation catalog
 """
 
 from __future__ import annotations
@@ -90,6 +99,34 @@ class ActionRequest(BaseModel):
 class ConfigRequest(BaseModel):
     key: str
     value: Any = None
+
+
+class QuantizeRequest(BaseModel):
+    name: str
+    fmt: str = "int8"
+
+
+class EdgeExportRequest(BaseModel):
+    name: str
+    fmt: str = "onnx"
+    quantize: Optional[str] = None
+
+
+class MarketRequest(BaseModel):
+    action: str
+    arg: Optional[str] = None
+    tag: Optional[str] = None
+    description: Optional[str] = None
+    stars: Optional[float] = None
+
+
+class TerminalRequest(BaseModel):
+    line: str
+
+
+class IntegrationChatRequest(BaseModel):
+    provider: str
+    message: str
 
 
 def create_app() -> FastAPI:
@@ -262,6 +299,95 @@ def create_app() -> FastAPI:
             return {"ok": True}
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/quantize")
+    def api_quantize(req: QuantizeRequest):
+        from aweai.quantize import quantize_model
+
+        try:
+            return {"ok": True, "result": quantize_model(req.name, fmt=req.fmt)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/export/edge")
+    def api_export_edge(req: EdgeExportRequest):
+        from aweai.export import export_edge
+
+        try:
+            return {"ok": True, "result": export_edge(req.name, fmt=req.fmt, quantize=req.quantize)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.get("/api/edge/footprint")
+    def api_edge_footprint(name: str):
+        from aweai.export import estimate_edge_footprint
+
+        try:
+            return {"ok": True, "result": estimate_edge_footprint(name)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/market")
+    def api_market(req: MarketRequest):
+        from aweai import market as mkt
+
+        try:
+            if req.action == "publish":
+                return {"ok": True, "result": mkt.publish(req.arg or "", tag=req.tag or "v1", description=req.description or "")}
+            if req.action == "search":
+                return {"ok": True, "result": mkt.search(req.arg or "")}
+            if req.action == "list":
+                return {"ok": True, "result": mkt.list_listings()}
+            if req.action == "info":
+                return {"ok": True, "result": mkt.info(req.arg or "")}
+            if req.action == "download":
+                return {"ok": True, "result": mkt.download(req.arg or "")}
+            if req.action == "rate":
+                parts = (req.arg or "").split()
+                if len(parts) < 2:
+                    raise ValueError("rate requires <id> <stars>")
+                return {"ok": True, "result": mkt.rate(parts[0], float(parts[1]))}
+            if req.action == "stats":
+                return {"ok": True, "result": mkt.stats()}
+            raise ValueError(f"Unknown market action: {req.action}")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.get("/api/integrations")
+    def api_integrations():
+        from aweai.integrations import list_tools
+
+        return {"ok": True, "result": list_tools()}
+
+    @app.post("/api/integrations/chat")
+    def api_integrations_chat(req: IntegrationChatRequest):
+        from aweai.integrations import chat
+
+        return {"ok": True, "result": chat(req.provider, req.message)}
+
+    @app.post("/api/terminal")
+    def api_terminal(req: TerminalRequest):
+        from aweai.terminal import run as term_run
+
+        return {"ok": True, "result": term_run(req.line)}
+
+    @app.get("/api/allc")
+    def api_allc(search: str = "", category: str = "", count: int = 50):
+        from aweai.menus import build_catalog, search_catalog
+
+        items = build_catalog(min_count=10000)
+        if search or category:
+            items = search_catalog(items, query=search, category=category)
+        return {"ok": True, "total": len(items), "items": items[:count]}
+
+    @app.get("/api/autoallc")
+    def api_autoallc(search: str = "", category: str = "", count: int = 50):
+        from aweai.menus import build_automations, search_catalog
+
+        items = build_automations(min_count=5000)
+        if search or category:
+            items = search_catalog(items, query=search, category=category)
+        return {"ok": True, "total": len(items), "items": items[:count]}
 
     return app
 
