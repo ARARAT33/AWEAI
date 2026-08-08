@@ -236,7 +236,14 @@ def check_cli() -> Dict[str, Any]:
     try:
         from aweai.cli import app
 
-        names = [c.name for c in app.registered_commands]
+        names = []
+        for c in app.registered_commands:
+            n = getattr(c, "name", None)
+            if n:
+                names.append(n)
+            elif getattr(c, "callback", None) is not None:
+                # Newer typer: name lives on the callback function.
+                names.append(c.callback.__name__)
         required = {"train", "eval", "models", "export", "data", "rag", "actions", "serve", "autotest"}
         missing = required - set(names)
         if missing:

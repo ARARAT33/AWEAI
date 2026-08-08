@@ -36,8 +36,11 @@ class RAGConfig:
 class RAGEngine:
     """Hash BoW RAG. `index_path` is the on-disk file; `_index` is the dict."""
 
-    def __init__(self, index_path: Optional[str] = None, config: Optional[RAGConfig] = None):
+    def __init__(self, index_path: Optional[str] = None, config: Optional[RAGConfig] = None,
+                 data_dir: Optional[str] = None) -> None:
         self.config = config or RAGConfig()
+        if data_dir is not None:
+            index_path = str(Path(data_dir) / "index.json")
         self.index_path = Path(index_path) if index_path else ensure_runtime_dirs()["rag"] / "index.json"
         self._index: Dict[str, Any] = {"documents": [], "chunks": [], "vectors": []}
         self._load_if_exists()
@@ -50,6 +53,22 @@ class RAGEngine:
                     self._index = data
             except Exception:
                 self._index = {"documents": [], "chunks": [], "vectors": []}
+
+    def clear(self) -> None:
+        """Reset the index (and remove the on-disk file if present)."""
+        self._index = {"documents": [], "chunks": [], "vectors": []}
+        try:
+            if self.index_path.exists():
+                self.index_path.unlink()
+        except OSError:
+            pass
+        return None
+
+    def index_file(self, path: str) -> int:
+        """Index a single text file; returns the number of chunks added."""
+        p = Path(path)
+        text = p.read_text(encoding="utf-8", errors="replace")
+        return int(self.index_documents([text])["chunks"])
 
     # ------------------------------------------------------------- embedding
     def _embed(self, text: str) -> np.ndarray:
