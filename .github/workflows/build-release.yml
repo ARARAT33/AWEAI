@@ -65,14 +65,14 @@ jobs:
           EXT="${{ matrix.asset_ext }}"
           NAME="${{ matrix.asset_name }}"
           if [ "${{ runner.os }}" = "Windows" ]; then
-            mv dist/aweai.exe "${NAME}${EXT}"
+            mv dist/aweai.exe "dist/${NAME}${EXT}"
           elif [ "${{ runner.os }}" = "macOS" ]; then
             # macOS: wrap binary + UI assets into a .app bundle (simple)
             mkdir -p "dist/${NAME}.app/Contents/MacOS"
             mv dist/aweai "dist/${NAME}.app/Contents/MacOS/aweai"
             chmod +x "dist/${NAME}.app/Contents/MacOS/aweai"
           else
-            mv dist/aweai "${NAME}${EXT}"
+            mv dist/aweai "dist/${NAME}${EXT}"
           fi
 
       - name: Determine release tag
@@ -94,6 +94,7 @@ jobs:
             dist/${{ matrix.asset_name }}.app
           fail_on_unmatched_files: false
           generate_release_notes: false
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -148,6 +149,7 @@ jobs:
             *.AppImage
           fail_on_unmatched_files: false
           generate_release_notes: false
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -208,6 +210,7 @@ jobs:
           files: ${{ steps.apk.outputs.path }}
           fail_on_unmatched_files: false
           generate_release_notes: false
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -251,5 +254,6 @@ jobs:
           files: aweai-web-static.tar.gz
           fail_on_unmatched_files: false
           generate_release_notes: false
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
