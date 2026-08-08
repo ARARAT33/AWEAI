@@ -3,7 +3,9 @@
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-v2.0.0--model--factory-brightgreen.svg)]()
-[![Tests](https://github.com/ARARAT33/AWEAI/actions/workflows/ci.yml/badge.svg)](https://github.com/ARARAT33/AWEAI/actions/workflows/ci.yml)
+[![CI](https://github.com/ARARAT33/AWEAI/actions/workflows/ci.yml/badge.svg)](https://github.com/ARARAT33/AWEAI/actions/workflows/ci.yml)
+[![Build APK](https://github.com/ARARAT33/AWEAI/actions/workflows/build-apk.yml/badge.svg)](https://github.com/ARARAT33/AWEAI/actions/workflows/build-apk.yml)
+[![Build Release](https://github.com/ARARAT33/AWEAI/actions/workflows/build-release.yml/badge.svg)](https://github.com/ARARAT33/AWEAI/actions/workflows/build-release.yml)
 
 **AWEAI is an AI model factory.** It creates, trains, tunes, evaluates,
 exports and manages AI models **from scratch** — and it ships **no built-in
@@ -22,6 +24,8 @@ implemented in plain Python + numpy, so the factory runs on modest hardware
 - **Manage** — model zoo on disk, versioning, export (JSON / raw numpy /
   ONNX / TorchScript), compare, delete.
 - **Automate** — natural-language actions, pipelines, batch jobs, REST API.
+- **Extend** — `aweai.tools` hosts the growing extension toolkit
+  (feature engineering, synthetic data, ensembles, …).
 - **Self-check** — `aweai autotest` verifies the whole factory in one command.
 
 ## Quick start
@@ -37,6 +41,24 @@ from aweai.train import train
 res = train("mlp", "my_model", X=[[0, 0], [1, 1]], y=[0, 1], params={"epochs": 10})
 ```
 
+## GitHub Actions & Releases
+
+Three workflows live in `.github/workflows/` — see [docs/RELEASES.md](docs/RELEASES.md):
+
+- **CI** (`ci.yml`) — lint/compile, import checks, pytest, autotest,
+  no-HuggingFace guard on Python 3.9 + 3.11.
+- **Build Android APK** (`build-apk.yml`) — buildozer APK → GitHub Release
+  (tag push or manual dispatch).
+- **Build Release (multi-platform)** (`build-release.yml`) — Windows `.exe`,
+  Linux binary + AppImage, macOS `.app`, Android APK, web static bundle →
+  GitHub Release (tag push or manual dispatch).
+
+Release a new version:
+
+```bash
+git tag v2.0.0 && git push origin v2.0.0
+```
+
 ## Docs
 
 - [User guide](docs/USER_GUIDE.md) · [Model zoo](docs/MODEL_ZOO.md) ·
@@ -44,7 +66,8 @@ res = train("mlp", "my_model", X=[[0, 0], [1, 1]], y=[0, 1], params={"epochs": 1
 - [Evaluation](docs/EVALUATION.md) · [Export](docs/EXPORT.md) ·
   [Automation](docs/AUTOMATION.md) · [RAG](docs/RAG.md)
 - [API](docs/API.md) · [Architecture](docs/ARCHITECTURE.md) ·
-  [Android](docs/ANDROID.md) · [Changelog](docs/CHANGELOG.md)
+  [Android](docs/ANDROID.md) · [Releases](docs/RELEASES.md) ·
+  [Changelog](docs/CHANGELOG.md)
 
 ## Roadmap
 
@@ -52,6 +75,7 @@ res = train("mlp", "my_model", X=[[0, 0], [1, 1]], y=[0, 1], params={"epochs": 1
 - [x] Automation: NL actions, pipelines, batch jobs
 - [x] RAG (numpy-only) + Autotest + i18n (12 languages)
 - [x] UI dashboard + REST API + CI + Android APK support
+- [x] Multi-platform release builds (Windows / Linux / macOS / Android / Web)
 - [ ] v2.1 — vision CNNs for images, sequence models for time-series
 - [ ] v2.2 — model quantization and edge export
 - [ ] v3.0 — distributed training and model marketplace
