@@ -36,6 +36,36 @@ PROFILES: Dict[str, Dict[str, Dict]] = {
         "desktop": {"hidden": 64, "layers": 2, "epochs": 40, "batch_size": 64, "lr": 0.005},
         "gpu": {"hidden": 128, "layers": 2, "epochs": 50, "batch_size": 128, "lr": 0.003},
     },
+    "gru": {
+        "edge": {"hidden": 16, "layers": 1, "epochs": 20, "batch_size": 16, "lr": 0.01},
+        "laptop": {"hidden": 32, "layers": 1, "epochs": 30, "batch_size": 32, "lr": 0.01},
+        "desktop": {"hidden": 64, "layers": 2, "epochs": 40, "batch_size": 64, "lr": 0.005},
+        "gpu": {"hidden": 128, "layers": 2, "epochs": 50, "batch_size": 128, "lr": 0.003},
+    },
+    "ts_transformer": {
+        "edge": {"d_model": 8, "nhead": 2, "layers": 1, "epochs": 20, "batch_size": 8, "lr": 0.005},
+        "laptop": {"d_model": 16, "nhead": 2, "layers": 2, "epochs": 30, "batch_size": 16, "lr": 0.003},
+        "desktop": {"d_model": 32, "nhead": 4, "layers": 2, "epochs": 40, "batch_size": 32, "lr": 0.001},
+        "gpu": {"d_model": 64, "nhead": 4, "layers": 3, "epochs": 50, "batch_size": 64, "lr": 0.001},
+    },
+    "vision_cnn": {
+        "edge": {"channels": [4, 8], "epochs": 15, "batch_size": 16, "lr": 0.01},
+        "laptop": {"channels": [8, 16], "epochs": 25, "batch_size": 32, "lr": 0.01},
+        "desktop": {"channels": [16, 32], "epochs": 35, "batch_size": 64, "lr": 0.005},
+        "gpu": {"channels": [32, 64], "epochs": 50, "batch_size": 128, "lr": 0.003},
+    },
+    "object_detector": {
+        "edge": {"hidden": [32, 32], "epochs": 15, "batch_size": 16, "lr": 0.005},
+        "laptop": {"hidden": [64, 64], "epochs": 25, "batch_size": 32, "lr": 0.005},
+        "desktop": {"hidden": [128, 64], "epochs": 35, "batch_size": 64, "lr": 0.003},
+        "gpu": {"hidden": [256, 128], "epochs": 50, "batch_size": 128, "lr": 0.002},
+    },
+    "segmentation": {
+        "edge": {"hidden": [64, 64], "epochs": 15, "batch_size": 16, "lr": 0.005},
+        "laptop": {"hidden": [128, 128], "epochs": 25, "batch_size": 32, "lr": 0.005},
+        "desktop": {"hidden": [256, 256], "epochs": 35, "batch_size": 64, "lr": 0.003},
+        "gpu": {"hidden": [512, 256], "epochs": 50, "batch_size": 128, "lr": 0.002},
+    },
     "transformer": {
         "edge": {"d_model": 16, "nhead": 2, "layers": 1, "epochs": 20, "batch_size": 8, "lr": 0.005},
         "laptop": {"d_model": 32, "nhead": 2, "layers": 2, "epochs": 30, "batch_size": 16, "lr": 0.003},
@@ -82,15 +112,18 @@ PROFILES: Dict[str, Dict[str, Dict]] = {
 
 # Which model types are appropriate for which task kind.
 TASK_TYPES: Dict[str, List[str]] = {
-    "classification": ["mlp", "logistic", "cnn", "rnn", "lstm", "transformer"],
-    "regression": ["linear", "mlp"],
+    "classification": ["mlp", "logistic", "cnn", "vision_cnn", "rnn", "lstm", "gru", "transformer", "ts_transformer"],
+    "regression": ["linear", "mlp", "ts_transformer"],
     "clustering": ["kmeans", "autoencoder"],
-    "text": ["ngram", "rnn", "lstm", "transformer"],
-    "vision": ["cnn", "mlp"],
-    "time_series": ["rnn", "lstm", "linear"],
+    "text": ["ngram", "rnn", "lstm", "gru", "transformer"],
+    "vision": ["vision_cnn", "cnn", "object_detector", "segmentation", "mlp"],
+    "time_series": ["lstm", "gru", "ts_transformer", "rnn", "linear"],
     "generative": ["gan", "autoencoder", "ngram"],
     "anomaly": ["autoencoder", "kmeans"],
     "embedding": ["autoencoder"],
+    "object_detection": ["object_detector"],
+    "segmentation": ["segmentation"],
+    "forecasting": ["ts_transformer", "gru", "lstm"],
 }
 
 TIER_ORDER = ["edge", "laptop", "desktop", "gpu"]
@@ -101,7 +134,7 @@ def pick_model_type(task: str, hw: Optional[HardwareInfo] = None) -> str:
     hw = hw or detect()
     tier = tier_of(hw)
     types = TASK_TYPES.get(task, TASK_TYPES["classification"])
-    preference = ["mlp", "logistic", "linear", "cnn", "rnn", "lstm", "transformer"]
+    preference = ["mlp", "logistic", "linear", "vision_cnn", "cnn", "rnn", "lstm", "gru", "ts_transformer", "transformer", "object_detector", "segmentation"]
     ordered = [t for t in preference if t in types] + [t for t in types if t not in preference]
     for t in ordered:
         if tier in ("edge", "laptop") and t in ("transformer", "lstm"):
