@@ -1,33 +1,21 @@
-"""
-AWEAI — AI-Worker Engine for Agents & Intelligence.
+"""AWEAI — the universal AI toolbox.
 
-A lightweight, modular Python toolkit for building AI-powered assistants:
-configuration, LLM client abstraction, tool registry, SQLite-backed
-memory, and a simple agent runner — plus a CLI and examples.
+Everything AI in one lightweight Python package:
 
-Public API:
-    from aweai.config import AWEConfig
-    from aweai.llm import LLMClient, EchoClient
-    from aweai.tools import ToolRegistry, tool
-    from aweai.memory import MemoryStore
-    from aweai.agent import Agent
+    pip install aweai
+    aweai serve      # browser UI on http://localhost:8888
+    aweai chat       # terminal chat
+    aweai train ...  # create / fine-tune models
 """
 
-from aweai.config import AWEConfig
-from aweai.llm import EchoClient, LLMClient, OpenAICompatClient
-from aweai.tools import ToolRegistry, tool
-from aweai.memory import MemoryStore
-from aweai.agent import Agent
+from aweai.config import get_config, Config
+from aweai.i18n import get_translator, LANGUAGES
 
+__version__ = "2.0.0"
 __all__ = [
-    "AWEConfig",
-    "LLMClient",
-    "EchoClient",
-    "OpenAICompatClient",
-    "ToolRegistry",
-    "tool",
-    "MemoryStore",
-    "Agent",
+    "__version__",
+    "get_config",
+    "Config",
+    "get_translator",
+    "LANGUAGES",
 ]
-
-__version__ = "0.1.0"

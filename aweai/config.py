@@ -1,108 +1,166 @@
-"""Configuration handling for AWEAI.
+"""Configuration management for AWEAI.
 
-Supports loading settings from environment variables, a JSON/TOML-style
-config file, or Python defaults.  Values are resolved with a clear
-precedence: explicit constructor kwargs > environment > config file >
-defaults.
+Stores user settings in a JSON file under ~/.aweai/config.json so nothing
+is lost between runs. API keys are kept in a separate file (api_keys.json)
+with 0600 permissions.
 """
 
 from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass, field, asdict
+import shutil
+import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+APP_DIR_NAME = ".aweai"
 
-DEFAULT_MODEL = "gpt-4o-mini"
-DEFAULT_TEMPERATURE = 0.7
-DEFAULT_MAX_TOKENS = 1024
-DEFAULT_TIMEOUT = 60.0
-DEFAULT_DB_PATH = "aweai.db"
+DEFAULTS: Dict[str, Any] = {
+    "language": "en",
+    "port": 8888,
+    "auto_open_browser": True,
+    "default_model": None,  # resolved automatically from hardware when None
+    "model_backend": "auto",  # auto | local | api
+    "api_provider": "openai",
+    "api_base_url": "https://api.openai.com/v1",
+    "api_model": "gpt-4o-mini",
+    "local_model_dir": None,  # where downloaded/custom models are stored
+    "data_dir": None,
+    "rag_backend": "json",  # json | chroma | faiss
+    "rag_embedding": "hash",  # hash | tfidf | huggingface
+    "log_level": "INFO",
+    "telemetry": False,
+    "max_history": 200,
+}
 
 
-@dataclass
-class AWEConfig:
-    """Central configuration object for an AWEAI application.
+def app_dir() -> Path:
+    """Return ~/.aweai creating it if needed."""
+    root = Path.home() / APP_DIR_NAME
+    root.mkdir(parents=True, exist_ok=True)
+    return root
 
-    Attributes:
-        api_key: API key for the LLM provider (falls back to env).
-        model: Model identifier (e.g. "gpt-4o-mini", "claude-3-5-sonnet").
-        base_url: Optional custom OpenAI-compatible endpoint.
-        temperature: Sampling temperature.
-        max_tokens: Maximum tokens per generation.
-        timeout: HTTP timeout in seconds.
-        db_path: Path to the SQLite memory database.
-        system_prompt: Optional system prompt for the agent.
-        extra: Free-form extra settings (config file passthrough).
-    """
 
-    api_key: Optional[str] = None
-    model: str = DEFAULT_MODEL
-    base_url: Optional[str] = None
-    temperature: float = DEFAULT_TEMPERATURE
-    max_tokens: int = DEFAULT_MAX_TOKENS
-    timeout: float = DEFAULT_TIMEOUT
-    db_path: str = DEFAULT_DB_PATH
-    system_prompt: Optional[str] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
+class Config:
+    """Thin JSON-backed settings store."""
 
-    # ------------------------------------------------------------------
-    # Environment variable names
-    # ------------------------------------------------------------------
-    _ENV_API_KEY = "AWEAI_API_KEY"
-    _ENV_MODEL = "AWEAI_MODEL"
-    _ENV_BASE_URL = "AWEAI_BASE_URL"
-    _ENV_DB_PATH = "AWEAI_DB_PATH"
+    def __init__(self, path: Optional[Path] = None) -> None:
+        self.path = Path(path) if path else app_dir() / "config.json"
+        self._data: Dict[str, Any] = {}
+        self.load()
 
-    def __post_init__(self) -> None:
-        # Resolve environment fallbacks for fields that were not set.
-        if self.api_key is None:
-            self.api_key = os.environ.get(self._ENV_API_KEY)
-        if self.model == DEFAULT_MODEL:
-            self.model = os.environ.get(self._ENV_MODEL, DEFAULT_MODEL)
-        if self.base_url is None:
-            self.base_url = os.environ.get(self._ENV_BASE_URL)
-        if self.db_path == DEFAULT_DB_PATH:
-            self.db_path = os.environ.get(self._ENV_DB_PATH, DEFAULT_DB_PATH)
+    def load(self) -> None:
+        self._data = dict(DEFAULTS)
+        if self.path.exists():
+            try:
+                stored = json.loads(self.path.read_text(encoding="utf-8"))
+                if isinstance(stored, dict):
+                    self._data.update(stored)
+            except (json.JSONDecodeError, OSError):
+                pass
 
-    # ------------------------------------------------------------------
-    # Factories
-    # ------------------------------------------------------------------
-    @classmethod
-    def from_file(cls, path: str | Path) -> "AWEConfig":
-        """Load configuration from a JSON file (optionally with an ``env``
-        section that is applied to the process environment before resolution)."""
-        path = Path(path)
-        if not path.exists():
-            raise FileNotFoundError(f"Config file not found: {path}")
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(
+            json.dumps(self._data, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
 
-        data: Dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._data.get(key, DEFAULTS.get(key, default))
 
-        # Apply env overrides if present.
-        for key, value in data.pop("env", {}).items():
-            os.environ[key] = str(value)
+    def set(self, key: str, value: Any) -> None:
+        self._data[key] = value
+        self.save()
 
-        # Unknown keys are preserved as ``extra``.
-        known = {
-            "api_key", "model", "base_url", "temperature",
-            "max_tokens", "timeout", "db_path", "system_prompt",
-        }
-        extra = {k: v for k, v in data.items() if k not in known}
-        clean = {k: v for k, v in data.items() if k in known}
-        clean["extra"] = extra
-        return cls(**clean)
+    def update(self, values: Dict[str, Any]) -> None:
+        self._data.update(values)
+        self.save()
 
-    @classmethod
-    def from_env(cls) -> "AWEConfig":
-        """Create configuration purely from environment variables."""
-        return cls()
+    def all(self) -> Dict[str, Any]:
+        return dict(self._data)
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize to a plain dict (useful for debugging/logging)."""
-        data = asdict(self)
-        # Never log secrets.
-        if data.get("api_key"):
-            data["api_key"] = "***"
-        return data
+    def reset(self) -> None:
+        self._data = dict(DEFAULTS)
+        self.save()
+
+
+class ApiKeyStore:
+    """Stores API keys with 0600 file permissions."""
+
+    def __init__(self, path: Optional[Path] = None) -> None:
+        self.path = Path(path) if path else app_dir() / "api_keys.json"
+        self._data: Dict[str, str] = {}
+
+    def _ensure_mode(self) -> None:
+        try:
+            os.chmod(self.path, 0o600)
+        except OSError:
+            pass
+
+    def load(self) -> None:
+        if self.path.exists():
+            try:
+                stored = json.loads(self.path.read_text(encoding="utf-8"))
+                if isinstance(stored, dict):
+                    self._data = {k: str(v) for k, v in stored.items()}
+            except (json.JSONDecodeError, OSError):
+                self._data = {}
+
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(
+            json.dumps(self._data, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        self._ensure_mode()
+
+    def get(self, provider: str) -> Optional[str]:
+        self.load()
+        return self._data.get(provider)
+
+    def set(self, provider: str, key: str) -> None:
+        self.load()
+        self._data[provider] = key
+        self.save()
+
+    def delete(self, provider: str) -> bool:
+        self.load()
+        if provider in self._data:
+            del self._data[provider]
+            self.save()
+            return True
+        return False
+
+
+def get_config() -> Config:
+    return Config()
+
+
+def get_api_keys() -> ApiKeyStore:
+    return ApiKeyStore()
+
+
+def ensure_runtime_dirs(cfg: Optional[Config] = None) -> Dict[str, Path]:
+    cfg = cfg or get_config()
+    base = Path(cfg.get("data_dir") or (app_dir() / "data"))
+    dirs = {
+        "models": Path(cfg.get("local_model_dir") or (base / "models")),
+        "rag": base / "rag",
+        "actions": base / "actions",
+        "logs": base / "logs",
+    }
+    for d in dirs.values():
+        d.mkdir(parents=True, exist_ok=True)
+    return dirs
+
+
+def get_platform() -> str:
+    if sys.platform.startswith("win"):
+        return "windows"
+    if sys.platform == "darwin":
+        return "macos"
+    return "linux"
+
+
+def which_ok(cmd: str) -> bool:
+    return shutil.which(cmd) is not None
