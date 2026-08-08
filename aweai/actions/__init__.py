@@ -1,9 +1,6 @@
-"""Actions subpackage: natural-language automation studio.
+"""Automation: natural-language actions, pipelines, batch jobs."""
 
-The Actions section (requirement #12) lets users say things like
-"new model with this data" and AWEAI figures out the pipeline and runs it.
-"""
+from .actions import parse_action, ACTION_PATTERNS
+from .runner import run_action, run_pipeline, save_pipeline, list_pipelines, run_batch
 
-from aweai.actions.runner import ActionsRunner, parse_action
-
-__all__ = ["ActionsRunner", "parse_action"]
+__all__ = ["parse_action", "ACTION_PATTERNS", "run_action", "run_pipeline", "save_pipeline", "list_pipelines", "run_batch"]
