@@ -39,3 +39,15 @@ class ActionError(AWEAIError):
 
 class AutotestError(AWEAIError):
     """Autotest step failures."""
+
+
+class QuantizeError(AWEAIError):
+    """Quantization failures."""
+
+
+class DistributedError(AWEAIError):
+    """Distributed training failures."""
+
+
+class MarketError(AWEAIError):
+    """Marketplace failures."""
