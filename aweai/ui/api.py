@@ -1,238 +1,279 @@
-"""FastAPI application and REST API for the AWEAI web UI."""
+"""AWEAI UI — powerful browser interface for the model factory.
+
+Endpoints:
+  /                 SPA (index.html)
+  /api/health       health check
+  /api/hardware     hardware + recommendation
+  /api/model-types  list model types
+  /api/models       list zoo models
+  /api/models/train create+train a model
+  /api/models/eval  evaluate a model
+  /api/models/export export a model
+  /api/models/delete delete a model
+  /api/data/load    load dataset info
+  /api/data/augment augment texts
+  /api/rag/index    index documents
+  /api/rag/ask      ask RAG
+  /api/actions/run  run natural-language action
+  /api/autotest     run autotest (the Autotest button)
+  /api/languages    list languages
+  /api/config       get/set config
+"""
 
 from __future__ import annotations
 
 import json
-import threading
-import webbrowser
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from aweai.config import get_config
-from aweai.i18n import LANGUAGES, available_languages
+from aweai import __version__
 from aweai.ports import resolve_port
 
-
-class ChatRequest(BaseModel):
-    message: str
-    history: List[Dict] = []
-    model: Optional[str] = None
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 class TrainRequest(BaseModel):
+    model_type: str = "mlp"
+    name: str = "model_1"
+    data_path: Optional[str] = None
+    target: Optional[str] = None
+    text_path: Optional[str] = None
+    params: Dict[str, Any] = {}
+    normalize: Optional[str] = None
+
+
+class EvalRequest(BaseModel):
     name: str
-    data: str
-    mode: str = "scratch"  # scratch | finetune | continue
-    base_model: Optional[str] = None
-    epochs: int = 1
+    data_path: Optional[str] = None
+    target: Optional[str] = None
+
+
+class ExportRequest(BaseModel):
+    name: str
+    fmt: str = "json"
+
+
+class DeleteRequest(BaseModel):
+    name: str
+
+
+class DataRequest(BaseModel):
+    path: str
+    target: Optional[str] = None
+
+
+class AugmentRequest(BaseModel):
+    texts: List[str]
+    n: int = 1
 
 
 class RagIndexRequest(BaseModel):
-    path: str = ""
+    path: Optional[str] = None
+    texts: Optional[List[str]] = None
 
 
 class RagAskRequest(BaseModel):
     query: str
-    top_k: int = 4
-
-
-class AgentRunRequest(BaseModel):
-    task: str
-    max_steps: int = 5
+    top_k: Optional[int] = None
 
 
 class ActionRequest(BaseModel):
     text: str
-    lang: str = "en"
 
 
-class ConfigUpdateRequest(BaseModel):
-    values: Dict
+class ConfigRequest(BaseModel):
+    key: str
+    value: Any = None
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="AWEAI", version="2.0.0", docs_url="/api/docs", openapi_url="/api/openapi.json")
-    cfg = get_config()
+    app = FastAPI(title="AWEAI — AI Model Factory", version=__version__, docs_url="/docs", redoc_url="/redoc")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-    # ---------- system ----------
+    @app.get("/")
+    def index():
+        return FileResponse(STATIC_DIR / "index.html")
+
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "version": "2.0.0"}
+        return {"status": "ok", "version": __version__, "name": "AWEAI Model Factory"}
 
-    @app.get("/api/languages")
-    def languages():
-        return {"languages": available_languages()}
-
-    @app.get("/api/config")
-    def get_cfg():
-        return {"config": cfg.all()}
-
-    @app.post("/api/config")
-    def set_cfg(req: ConfigUpdateRequest):
-        cfg.update(req.values)
-        return {"config": cfg.all()}
-
-    # ---------- hardware & models ----------
     @app.get("/api/hardware")
-    def hardware():
+    def api_hardware():
         from aweai.hardware import detect
-
-        return detect().to_dict()
-
-    @app.get("/api/models")
-    def models():
-        from aweai.models.registry import ModelRegistry
-
-        reg = ModelRegistry()
-        return {"catalog": reg.catalog(), "installed": reg.installed()}
-
-    @app.get("/api/models/recommended")
-    def recommended():
-        from aweai.hardware import detect
-        from aweai.models.selector import pick_best_model, suggest_models
+        from aweai.selector import recommend
 
         hw = detect()
-        best = pick_best_model(hw)
-        return {
-            "hardware": hw.to_dict(),
-            "best": best,
-            "suggestions": suggest_models(hw, limit=5),
-        }
+        return {"hardware": hw.to_dict(), "recommendation": recommend("classification", hw)}
 
-    # ---------- chat ----------
-    @app.post("/api/chat")
-    def chat(req: ChatRequest):
-        from aweai.models.inference import LLM
+    @app.get("/api/model-types")
+    def api_model_types():
+        from aweai.models.registry import MODEL_TYPES
+
+        return {"types": [{"name": k, "task": v["task"], "desc": v["desc"]} for k, v in MODEL_TYPES.items()]}
+
+    @app.get("/api/models")
+    def api_models():
+        from aweai.management import list_models
+
+        return {"models": list_models()}
+
+    @app.post("/api/models/train")
+    def api_train(req: TrainRequest):
+        from aweai.train import train
 
         try:
-            llm = LLM(model_id=req.model)
-            messages = req.history + [{"role": "user", "content": req.message}]
-            reply = llm.chat(messages)
-            return {"reply": reply, "model": llm.model_id or "auto"}
+            res = train(
+                req.model_type, req.name, data_path=req.data_path, text_path=req.text_path,
+                target=req.target, params=dict(req.params), normalize=req.normalize,
+            )
+            return {"ok": True, "result": res}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e))
 
-    # ---------- training ----------
-    @app.post("/api/train")
-    def train(req: TrainRequest):
-        from aweai.models.trainer import train_scratch, finetune, continue_training
+    @app.post("/api/models/eval")
+    def api_eval(req: EvalRequest):
+        from aweai.data import load_any
+        from aweai.eval import classification_report
+        from aweai.management import load_model
 
         try:
-            if req.mode == "finetune":
-                if not req.base_model:
-                    raise HTTPException(status_code=400, detail="base_model required for finetune")
-                result = finetune(req.base_model, req.name, req.data, epochs=req.epochs)
-            elif req.mode == "continue":
-                if not req.base_model:
-                    raise HTTPException(status_code=400, detail="checkpoint path required for continue")
-                result = continue_training(req.name, req.base_model, req.data, epochs=req.epochs)
+            model, meta = load_model(req.name)
+            if req.data_path:
+                ds = load_any(req.data_path, target_column=req.target or None)
+                pred = model.predict(ds.X if ds.X is not None else ds.texts)
+                report = classification_report(ds.y, pred) if ds.y is not None else {"pred": pred.tolist()}
             else:
-                result = train_scratch(req.name, req.data, epochs=req.epochs)
-            return {
-                "status": "ok",
-                "name": result.name,
-                "path": result.path,
-                "steps": result.steps,
-                "loss": round(result.loss, 4),
-                "duration_s": round(result.duration_s, 2),
-                "messages": result.messages,
-            }
+                report = {"metrics": meta.get("metrics", {})}
+            return {"ok": True, "result": report}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e))
 
-    # ---------- RAG ----------
-    @app.get("/api/rag/stats")
-    def rag_stats():
-        from aweai.rag.engine import RAGEngine
+    @app.post("/api/models/export")
+    def api_export(req: ExportRequest):
+        from aweai.management import export_model
 
-        return RAGEngine().stats()
+        try:
+            return {"ok": True, "result": export_model(req.name, fmt=req.fmt)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/models/delete")
+    def api_delete(req: DeleteRequest):
+        from aweai.management import delete_model
+
+        try:
+            return {"ok": True, "result": {"deleted": delete_model(req.name)}}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/data/load")
+    def api_data_load(req: DataRequest):
+        from aweai.data import load_any
+
+        try:
+            ds = load_any(req.path, target_column=req.target or None)
+            return {"ok": True, "result": ds.to_dict()}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/data/augment")
+    def api_data_augment(req: AugmentRequest):
+        from aweai.data import text_augment
+
+        try:
+            out = [t for txt in req.texts for t in text_augment(txt, n=req.n)]
+            return {"ok": True, "result": {"augmented": out}}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     @app.post("/api/rag/index")
-    def rag_index(req: RagIndexRequest):
-        from aweai.rag.engine import RAGEngine
+    def api_rag_index(req: RagIndexRequest):
+        from aweai.rag import RAGEngine
 
         try:
-            engine = RAGEngine()
+            eng = RAGEngine()
             if req.path:
-                p = Path(req.path)
-                if p.is_dir():
-                    added = engine.index_directory(str(p))
-                else:
-                    added = engine.index_file(str(p))
+                res = eng.index_directory(req.path)
             else:
-                added = 0
-            return {"status": "ok", "added": added, "stats": engine.stats()}
+                res = eng.index_documents(req.texts or [])
+            return {"ok": True, "result": res}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e))
 
     @app.post("/api/rag/ask")
-    def rag_ask(req: RagAskRequest):
-        from aweai.rag.engine import RAGEngine
+    def api_rag_ask(req: RagAskRequest):
+        from aweai.rag import RAGEngine
 
         try:
-            engine = RAGEngine()
-            result = engine.ask(req.query, top_k=req.top_k)
-            return result
+            eng = RAGEngine()
+            return {"ok": True, "result": eng.ask(req.query, top_k=req.top_k)}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e))
 
-    # ---------- agents ----------
-    @app.post("/api/agent/run")
-    def agent_run(req: AgentRunRequest):
-        from aweai.agents.engine import AgentEngine
-
-        try:
-            agent = AgentEngine.create()
-            result = agent.run(req.task, max_steps=req.max_steps, verbose=False)
-            return result
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-
-    # ---------- actions (automation studio) ----------
     @app.post("/api/actions/run")
-    def actions_run(req: ActionRequest):
-        from aweai.actions.runner import ActionsRunner
+    def api_actions(req: ActionRequest):
+        from aweai.actions import run_action
 
         try:
-            runner = ActionsRunner(lang=req.lang, verbose=False)
-            return runner.run(req.text)
+            return {"ok": True, "result": run_action(req.text)}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e))
 
-    # ---------- static SPA ----------
-    static_dir = Path(__file__).parent / "static"
-    if static_dir.exists():
-        app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
+    @app.post("/api/autotest")
+    def api_autotest(quick: bool = False, no_ui: bool = False):
+        from aweai.autotest import run_autotest
+
+        report = run_autotest(quick=quick, no_ui=no_ui, verbose=False)
+        return report
+
+    @app.get("/api/languages")
+    def api_languages():
+        from aweai.i18n import language_names
+
+        return {"languages": language_names()}
+
+    @app.get("/api/config")
+    def api_config_get():
+        from aweai.config import get_config
+
+        return {"config": get_config().all()}
+
+    @app.post("/api/config")
+    def api_config_set(req: ConfigRequest):
+        from aweai.config import get_config
+
+        try:
+            get_config().set(req.key, req.value)
+            return {"ok": True}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     return app
 
 
-def serve(port: Optional[int] = None, host: str = "127.0.0.1",
-          open_browser: Optional[bool] = None, debug: bool = False) -> None:
-    """Start the UI server with smart port selection (8888, then +1)."""
+def serve(port: int = 8888, host: str = "127.0.0.1", open_browser: bool = True) -> None:
+    import threading
+    import webbrowser
+
     import uvicorn
 
-    cfg = get_config()
-    preferred = port or int(cfg.get("port", 8888))
-    actual = resolve_port(preferred)
-    if actual != preferred:
-        print(f"[aweai] Port {preferred} is busy, using {actual} instead.")
-    cfg.set("port", actual)
-
-    url = f"http://{host}:{actual}"
-    print(f"[aweai] AWEAI UI running at {url}")
-    print(f"[aweai] API docs: {url}/api/docs")
-    print("[aweai] Press Ctrl+C to stop.")
-
-    if open_browser is None:
-        open_browser = bool(cfg.get("auto_open_browser", True))
-    if open_browser and host in ("127.0.0.1", "localhost"):
-        threading.Timer(1.2, lambda: webbrowser.open(url)).start()
-
-    app = create_app()
-    uvicorn.run(app, host=host, port=actual, log_level="debug" if debug else "info")
+    resolved = resolve_port(port, host)
+    print(f"AWEAI Model Factory UI → http://{host}:{resolved}  (docs at /docs)")
+    if open_browser:
+        threading.Timer(1.0, lambda: webbrowser.open(f"http://127.0.0.1:{resolved}")).start()
+    uvicorn.run(create_app(), host=host, port=resolved, log_level="info")

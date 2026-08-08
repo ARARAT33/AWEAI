@@ -1,4 +1,4 @@
-"""AWEAI UI package."""
+"""Compatibility alias: create_app/serve live in api.py.""""
 
 from .api import create_app, serve
 
