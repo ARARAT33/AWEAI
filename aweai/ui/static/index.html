@@ -1,146 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AWEAI — Universal AI Toolbox</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWEAI — AI Model Factory</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo">AWE</div>
-        <div class="brand-text">
-          <strong>AI</strong>
-          <span data-i18n="app_title">Universal AI Toolbox</span>
-        </div>
-      </div>
-      <nav>
-        <button class="nav-item active" data-view="chat"><span>💬</span> <span data-i18n="chat">Chat</span></button>
-        <button class="nav-item" data-view="models"><span>🧠</span> <span data-i18n="models">Models</span></button>
-        <button class="nav-item" data-view="train"><span>🎓</span> <span data-i18n="train">Train</span></button>
-        <button class="nav-item" data-view="rag"><span>📚</span> <span data-i18n="rag">RAG</span></button>
-        <button class="nav-item" data-view="agents"><span>🤖</span> <span data-i18n="agents">Agents</span></button>
-        <button class="nav-item" data-view="actions"><span>⚡</span> <span data-i18n="actions">Actions</span></button>
-        <button class="nav-item" data-view="settings"><span>⚙️</span> <span data-i18n="settings">Settings</span></button>
-      </nav>
-      <div class="sidebar-foot">
-        <select id="lang-select" title="Language"></select>
-        <div id="hw-badge" class="hw-badge">—</div>
-      </div>
-    </aside>
-
-    <main class="main">
-      <!-- Chat view -->
-      <section id="view-chat" class="view active">
-        <header class="view-head">
-          <h1 data-i18n="chat">Chat</h1>
-          <div class="status-pill"><span class="dot"></span><span id="chat-status" data-i18n="status">Status</span></div>
-        </header>
-        <div id="chat-messages" class="messages">
-          <div class="msg bot">
-            <div class="bubble"><strong data-i18n="welcome">Welcome to AWEAI</strong><br><span data-i18n="tagline">Everything AI in one place</span></div>
-          </div>
-        </div>
-        <form id="chat-form" class="composer">
-          <input id="chat-input" type="text" placeholder="Type your message…" data-i18n-ph="enter_message" autocomplete="off">
-          <button type="submit" class="btn primary" data-i18n="send">Send</button>
-        </form>
-      </section>
-
-      <!-- Models view -->
-      <section id="view-models" class="view">
-        <header class="view-head">
-          <h1 data-i18n="models">Models</h1>
-          <button id="refresh-models" class="btn">↻</button>
-        </header>
-        <div class="card">
-          <h3 id="rec-header">Recommended for this machine</h3>
-          <div id="rec-model" class="rec-box">—</div>
-        </div>
-        <div class="card">
-          <h3>Catalog</h3>
-          <div id="model-table" class="table-wrap"></div>
-        </div>
-      </section>
-
-      <!-- Train view -->
-      <section id="view-train" class="view">
-        <header class="view-head"><h1 data-i18n="train">Train</h1></header>
-        <div class="card form-card">
-          <label data-i18n="model">Model</label>
-          <input id="train-name" type="text" value="my_model" placeholder="my_model">
-          <label data-i18n="data_path">Data path</label>
-          <input id="train-data" type="text" placeholder="/path/to/data.jsonl">
-          <label>Mode</label>
-          <select id="train-mode">
-            <option value="scratch">Scratch (0 → model)</option>
-            <option value="finetune">Fine-tune (LoRA)</option>
-            <option value="continue">Continue training</option>
-          </select>
-          <label>Base model / checkpoint</label>
-          <input id="train-base" type="text" placeholder="Qwen/Qwen2.5-0.5B-Instruct">
-          <button id="train-btn" class="btn primary big" data-i18n="start">Start</button>
-          <pre id="train-output" class="output">—</pre>
-        </div>
-      </section>
-
-      <!-- RAG view -->
-      <section id="view-rag" class="view">
-        <header class="view-head"><h1 data-i18n="rag">RAG</h1></header>
-        <div class="card form-card">
-          <label data-i18n="data_path">Data path</label>
-          <input id="rag-path" type="text" placeholder="/path/to/documents/">
-          <button id="rag-index-btn" class="btn">Index</button>
-          <pre id="rag-stats" class="output">—</pre>
-        </div>
-        <div class="card form-card">
-          <label>Query</label>
-          <input id="rag-query" type="text" placeholder="Ask your documents…">
-          <button id="rag-ask-btn" class="btn primary">Ask</button>
-          <div id="rag-answer" class="output">—</div>
-        </div>
-      </section>
-
-      <!-- Agents view -->
-      <section id="view-agents" class="view">
-        <header class="view-head"><h1 data-i18n="agents">Agents</h1></header>
-        <div class="card form-card">
-          <label>Task</label>
-          <textarea id="agent-task" rows="3" placeholder="e.g. List the files in /tmp and calculate 15*4"></textarea>
-          <button id="agent-run-btn" class="btn primary" data-i18n="start">Start</button>
-          <pre id="agent-output" class="output">—</pre>
-        </div>
-      </section>
-
-      <!-- Actions view -->
-      <section id="view-actions" class="view">
-        <header class="view-head"><h1 data-i18n="actions">Actions</h1></header>
-        <div class="card form-card">
-          <label>⚡ <span data-i18n="tagline">Everything AI in one place</span></label>
-          <input id="action-text" type="text" placeholder='Try: "new model with this data"'>
-          <button id="action-run-btn" class="btn primary big" data-i18n="start">Start</button>
-          <pre id="action-output" class="output">—</pre>
-        </div>
-      </section>
-
-      <!-- Settings view -->
-      <section id="view-settings" class="view">
-        <header class="view-head"><h1 data-i18n="settings">Settings</h1></header>
-        <div class="card form-card">
-          <label data-i18n="language">Language</label>
-          <select id="settings-lang"></select>
-          <label>Port</label>
-          <input id="settings-port" type="number" value="8888">
-          <label>Default model</label>
-          <input id="settings-model" type="text" placeholder="auto">
-          <button id="settings-save" class="btn primary">Save</button>
-          <pre id="settings-output" class="output">—</pre>
-        </div>
-      </section>
-    </main>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🏭</span>
+    <div>
+      <h1 id="app-name">AWEAI — AI Model Factory</h1>
+      <p id="app-tagline">Create, train, tune and manage AI models from scratch. No built-in AI, no Hugging Face.</p>
+    </div>
   </div>
-  <script src="app.js"></script>
+  <div class="top-actions">
+    <button id="autotest-btn" class="btn btn-primary">🧪 Autotest</button>
+    <select id="lang-select" class="select"></select>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+  <button class="tab" data-tab="wizard">🪄 Wizard</button>
+  <button class="tab" data-tab="zoo">🐾 Model Zoo</button>
+  <button class="tab" data-tab="datasets">🗃 Datasets</button>
+  <button class="tab" data-tab="hyper">🎛 Hyperparameters</button>
+  <button class="tab" data-tab="rag">🔍 RAG</button>
+  <button class="tab" data-tab="actions">⚙️ Actions</button>
+  <button class="tab" data-tab="settings">⚙️ Settings</button>
+</nav>
+
+<main>
+  <!-- Dashboard -->
+  <section id="tab-dashboard" class="tab-content active">
+    <div class="cards">
+      <div class="card"><h3>Hardware</h3><pre id="hardware-info">Loading…</pre></div>
+      <div class="card"><h3>Recommendation</h3><pre id="recommendation-info">Loading…</pre></div>
+      <div class="card"><h3>Model Zoo</h3><pre id="zoo-count">Loading…</pre></div>
+    </div>
+    <div class="card">
+      <h3>Live Training Curves</h3>
+      <canvas id="loss-canvas" width="900" height="240"></canvas>
+      <p class="hint" id="curve-hint">Train a model in the Wizard to see live loss curves.</p>
+    </div>
+  </section>
+
+  <!-- Wizard -->
+  <section id="tab-wizard" class="tab-content">
+    <div class="card">
+      <h3>Create &amp; train a model</h3>
+      <div class="form-grid">
+        <label>Model type
+          <select id="w-model-type" class="select"></select>
+        </label>
+        <label>Name
+          <input id="w-name" class="input" value="my_model" placeholder="model name">
+        </label>
+        <label>Data path (CSV/JSON/JSONL)
+          <input id="w-data" class="input" placeholder="/path/to/data.csv">
+        </label>
+        <label>Target column
+          <input id="w-target" class="input" placeholder="label">
+        </label>
+        <label>Epochs
+          <input id="w-epochs" class="input" type="number" value="20">
+        </label>
+        <label>Hyperparameters (JSON)
+          <input id="w-params" class="input" placeholder='{"hidden": [16, 8]}'>
+        </label>
+      </div>
+      <button id="train-btn" class="btn btn-primary">🚀 Train</button>
+      <pre id="train-result" class="output"></pre>
+    </div>
+  </section>
+
+  <!-- Model Zoo -->
+  <section id="tab-zoo" class="tab-content">
+    <div class="card">
+      <h3>Model Zoo</h3>
+      <button id="refresh-zoo" class="btn">Refresh</button>
+      <pre id="zoo-list" class="output"></pre>
+    </div>
+  </section>
+
+  <!-- Datasets -->
+  <section id="tab-datasets" class="tab-content">
+    <div class="card">
+      <h3>Dataset Manager</h3>
+      <label>Path
+        <input id="ds-path" class="input" placeholder="/path/to/data.csv">
+      </label>
+      <button id="ds-load" class="btn">Load dataset info</button>
+      <pre id="ds-result" class="output"></pre>
+    </div>
+    <div class="card">
+      <h3>Text augmentation</h3>
+      <label>Texts (one per line)
+        <textarea id="ds-texts" class="input" rows="3">The quick brown fox jumps over the lazy dog.</textarea>
+      </label>
+      <button id="ds-augment" class="btn">Augment</button>
+      <pre id="ds-augment-result" class="output"></pre>
+    </div>
+  </section>
+
+  <!-- Hyperparameters -->
+  <section id="tab-hyper" class="tab-content">
+    <div class="card">
+      <h3>Hyperparameter panel</h3>
+      <p>Run grid/random search via the CLI:</p>
+      <pre class="code">aweai tune mlp --data data.csv --target label --method grid</pre>
+      <p>Resource-adaptive defaults are applied automatically by the factory.</p>
+    </div>
+  </section>
+
+  <!-- RAG -->
+  <section id="tab-rag" class="tab-content">
+    <div class="card">
+      <h3>RAG</h3>
+      <label>Docs directory
+        <input id="rag-path" class="input" placeholder="/path/to/docs">
+      </label>
+      <button id="rag-index" class="btn">Index documents</button>
+      <pre id="rag-index-result" class="output"></pre>
+      <label>Query
+        <input id="rag-query" class="input" placeholder="ask your documents…">
+      </label>
+      <button id="rag-ask" class="btn">Ask</button>
+      <pre id="rag-ask-result" class="output"></pre>
+    </div>
+  </section>
+
+  <!-- Actions -->
+  <section id="tab-actions" class="tab-content">
+    <div class="card">
+      <h3>Natural-language actions</h3>
+      <label>Instruction
+        <input id="act-text" class="input" value="list all models" placeholder="e.g. train an mlp model named demo">
+      </label>
+      <button id="act-run" class="btn">Run action</button>
+      <pre id="act-result" class="output"></pre>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section id="tab-settings" class="tab-content">
+    <div class="card">
+      <h3>Settings</h3>
+      <pre id="config-info" class="output"></pre>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">AWEAI v2.0.0 — AI Model Factory · no Hugging Face · no built-in AI · Apache-2.0-friendly MIT</footer>
+
+<script src="/static/app.js"></script>
 </body>
 </html>
