@@ -21,7 +21,7 @@ Builds the APK with buildozer (`scripts/build_apk.sh`), locates the `.apk`,
 and uploads it to the GitHub Release for the tag.
 
 ```bash
-git tag v2.0.0 && git push origin v2.0.0
+git tag v3.0.0 && git push origin v3.0.0
 ```
 
 Or run it manually from the Actions tab (optionally giving a tag name).
