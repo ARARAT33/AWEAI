@@ -59,10 +59,10 @@ _STATIC: Dict[str, Dict[str, str]] = {
     "common.passed": {"en": "Passed", "hy": "Անցած", "ru": "Пройдено", "fr": "Réussi", "de": "Bestanden", "es": "Aprobado", "it": "Superato", "pt": "Aprovado", "tr": "Geçti", "fa": "موفق", "zh": "通过", "ja": "合格"},
     "common.failed": {"en": "Failed", "hy": "Ձախողված", "ru": "Провалено", "fr": "Échoué", "de": "Fehlgeschlagen", "es": "Fallido", "it": "Fallito", "pt": "Falhou", "tr": "Başarısız", "fa": "ناموفق", "zh": "失败", "ja": "失敗"},
     "common.language": {"en": "Language", "hy": "Լեզու", "ru": "Язык", "fr": "Langue", "de": "Sprache", "es": "Idioma", "it": "Lingua", "pt": "Idioma", "tr": "Dil", "fa": "زبان", "zh": "语言", "ja": "言語"},
-    "common.recommendation": {"en": "Recommendation", "hy": "Առաջարկություն", "ru": "Рекомендация", "fr": "Recommandation", "de": "Empfehlung", "es": "Recomendación", "it": "Raccomandazione", "pt": "Recomendação", "tr": "Öneri", "fa": "پیشنهاد", "zh": "推荐", "ja": "推奨"},
+    "common.recommendation": {"en": "Recommendation", "hy": "Առաջարկություն", "ru": "Рекомендация", "fr": "Recommandation", "de": "Empfehlung", "es": "Recomendación", "it": "Raccomandazione", "pt": "Recomendaçao", "tr": "Öneri", "fa": "پیشنهاد", "zh": "推荐", "ja": "推奨"},
     "common.accuracy": {"en": "Accuracy", "hy": "Ճշգրտություն", "ru": "Точность", "fr": "Précision", "de": "Genauigkeit", "es": "Precisión", "it": "Precisione", "pt": "Precisão", "tr": "Doğruluk", "fa": "دقت", "zh": "准确率", "ja": "精度"},
     "common.loss": {"en": "Loss", "hy": "Կորուստ", "ru": "Потери", "fr": "Perte", "de": "Verlust", "es": "Pérdida", "it": "Perdita", "pt": "Perda", "tr": "Kayıp", "fa": "زیان", "zh": "损失", "ja": "損失"},
-    "common.epochs": {"en": "Epochs", "hy": "Դարաշրջաններ", "ru": "Эпохи", "fr": "Époques", "de": "Epochen", "es": "Épocas", "it": "Epoche", "pt": "Épocas", "tr": "Devirler", "fa": "دورها", "zh": "轮次", "ja": "エポック"},
+    "common.epochs": {"en": "Epochs", "hy": "Դարաշրջաններ", "ru": "Эпохи", "fr": "Époques", "de": "Epochen", "es": "Épocas", "it": "Epoche", "pt": "Épocas", "tr": "Devirler", "fa": "دوره‌ها", "zh": "轮次", "ja": "エポック"},
     "common.model_type": {"en": "Model type", "hy": "Մոդելի տեսակ", "ru": "Тип модели", "fr": "Type de modèle", "de": "Modelltyp", "es": "Tipo de modelo", "it": "Tipo di modello", "pt": "Tipo de modelo", "tr": "Model tipi", "fa": "نوع مدل", "zh": "模型类型", "ja": "モデルタイプ"},
     "common.name": {"en": "Name", "hy": "Անուն", "ru": "Имя", "fr": "Nom", "de": "Name", "es": "Nombre", "it": "Nome", "pt": "Nome", "tr": "Ad", "fa": "نام", "zh": "名称", "ja": "名前"},
     "common.actions": {"en": "Actions", "hy": "Գործողություններ", "ru": "Действия", "fr": "Actions", "de": "Aktionen", "es": "Acciones", "it": "Azioni", "pt": "Ações", "tr": "Eylemler", "fa": "عملیات", "zh": "操作", "ja": "操作"},
@@ -196,3 +196,28 @@ def t(key: str, lang: Optional[str] = None, **kwargs) -> str:
         except Exception:
             pass
     return value
+
+
+# ---------------------------------------------------------------------------
+# Compatibility API (used by tests and external callers)
+# ---------------------------------------------------------------------------
+available_languages = languages
+supported_langs = languages
+
+
+class Translator:
+    """Simple translation helper bound to a language.
+
+    Usage:
+        t = Translator("hy")
+        t("common.dashboard")   # -> "Վահանակ"
+    """
+
+    def __init__(self, lang: Optional[str] = None) -> None:
+        self.lang = lang or get_language()
+
+    def __call__(self, key: str, **kwargs) -> str:
+        return t(key, lang=self.lang, **kwargs)
+
+    def translate(self, key: str, **kwargs) -> str:
+        return self(key, **kwargs)
