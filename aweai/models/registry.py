@@ -14,6 +14,8 @@ from aweai.models.gan import GAN
 from aweai.models.rnn import RNN, LSTM
 from aweai.models.cnn import TinyCNN
 from aweai.models.transformer import MiniTransformer
+from aweai.models.vision import VisionCNN, ObjectDetector, SegmentationNet
+from aweai.models.sequence import GRU, TimeSeriesTransformer
 
 MODEL_TYPES: Dict[str, Dict[str, Any]] = {
     "mlp": {"class": MLP, "task": "classification", "desc": "Multi-layer perceptron (classification/regression)"},
@@ -25,7 +27,12 @@ MODEL_TYPES: Dict[str, Dict[str, Any]] = {
     "gan": {"class": GAN, "task": "generative", "desc": "GAN (generative)"},
     "rnn": {"class": RNN, "task": "time_series", "desc": "Simple RNN (text/time-series)"},
     "lstm": {"class": LSTM, "task": "time_series", "desc": "LSTM (text/time-series)"},
+    "gru": {"class": GRU, "task": "time_series", "desc": "GRU (time-series forecasting)"},
+    "ts_transformer": {"class": TimeSeriesTransformer, "task": "time_series", "desc": "Time-series Transformer (forecasting)"},
     "cnn": {"class": TinyCNN, "task": "vision", "desc": "Tiny CNN (vision)"},
+    "vision_cnn": {"class": VisionCNN, "task": "vision", "desc": "Vision CNN (image classification, pooling)"},
+    "object_detector": {"class": ObjectDetector, "task": "vision", "desc": "Object Detector (bounding boxes, grid-based)"},
+    "segmentation": {"class": SegmentationNet, "task": "vision", "desc": "Segmentation Network (per-pixel masks)"},
     "transformer": {"class": MiniTransformer, "task": "text", "desc": "Mini Transformer (text)"},
 }
 
