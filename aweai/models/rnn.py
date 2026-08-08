@@ -49,7 +49,8 @@ class RNN(BaseModel):
                     h = np.tanh(x[t] @ self.Wxh + h @ self.Whh + self.bh)
                     hs.append(h)
                 y_pred = hs[-1] @ self.Why + self.by
-                target = np.asarray(y[i], dtype=float).reshape(-1, self.output_dim) if y is not None else y_pred
+                y_pred = np.asarray(y_pred, dtype=float).reshape(1, -1)[:, : self.output_dim]
+                target = np.asarray(y[i], dtype=float).reshape(1, -1)[:, : self.output_dim] if y is not None else y_pred
                 if y is None:
                     target = np.roll(x, -1, axis=0)[-1:].reshape(1, -1) if x.shape[0] > 1 else np.zeros((1, self.output_dim))
                     target = target[:, : self.output_dim]
@@ -58,7 +59,7 @@ class RNN(BaseModel):
                 d_out = 2 * (y_pred - target) / target.size
                 dWhy = hs[-1].reshape(-1, 1) @ d_out.reshape(1, -1)
                 dby = d_out.ravel()
-                dh = d_out @ self.Why.T
+                dh = (d_out @ self.Why.T).ravel()
                 dWxh = np.zeros_like(self.Wxh)
                 dWhh = np.zeros_like(self.Whh)
                 dbh = np.zeros_like(self.bh)
@@ -152,6 +153,7 @@ class LSTM(RNN):
                     hs.append(h)
                     cs.append(c)
                 y_pred = h @ self.Why + self.by
+                y_pred = np.asarray(y_pred, dtype=float).reshape(1, -1)[:, : self.output_dim]
                 if y is None:
                     target = np.roll(x, -1, axis=0)[-1:].reshape(1, -1)[:, : self.output_dim]
                 else:
@@ -161,7 +163,7 @@ class LSTM(RNN):
                 d_out = 2 * (y_pred - target) / target.size
                 self.Why -= lr * np.outer(h, d_out.ravel())
                 self.by -= lr * d_out.ravel()
-                dh = d_out @ self.Why.T
+                dh = (d_out @ self.Why.T).ravel()
                 dc = np.zeros(self.hidden)
                 for t in reversed(range(len(x))):
                     o = sigmoid(np.concatenate([x[t], hs[t - 1] if t > 0 else np.zeros(self.hidden)]) @ self.Wo + self.bo)
@@ -171,11 +173,11 @@ class LSTM(RNN):
                     f = sigmoid(z @ self.Wf + self.bf)
                     i = sigmoid(z @ self.Wi + self.bi)
                     c_hat = np.tanh(z @ self.Wc + self.bc)
-                    do = dh * np.tanh(c_cur) * o * (1 - o)
-                    dc = dh * o * (1 - np.tanh(c_cur) ** 2) + dc
-                    dc_hat = dc * i * (1 - c_hat ** 2)
-                    di = dc * c_hat * i * (1 - i)
-                    df = dc * c_prev * f * (1 - f)
+                    do = (dh * np.tanh(c_cur) * o * (1 - o)).ravel()
+                    dc = (dh * o * (1 - np.tanh(c_cur) ** 2) + dc).ravel()
+                    dc_hat = (dc * i * (1 - c_hat ** 2)).ravel()
+                    di = (dc * c_hat * i * (1 - i)).ravel()
+                    df = (dc * c_prev * f * (1 - f)).ravel()
                     self.Wo -= lr * np.outer(z, do)
                     self.bo -= lr * do
                     self.Wi -= lr * np.outer(z, di)
@@ -184,8 +186,8 @@ class LSTM(RNN):
                     self.bc -= lr * dc_hat
                     self.Wf -= lr * np.outer(z, df)
                     self.bf -= lr * df
-                    dh = df @ self.Wf[: self.input_dim].T + di @ self.Wi[: self.input_dim].T + \
-                         dc_hat @ self.Wc[: self.input_dim].T + do @ self.Wo[: self.input_dim].T
+                    dh = (df @ self.Wf[: self.input_dim].T + di @ self.Wi[: self.input_dim].T +
+                          dc_hat @ self.Wc[: self.input_dim].T + do @ self.Wo[: self.input_dim].T).ravel()
             self.history["loss"].append(float(epoch_loss / max(n, 1)))
         self.trained = True
         self.metrics["final_loss"] = float(self.history["loss"][-1])
