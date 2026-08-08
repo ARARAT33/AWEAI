@@ -21,7 +21,18 @@ def _execute(action: str, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         name = kwargs.get("name", f"auto_{int(time.time())}")
         res = train(mtype, name, X=kwargs.get("X"), y=kwargs.get("y"),
                     data_path=kwargs.get("data_path"), params=kwargs.get("params"))
-        return {"result": res}
+        if isinstance(res, dict):
+            out = dict(res)
+            out.setdefault("model", name)
+            return {"result": out}
+        return {"result": {"model": name, "model_type": mtype, "trained": True}}
+    if action == "hardware":
+        from aweai.hardware import detect
+        from aweai.models.selector import pick_best_model
+
+        hw = detect()
+        best = pick_best_model(hw)
+        return {"result": {"hardware": hw.to_dict(), "best_model": (best or {}).get("id")}}
     if action == "eval":
         from aweai.management import load_model
         from aweai.eval import classification_report
@@ -113,3 +124,26 @@ def run_batch(actions: List[str]) -> Dict[str, Any]:
         except Exception as e:
             results.append({"action": a, "error": str(e)})
     return {"results": results, "count": len(results)}
+
+
+class ActionsRunner:
+    """Object-oriented action runner.
+
+    Usage:
+        runner = ActionsRunner(verbose=False)
+        result = runner.run("hardware")          # -> {"status": "ok", ...}
+        result = runner.run("train an mlp model named demo ...")
+    """
+
+    def __init__(self, verbose: bool = True) -> None:
+        self.verbose = verbose
+
+    def run(self, text: str, **kwargs) -> Dict[str, Any]:
+        try:
+            res = run_action(text, **kwargs)
+            payload = res.get("result", res) if isinstance(res, dict) else res
+            if isinstance(payload, dict):
+                return {"status": "ok", **payload}
+            return {"status": "ok", "result": payload}
+        except Exception as e:  # pragma: no cover - defensive
+            return {"status": "error", "error": str(e)}

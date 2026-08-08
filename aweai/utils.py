@@ -7,7 +7,7 @@ import json
 import re
 import time
 from pathlib import Path
-from typing import Any, List, Sequence, Tuple, Union
+from typing import Any, List, Sequence, Tuple, Union, Dict
 
 import numpy as np
 
@@ -46,9 +46,28 @@ def chunk_text(text: str, size: int = 500, overlap: int = 50) -> List[str]:
 
 
 def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
-    """Cosine similarity between two vectors (numpy fallback included)."""
-    a = np.asarray(a, dtype=float)
-    b = np.asarray(b, dtype=float)
+    """Cosine similarity between two vectors (numpy fallback included).
+
+    If string tokens are passed (e.g. ["a", "b"]), they are treated as a
+    bag-of-words: each token becomes a dimension (order-independent).
+    """
+    a = np.asarray(a)
+    b = np.asarray(b)
+    if a.dtype.kind in ("U", "O") or b.dtype.kind in ("U", "O"):
+        vocab: Dict[str, int] = {}
+        for tok in list(a) + list(b):
+            if tok not in vocab:
+                vocab[tok] = len(vocab)
+        va = np.zeros(len(vocab), dtype=float)
+        vb = np.zeros(len(vocab), dtype=float)
+        for tok in a:
+            va[vocab[tok]] += 1.0
+        for tok in b:
+            vb[vocab[tok]] += 1.0
+        a, b = va, vb
+    else:
+        a = a.astype(float)
+        b = b.astype(float)
     na = float(np.linalg.norm(a))
     nb = float(np.linalg.norm(b))
     if na == 0.0 or nb == 0.0:

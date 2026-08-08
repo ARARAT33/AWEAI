@@ -14,11 +14,23 @@ from .registry import (
     list_model_types,
     recommended_for_task,
 )
+from .catalog import (
+    MODELS,
+    catalog_stats,
+    get_fallback,
+    get_model,
+    list_models,
+)
 
 __all__ = [
     "MODEL_TYPES",
+    "MODELS",
     "create_model",
     "get_model_type_info",
     "list_model_types",
     "recommended_for_task",
+    "catalog_stats",
+    "get_fallback",
+    "get_model",
+    "list_models",
 ]

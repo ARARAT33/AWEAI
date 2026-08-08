@@ -50,14 +50,27 @@ class MLP(BaseModel):
     def fit(self, X, y=None, epochs: int = 50, lr: float = 0.01, batch_size: int = 16,
             val_X=None, val_y=None, early_stopping: bool = False, patience: int = 5, **kw):
         X = np.asarray(X, dtype=float)
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
+        if y is None:
+            # Unsupervised pass: fit against zeros (feature-extraction mode).
+            y = np.zeros(len(X), dtype=float)
         y = np.asarray(y)
+        if y.ndim == 0:
+            y = np.full(len(X), float(y), dtype=float)
         epochs = int(kw.get("epochs", epochs))
         lr = float(kw.get("lr", lr))
         batch_size = int(kw.get("batch_size", batch_size))
         n = len(X)
         if self.output_dim == 1 and y.ndim == 1:
             y = y.reshape(-1, 1)
-        classification = self.is_classifier or (self.output_dim > 1 and y.ndim == 2 and y.shape[1] > 1)
+        classification = self.is_classifier or (self.output_dim > 1 and (y.ndim == 2 and y.shape[1] > 1 or y.ndim == 1))
+        if classification and y.ndim == 1:
+            # one-hot encode integer labels
+            n_classes = self.output_dim
+            y_oh = np.zeros((len(y), n_classes), dtype=float)
+            y_oh[np.arange(len(y)), np.asarray(y, dtype=int)] = 1.0
+            y = y_oh
         best_loss = float("inf")
         patience_count = 0
         for epoch in range(epochs):
@@ -67,6 +80,8 @@ class MLP(BaseModel):
                 idx = perm[start : start + batch_size]
                 xb = X[idx]
                 yb = y[idx]
+                if self.output_dim == 1:
+                    yb = yb.reshape(-1, 1)
                 acts = self._forward(xb)
                 z_out = acts[-1]
                 if classification:

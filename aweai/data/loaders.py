@@ -209,6 +209,8 @@ def load_any(path: Union[str, Path], **kwargs) -> Dataset:
     if suffix == ".json":
         return load_json(p, **kwargs)
     if suffix in (".jsonl", ".ndjson"):
+        # JSONL uses text_key/label_key, not target_column
+        kwargs.pop("target_column", None)
         return load_jsonl(p, **kwargs)
     if suffix == ".txt":
         return load_text(p)
