@@ -1,83 +1,33 @@
-# AWEAI Architecture
+# Architecture
 
-AWEAI is a modular Python package: a thin core with zero-to-two dependencies,
-plus optional extras for the full ML stack. Everything is importable and
-testable without heavy frameworks.
-
-## Layers
+AWEAI v2 is a **model factory** — it creates, trains, tunes and manages AI
+models from scratch.
 
 ```
 aweai/
-├── config.py        configuration store (~/.aweai) + BYOK API keys
-├── i18n.py         12-language translator (JSON assets + fallback)
-├── ports.py         smart port selection: 8888 → +1
-├── hardware.py     resource detection (CPU/RAM/GPU/VRAM) + score
-├── utils.py        tokenizer, chunker, cosine, file helpers
-├── models/         catalog, registry, selector, inference, APIs, trainer
-├── rag/            RAG engine (json/chroma/faiss backends)
-├── agents/         ReAct agent + tools
-├── actions/        natural-language automation runner
-└── ui/             FastAPI REST API + SPA frontend
+├── cli.py                 # CLI entry (aweai ...)
+├── config.py              # config store (~/.aweai/config.json)
+├── errors.py              # exception hierarchy
+├── hardware.py            # hardware detection
+├── selector.py            # resource-adaptive model picker
+├── utils.py               # tokenize, n-gram key fix, helpers
+├── i18n.py                # 12 languages
+├── autotest/              # full system self-check
+├── data/                  # loaders, split, normalize, augment, tokenizer
+├── models/                # from-scratch model zoo
+├── train/                 # trainer, tuning
+├── eval/                  # metrics, curves
+├── management/            # model zoo manager
+├── export/                # ONNX / TorchScript / raw / JSON
+├── rag/                   # numpy-only RAG
+├── actions/               # automation (NL actions, pipelines)
+└── ui/                    # FastAPI + SPA
 ```
 
-## Core design decisions
-
-1. **Zero heavy deps in core** — `aweai[all]` is optional; the base package
-   installs with `typer` and `rich` only, and still works (fallback brain).
-2. **Auto everything** — port auto-increment, model auto-selection by
-   hardware, automatic fallback to API or tiny brain.
-3. **Local-first** — no mandatory API keys; everything runs offline.
-4. **Multilingual** — the i18n engine covers 12 languages with a tiny
-   gettext-style API (`t("key")`), UI strings included.
-5. **Extensible** — add tools to the agent, backends to RAG, models to the
-   catalog, intents to actions.
-
-## Data flow
-
-### Chat
-```
-User → CLI/UI → LLM (auto backend) → reply
-                  ├─ transformers (local, quantized)
-                  ├─ API (BYOK, OpenAI-compatible)
-                  └─ TinyBrain (fallback, zero deps)
-```
-
-### Training
-```
-JSONL data → load_texts() → mode:
-  scratch  → TorchMiniGPT | TinyNgramLM → save model + vocab + metadata
-  finetune → transformers + PEFT LoRA   → save adapter
-  continue → load checkpoint → more epochs
-```
-
-### RAG
-```
-Documents → chunk_text() → tokenize() → index.json
-Query     → tokenize()   → cosine similarity → top-k context → LLM answer
-```
-
-### Agent
-```
-Task → LLM (Thought/Action) → tool.call(args) → Observation → … → Final Answer
-```
-
-### Actions
-```
-Text → parse_action() → intent+params → pipeline runner → report
-```
-
-## Storage
-
-| Path | Purpose |
-|------|---------|
-| `~/.aweai/config.json` | user config |
-| `~/.aweai/api_keys.json` | BYOK keys (0600) |
-| `~/.aweai/data/rag/index.json` | RAG index |
-| `~/.aweai/models/<name>/` | trained models + metadata.json |
-
-## Adding a new model to the catalog
-
-Append a dict to `aweai/models/__init__.py::MODELS` with:
-`id, family, params_b, context, min_ram_gb, vram_gb, quantizations, license, hf, languages, use, tier`.
-
-The selector will pick it automatically when it fits the hardware.
+Key design decisions:
+- **No Hugging Face** anywhere — from-scratch numpy models, own tokenizer,
+  own RAG embeddings.
+- **Resource-adaptive** — `selector.recommend(task)` picks model type/size
+  from detected hardware.
+- **Model zoo on disk** — `~/.aweai/models/<name>/model.json` + version.
+- **Autotest** — a single command validates the entire factory.

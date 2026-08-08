@@ -1,66 +1,23 @@
-# AWEAI REST API
+# REST API
 
-Base URL: `http://localhost:8888` (auto-increments on conflict).
-Interactive docs: `http://localhost:8888/api/docs`.
+Base URL: `http://localhost:8888` (auto +1 if busy). Interactive docs at
+`/docs` (OpenAPI).
 
-## System
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/health` | health + version |
-| GET | `/api/languages` | language codes + names |
-| GET | `/api/config` | current config |
-| POST | `/api/config` | update config (`{"values": {...}}`) |
-
-## Hardware & models
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/hardware` | detected resources |
-| GET | `/api/models` | catalog + installed models |
-| GET | `/api/models/recommended` | best model for this machine |
-
-## Chat
-
-| Method | Path | Body |
-|--------|------|------|
-| POST | `/api/chat` | `{message, history[], model?}` |
-
-## Training
-
-| Method | Path | Body |
-|--------|------|------|
-| POST | `/api/train` | `{name, data, mode: scratch\|finetune\|continue, base_model?, epochs}` |
-
-## RAG
-
-| Method | Path | Body |
-|--------|------|------|
-| GET | `/api/rag/stats` | — |
-| POST | `/api/rag/index` | `{path}` (file or dir) |
-| POST | `/api/rag/ask` | `{query, top_k}` |
-
-## Agents
-
-| Method | Path | Body |
-|--------|------|------|
-| POST | `/api/agent/run` | `{task, max_steps}` |
-
-## Actions (automation studio)
-
-| Method | Path | Body |
-|--------|------|------|
-| POST | `/api/actions/run` | `{text, lang}` |
-
-## Example
-
-```bash
-curl -s http://localhost:8888/api/health
-curl -s http://localhost:8888/api/hardware
-curl -s -X POST http://localhost:8888/api/chat \
-  -H 'Content-Type: application/json' \
-  -d '{"message": "Hello"}'
-curl -s -X POST http://localhost:8888/api/actions/run \
-  -H 'Content-Type: application/json' \
-  -d '{"text": "hardware"}'
-```
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/health` | health check |
+| GET | `/api/hardware` | hardware + recommendation |
+| GET | `/api/model-types` | model zoo types |
+| GET | `/api/models` | list models |
+| POST | `/api/models/train` | create + train a model |
+| POST | `/api/models/eval` | evaluate a model |
+| POST | `/api/models/export` | export a model |
+| POST | `/api/models/delete` | delete a model |
+| POST | `/api/data/load` | load dataset info |
+| POST | `/api/data/augment` | augment texts |
+| POST | `/api/rag/index` | index documents |
+| POST | `/api/rag/ask` | ask RAG |
+| POST | `/api/actions/run` | run natural-language action |
+| POST | `/api/autotest` | run autotest |
+| GET | `/api/languages` | list languages |
+| GET/POST | `/api/config` | get/set config |
