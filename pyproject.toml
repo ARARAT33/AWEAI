@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aweai"
-version = "2.0.0"
+version = "3.0.0"
 description = "AWEAI — AI Model Factory: create, train, tune and manage AI models from scratch. No built-in AI, no Hugging Face."
 readme = "README.md"
 requires-python = ">=3.9"

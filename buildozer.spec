@@ -12,7 +12,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,txt,json,md,html,css,js
 source.exclude_dirs = tests, docs, .git, .github
 
-requirements = python3,kivy==2.3.0,plyer,urllib3
+requirements = python3,kivy==2.3.0,plyer,urllib3,numpy
 
 gradle.api_level = 33
 android.archs = arm64-v8a
