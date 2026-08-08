@@ -33,7 +33,7 @@ class RAGEngine:
         dirs = ensure_runtime_dirs()
         self.data_dir = Path(data_dir or dirs["rag"])
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.index_file = self.data_dir / "index.json"
+        self.index_path = self.data_dir / "index.json"
         self.documents: List[Dict] = []
         self.backend = backend if backend != "auto" else "json"
         self.embedding = embedding if embedding != "auto" else "hash"
@@ -41,9 +41,9 @@ class RAGEngine:
 
     # ---------- persistence ----------
     def load(self) -> None:
-        if self.index_file.exists():
+        if self.index_path.exists():
             try:
-                data = json.loads(self.index_file.read_text(encoding="utf-8"))
+                data = json.loads(self.index_path.read_text(encoding="utf-8"))
                 self.documents = data.get("documents", [])
                 self.backend = data.get("backend", self.backend)
                 self.embedding = data.get("embedding", self.embedding)
@@ -51,7 +51,7 @@ class RAGEngine:
                 self.documents = []
 
     def save(self) -> None:
-        write_json(self.index_file, {
+        write_json(self.index_path, {
             "documents": self.documents,
             "backend": self.backend,
             "embedding": self.embedding,
@@ -127,7 +127,7 @@ class RAGEngine:
             "embedding": self.embedding,
             "chunks": len(self.documents),
             "docs": len({d.get('metadata', {}).get('source', '') for d in self.documents}),
-            "index_file": str(self.index_file),
+            "index_file": str(self.index_path),
         }
 
     def clear(self) -> None:
