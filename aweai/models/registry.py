@@ -1,69 +1,51 @@
-"""Registry facade: catalog + installed/custom models on disk."""
+"""Model registry: create from-scratch models by type name."""
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from aweai.models import MODELS, get_model, list_models
-from aweai.config import ensure_runtime_dirs
+from aweai.models.base import BaseModel
+from aweai.models.mlp import MLP
+from aweai.models.linear import LinearRegression, LogisticRegression
+from aweai.models.kmeans import KMeans
+from aweai.models.ngram import NGramLM
+from aweai.models.autoencoder import Autoencoder
+from aweai.models.gan import GAN
+from aweai.models.rnn import RNN, LSTM
+from aweai.models.cnn import TinyCNN
+from aweai.models.transformer import MiniTransformer
+
+MODEL_TYPES: Dict[str, Dict[str, Any]] = {
+    "mlp": {"class": MLP, "task": "classification", "desc": "Multi-layer perceptron (classification/regression)"},
+    "linear": {"class": LinearRegression, "task": "regression", "desc": "Linear regression (closed form)"},
+    "logistic": {"class": LogisticRegression, "task": "classification", "desc": "Logistic regression (SGD)"},
+    "kmeans": {"class": KMeans, "task": "clustering", "desc": "K-Means clustering"},
+    "ngram": {"class": NGramLM, "task": "text", "desc": "N-gram language model"},
+    "autoencoder": {"class": Autoencoder, "task": "anomaly", "desc": "Autoencoder (anomaly/embedding)"},
+    "gan": {"class": GAN, "task": "generative", "desc": "GAN (generative)"},
+    "rnn": {"class": RNN, "task": "time_series", "desc": "Simple RNN (text/time-series)"},
+    "lstm": {"class": LSTM, "task": "time_series", "desc": "LSTM (text/time-series)"},
+    "cnn": {"class": TinyCNN, "task": "vision", "desc": "Tiny CNN (vision)"},
+    "transformer": {"class": MiniTransformer, "task": "text", "desc": "Mini Transformer (text)"},
+}
 
 
-class ModelRegistry:
-    """Merges the built-in catalog with user-installed local models."""
+def list_model_types() -> List[str]:
+    return list(MODEL_TYPES.keys())
 
-    def __init__(self, models_dir: Optional[Path] = None) -> None:
-        dirs = ensure_runtime_dirs()
-        self.models_dir = Path(models_dir or dirs["models"])
-        self.models_dir.mkdir(parents=True, exist_ok=True)
 
-    def catalog(self) -> List[Dict]:
-        return list(MODELS)
+def get_model_type_info(model_type: str) -> Dict[str, Any]:
+    if model_type not in MODEL_TYPES:
+        raise ValueError(f"Unknown model type: {model_type}. Known: {list_model_types()}")
+    return MODEL_TYPES[model_type]
 
-    def installed(self) -> List[Dict]:
-        """Scan the local models dir for saved models (with metadata.json)."""
-        found = []
-        if not self.models_dir.exists():
-            return found
-        for child in sorted(self.models_dir.iterdir()):
-            meta = child / "metadata.json"
-            if child.is_dir() and meta.exists():
-                try:
-                    data = json.loads(meta.read_text(encoding="utf-8"))
-                    data.setdefault("path", str(child))
-                    data.setdefault("local", True)
-                    found.append(data)
-                except (OSError, json.JSONDecodeError):
-                    continue
-        return found
 
-    def all(self) -> List[Dict]:
-        return self.catalog() + self.installed()
+def create_model(model_type: str, **kwargs) -> BaseModel:
+    info = get_model_type_info(model_type)
+    return info["class"](**kwargs)
 
-    def resolve(self, model_id: str) -> Optional[Dict]:
-        m = get_model(model_id)
-        if m:
-            return m
-        for inst in self.installed():
-            if inst.get("id") == model_id or inst.get("name") == model_id:
-                return inst
-        return None
 
-    def register_local(self, name: str, path: str, family: str = "custom",
-                       params_b: float = 0.0, metadata: Optional[Dict] = None) -> Dict:
-        meta = {
-            "id": name,
-            "name": name,
-            "family": family,
-            "params_b": params_b,
-            "path": path,
-            "local": True,
-            "created": metadata.get("created") if metadata else None,
-        }
-        if metadata:
-            meta.update(metadata)
-        meta_path = Path(path) / "metadata.json"
-        meta_path.parent.mkdir(parents=True, exist_ok=True)
-        meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
-        return meta
+def recommended_for_task(task: str) -> str:
+    from aweai.selector import pick_model_type
+
+    return pick_model_type(task)
