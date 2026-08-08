@@ -1,4 +1,4 @@
-"""Smart port selection: start at 8888, increment on conflict."""
+"""Smart port resolution: 8888 → 8889 → … until a free port is found."""
 
 from __future__ import annotations
 
@@ -6,36 +6,27 @@ import socket
 from typing import Optional
 
 
-def is_port_free(port: int, host: str = "127.0.0.1") -> bool:
-    """Return True if the given port is not bound (TCP)."""
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+def is_free(port: int, host: str = "127.0.0.1") -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
             s.bind((host, port))
             return True
-    except OSError:
-        return False
+        except OSError:
+            return False
 
 
-def find_free_port(start: int = 8888, max_tries: int = 50, host: str = "0.0.0.0") -> int:
-    """Return the first free port >= start; increment on conflicts.
-
-    Binds on 0.0.0.0 so it also detects ports used on other interfaces.
-    """
-    for port in range(start, start + max_tries):
-        if is_port_free(port, host):
+def resolve_port(preferred: int = 8888, host: str = "127.0.0.1", max_tries: int = 50) -> int:
+    """Return the first free port starting at `preferred`, auto-incrementing."""
+    for port in range(preferred, preferred + max_tries):
+        if is_free(port, host):
             return port
-    # fall back to an OS-assigned port
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((host, 0))
-        return s.getsockname()[1]
+    raise RuntimeError(f"No free port found in range {preferred}..{preferred + max_tries}")
 
 
-def resolve_port(preferred: Optional[int] = None) -> int:
-    """Resolve the actual port to serve on.
+def current_port() -> Optional[int]:
+    """Best-effort: return the configured port if it is free, else resolved."""
+    from aweai.config import get_config
 
-    - preferred: the requested port (default 8888)
-    - returns preferred if free, otherwise preferred+1, +2, ...
-    """
-    start = preferred or 8888
-    return find_free_port(start)
+    cfg = get_config()
+    preferred = int(cfg.get("port", 8888))
+    return resolve_port(preferred)

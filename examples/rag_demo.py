@@ -1,25 +1,35 @@
-"""Example: RAG — index documents and ask questions."""
+#!/usr/bin/env python
+"""Example: RAG — index documents and ask.
 
-from pathlib import Path
+Run:  python examples/rag_demo.py
+"""
+
+from __future__ import annotations
+
 import tempfile
+from pathlib import Path
 
 from aweai.rag.engine import RAGEngine
 
-docs = Path(tempfile.mkdtemp(prefix="aweai_rag_demo_")) / "docs.txt"
-docs.write_text(
-    "AWEAI is a universal AI toolbox created in Armenia.\n"
-    "It supports RAG, agents, fine-tuning and a 12-language interface.\n"
-    "The UI opens in the browser on port 8888.\n"
-    "Yerevan, the capital of Armenia, is one of the oldest cities in the world.\n",
-    encoding="utf-8",
-)
 
-engine = RAGEngine()
-added = engine.index_file(str(docs))
-print(f"Indexed {added} chunks")
+def main() -> None:
+    engine = RAGEngine()
+    engine.clear()
 
-result = engine.ask("What does AWEAI support?")
-print("Answer:", result["answer"])
-print("Sources:")
-for s in result["sources"]:
-    print("  -", s["id"], s["score"])
+    doc = Path(tempfile.mkdtemp(prefix="aweai_rag_demo_")) / "about.txt"
+    doc.write_text(
+        "AWEAI is a universal AI toolbox. It supports local LLMs, model creation, "
+        "fine-tuning with LoRA, RAG, agents, automation and a 12-language browser UI.\n"
+        "Armenia is a country in the South Caucasus. Its capital is Yerevan.\n",
+        encoding="utf-8",
+    )
+    added = engine.index_file(str(doc))
+    print(f"Indexed {added} chunks.")
+
+    result = engine.ask("What does AWEAI support?")
+    print("Answer:", result["answer"])
+    print("Sources:", [s["id"] for s in result["sources"]])
+
+
+if __name__ == "__main__":
+    main()

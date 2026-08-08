@@ -1,27 +1,29 @@
 [app]
-title = AWEAI
+# AWEAI Android APK configuration
 package.name = aweai
 package.domain = org.aweai
-source.dir = android
-source.include_exts = py,png,jpg,kv,atlas
-version = 2.0.0
+
+title = AWEAI
+version.code = 1
+version.regex = __version__\s*=\s*"(\d+\.\d+\.\d+)"
+version.filename = %(source.dir)s/aweai/__init__.py
+
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,txt,json,md,html,css,js
+source.exclude_dirs = tests, docs, .git, .github
+
+requirements = python3,kivy==2.3.0,plyer,urllib3
+
+gradle.api_level = 33
+android.archs = arm64-v8a
+android.accept_sdk_license = True
+android.private_storage = True
+
 orientation = portrait
 fullscreen = 0
 
-# WebView-based shell: no native UI deps beyond kivy + plyer
-requirements = python3,kivy==2.3.0,plyer,android
-
-# Permissions
-android.permissions = INTERNET,ACCESS_NETWORK_STATE
-
-# The app starts the AWEAI UI server locally and opens it in a WebView.
-android.api = 33
-android.minapi = 21
-android.archs = arm64-v8a,armeabi-v7a
-
-# Keep the package light: no torch on Android by default
-android.allow_backup = True
-android.private_storage = True
+presplash.color = #0b1020
+icon.filename = %(source.dir)s/android/icon.png
 
 [buildozer]
 log_level = 2

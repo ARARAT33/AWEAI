@@ -1,28 +1,40 @@
-"""Example: create a brand-new model from scratch.
+#!/usr/bin/env python
+"""Example: train a new model from scratch (torch or n-gram fallback).
 
-This trains a tiny model on a small JSONL dataset so it runs on CPU in
-seconds. For a real model, use a bigger dataset and `pip install aweai[ml]`.
+Run:  python examples/train_demo.py
 """
 
-from pathlib import Path
+from __future__ import annotations
+
+import json
 import tempfile
+from pathlib import Path
 
 from aweai.models.trainer import train_scratch
 
-# tiny sample dataset
-sample = Path(tempfile.mkdtemp(prefix="aweai_demo_")) / "data.jsonl"
-sample.write_text(
-    "\n".join([
-        '{"text": "AWEAI is the universal AI toolbox."}',
-        '{"text": "Բարեւ աշխարհ։ AWEAI-ը համընդհանուր AI գործիք է։"}',
-        '{"text": "The capital of Armenia is Yerevan."}',
-        '{"text": "RAG makes models answer from your documents."}',
-        '{"text": "LoRA fine-tuning is fast and cheap."}',
-    ]),
-    encoding="utf-8",
-)
 
-result = train_scratch("demo_model", str(sample), epochs=2)
-print(f"Trained model at: {result.path}")
-print(f"Loss: {result.loss:.4f}, steps: {result.steps}")
-print(f"Messages: {result.messages}")
+def main() -> None:
+    # Build a tiny sample dataset
+    data = Path(tempfile.mkdtemp(prefix="aweai_demo_")) / "data.jsonl"
+    lines = [
+        {"text": "AWEAI is the universal AI toolbox."},
+        {"text": "Բարեւ աշխարհ։ AWEAI-ը համընդհանուր AI գործիք է։"},
+        {"text": "Yerevan is the capital of Armenia."},
+        {"text": "RAG stands for retrieval-augmented generation."},
+        {"text": "LoRA is a lightweight fine-tuning method."},
+        {"text": "Agents can use tools to complete tasks."},
+        {"text": "The UI supports 12 languages."},
+    ]
+    data.write_text(
+        "\n".join(json.dumps(l, ensure_ascii=False) for l in lines), encoding="utf-8"
+    )
+
+    print("Training a new model from scratch…")
+    result = train_scratch("demo_model", str(data), epochs=2)
+    print(f"Done in {result.duration_s:.1f}s -> {result.path}")
+    for m in result.messages:
+        print("  •", m)
+
+
+if __name__ == "__main__":
+    main()

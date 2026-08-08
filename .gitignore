@@ -6,40 +6,27 @@ __pycache__/
 build/
 dist/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
 .coverage
 htmlcov/
-
-# Environments
+.tox/
 .venv/
 venv/
-env/
-.env
 
-# AWEAI runtime data
-~/.aweai/
-.aweai/
-*.db
-*.sqlite3
-memory/
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# ML artifacts
-*.pt
-*.bin
-*.safetensors
-models_cache/
-datasets/
-
-# Android / buildozer
-bin/
-.buildozer/
-*.apk
-*.aab
-
-# OS / editors
+# OS
 .DS_Store
 Thumbs.db
-.idea/
-.vscode/
-*.swp
+
+# AWEAI runtime
+.aweai/
+*.log
+
+# Android build
+buildozer/
+bin/
+.android/
