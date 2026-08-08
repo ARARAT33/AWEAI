@@ -8,26 +8,39 @@ on:
 
 jobs:
   test:
+    name: test (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.9", "3.11"]
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
+
       - name: Install
         run: |
-          pip install --upgrade pip
-          pip install -e ".[all]"
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[all]" pytest
+
       - name: Lint compile
         run: python -m compileall -q aweai tests examples scripts
+
+      - name: Import checks
+        run: |
+          python -c "import aweai, aweai.cli, aweai.train, aweai.eval, aweai.rag, aweai.actions, aweai.ui, aweai.autotest; print('imports OK')"
+          python -m aweai version
+
       - name: Unit tests
         run: python -m pytest -q
+
       - name: Autotest (no UI)
         run: python -m aweai autotest --quick --no-ui
+
       - name: No-HuggingFace guard
-        run: |
-          ! grep -rIl -E "transformers|datasets|huggingface|sentence-transformers|peft" --include="*.py" --include="*.toml" --include="*.txt" . || (echo "Hugging Face references found" && exit 1)
+        run: python .github/scripts/check_hf_free.py
