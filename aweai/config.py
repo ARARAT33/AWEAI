@@ -1,10 +1,10 @@
-"""Configuration store: ~/.aweai/config.json + API key store.
+"""Configuration store for AWEAI.
 
 Paths:
-  ~/.aweai/config.json     — user config (language, port, model…)
-  ~/.aweai/api_keys.json   — BYOK provider keys (chmod 0600)
-  ~/.aweai/data/           — RAG index
-  ~/.aweai/models/         — trained models
+  ~/.aweai/config.json     — user config (language, port, defaults…)
+  ~/.aweai/data/           — datasets & RAG index
+  ~/.aweai/models/         — trained models (the model zoo)
+  ~/.aweai/logs/           — training logs & curves
 
 Environment overrides:
   AWEAI_HOME   — override the base directory
@@ -23,10 +23,10 @@ DEFAULTS: Dict[str, Any] = {
     "port": 8888,
     "auto_open_browser": True,
     "default_model": None,
-    "model_backend": "auto",  # auto | local | api
-    "api_provider": None,
-    "api_base_url": None,
-    "api_model": None,
+    "device": "auto",  # auto | cpu | cuda | mps
+    "verbosity": "info",
+    "dataset_dir": None,
+    "model_dir": None,
 }
 
 
@@ -43,7 +43,6 @@ class Config:
                     self._data.update(loaded)
             except (OSError, json.JSONDecodeError):
                 pass
-        # environment overrides
         env_lang = os.environ.get("AWEAI_LANG")
         if env_lang:
             self._data["language"] = env_lang
@@ -88,63 +87,11 @@ def ensure_runtime_dirs() -> Dict[str, Path]:
         "rag": base / "data" / "rag",
         "models": base / "models",
         "logs": base / "logs",
+        "pipelines": base / "pipelines",
     }
     for d in dirs.values():
         d.mkdir(parents=True, exist_ok=True)
     return dirs
-
-
-class ApiKeyStore:
-    """BYOK provider keys, stored 0600."""
-
-    def __init__(self, path: Optional[Path] = None) -> None:
-        self.path = Path(path or (app_dir() / "api_keys.json"))
-        self._data: Dict[str, str] = {}
-        if self.path.exists():
-            try:
-                loaded = json.loads(self.path.read_text(encoding="utf-8"))
-                if isinstance(loaded, dict):
-                    self._data = {k: str(v) for k, v in loaded.items()}
-            except (OSError, json.JSONDecodeError):
-                pass
-
-    def get(self, provider: str) -> Optional[str]:
-        return self._data.get(provider)
-
-    def set(self, provider: str, key: str) -> None:
-        self._data[provider] = key
-        self.save()
-
-    def all(self) -> Dict[str, str]:
-        return dict(self._data)
-
-    def save(self) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps(self._data, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        try:
-            os.chmod(self.path, 0o600)
-        except OSError:
-            pass
-
-
-_config_singleton: Optional[Config] = None
-_keys_singleton: Optional[ApiKeyStore] = None
-
-
-def get_config() -> Config:
-    global _config_singleton
-    if _config_singleton is None:
-        _config_singleton = Config()
-    return _config_singleton
-
-
-def get_api_keys() -> ApiKeyStore:
-    global _keys_singleton
-    if _keys_singleton is None:
-        _keys_singleton = ApiKeyStore()
-    return _keys_singleton
 
 
 def get_platform() -> str:
@@ -157,3 +104,13 @@ def which_ok(cmd: str) -> bool:
     import shutil
 
     return shutil.which(cmd) is not None
+
+
+_config_singleton: Optional[Config] = None
+
+
+def get_config() -> Config:
+    global _config_singleton
+    if _config_singleton is None:
+        _config_singleton = Config()
+    return _config_singleton
