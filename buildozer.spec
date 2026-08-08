@@ -12,6 +12,9 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,txt,json,md,html,css,js
 source.exclude_dirs = tests, docs, .git, .github
 
+# Keep the Android APK slim: Kivy + UI + CLI. numpy is provided by
+# python-for-android's numpy recipe (arm64-v8a) and does not need to be
+# declared as a pypi requirement; heavy torch/onnx are NOT bundled on-device.
 requirements = python3,kivy==2.3.0,plyer,urllib3,numpy
 
 # Pin a stable NDK that works with buildozer/p4a for arm64-v8a API 33.

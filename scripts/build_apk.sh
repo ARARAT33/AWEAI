@@ -21,3 +21,4 @@ if [ -z "$APK" ]; then
   exit 1
 fi
 echo "APK ready: $APK"
+ls -lh "$APK"

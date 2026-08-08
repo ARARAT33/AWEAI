@@ -21,6 +21,16 @@ except Exception:  # pragma: no cover
 _ALNUM_RE = re.compile(r"[\w\u0561-\u0587\u0531-\u0556]+", re.UNICODE)
 
 
+def truncate(text: str, limit: int = 500) -> str:
+    """Truncate text to `limit` characters with an ellipsis marker."""
+    if text is None:
+        return ""
+    text = str(text)
+    if len(text) <= limit:
+        return text
+    return text[: max(limit - 3, 0)] + "..."
+
+
 def safe_filename(name: str) -> str:
     """Turn arbitrary text into a safe directory/file name."""
     cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", name).strip("._")

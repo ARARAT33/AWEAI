@@ -3,6 +3,11 @@
 
 Usage:
     pyinstaller --clean --noconfirm aweai.spec
+
+The packaged binary intentionally EXCLUDES the heavy optional ML backends
+(torch, onnx, scikit-learn). Bundling torch pulls in multiple GB of CUDA
+libraries which exceeds the GitHub Release 2 GB asset limit. Those features
+remain available when AWEAI is installed from pip (pip install aweai[all]).
 """
 
 from PyInstaller.utils.hooks import collect_submodules
@@ -21,7 +26,25 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["tkinter", "matplotlib", "PIL", "pytest"],
+    excludes=[
+        "tkinter",
+        "matplotlib",
+        "PIL",
+        "pytest",
+        "torch",
+        "torchvision",
+        "torchaudio",
+        "onnx",
+        "onnxruntime",
+        "scikit-learn",
+        "sklearn",
+        "tensorflow",
+        "keras",
+        "pandas",
+        "scipy",
+        "IPython",
+        "jupyter",
+    ],
     noarchive=False,
 )
 
