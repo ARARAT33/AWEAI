@@ -4,7 +4,8 @@ Every architecture is implemented from zero in numpy (+ optional torch only
 for export). Available types:
 
     mlp, linear, logistic, kmeans, ngram, autoencoder, gan,
-    rnn, lstm, cnn, transformer
+    rnn, lstm, gru, ts_transformer, cnn, vision_cnn,
+    object_detector, segmentation, transformer
 """
 
 from .registry import (
