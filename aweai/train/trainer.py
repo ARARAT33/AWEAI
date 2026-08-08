@@ -74,16 +74,29 @@ def train(
     task = info["task"]
 
     # Auto-infer dimensions from data for models that need them.
-    if model_type in ("mlp", "autoencoder", "gan", "cnn", "rnn", "lstm"):
+    if model_type in ("mlp", "autoencoder", "gan", "cnn", "vision_cnn", "rnn", "lstm", "gru", "object_detector", "segmentation"):
         params.setdefault("input_dim", X.shape[1] if X.ndim == 2 else 1)
-    if model_type in ("cnn",):
+    if model_type in ("cnn", "vision_cnn"):
         n = X.shape[1]
         h = int(round(n ** 0.5))
         params.setdefault("height", h)
-    if model_type in ("mlp", "cnn") and y is not None:
+    if model_type in ("mlp", "cnn", "vision_cnn") and y is not None:
         uniq = np.unique(y)
         params.setdefault("output_dim", int(len(uniq)) if len(uniq) > 1 else 1)
         params.setdefault("num_classes", int(len(uniq)) if len(uniq) > 1 else 1)
+    if model_type in ("segmentation",):
+        params.setdefault("num_classes", int(np.unique(y).size) if y is not None else 2)
+    if model_type in ("rnn", "lstm", "gru"):
+        params.setdefault("output_dim", X.shape[-1] if X.ndim >= 2 else 1)
+        params.setdefault("seq_len", X.shape[1] if X.ndim >= 2 else 4)
+    if model_type in ("ts_transformer",):
+        params.setdefault("input_dim", X.shape[-1] if X.ndim >= 2 else 1)
+        params.setdefault("output_dim", X.shape[-1] if X.ndim >= 2 else 1)
+        params.setdefault("max_len", X.shape[1] if X.ndim >= 2 else 8)
+    if model_type in ("object_detector",):
+        params.setdefault("grid", 4)
+        params.setdefault("num_anchors", 2)
+        params.setdefault("num_classes", int(np.unique(y).size) if y is not None else 1)
     if model_type in ("kmeans",):
         params.setdefault("k", min(3, max(2, int(np.unique(y).size) if y is not None else 3)))
     if model_type in ("transformer",):
