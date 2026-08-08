@@ -53,6 +53,8 @@ def check_module_imports() -> Dict[str, Any]:
         "aweai.data", "aweai.models", "aweai.train", "aweai.eval",
         "aweai.management", "aweai.export", "aweai.rag", "aweai.actions",
         "aweai.autotest", "aweai.ui", "aweai.cli",
+        "aweai.quantize", "aweai.distributed", "aweai.market",
+        "aweai.menus", "aweai.terminal", "aweai.integrations",
     ]
     failed = []
     for m in modules:
@@ -75,7 +77,7 @@ def _smoke_train() -> Dict[str, Any]:
     texts = ["the quick brown fox jumps over the lazy dog", "hello world from the model factory", "numpy from scratch no hugging face"]
     results = {}
     failed = []
-    for mtype in ("mlp", "linear", "logistic", "kmeans", "ngram", "autoencoder", "gan", "rnn", "lstm", "cnn", "transformer"):
+    for mtype in ("mlp", "linear", "logistic", "kmeans", "ngram", "autoencoder", "gan", "rnn", "lstm", "cnn", "transformer", "vision_cnn", "object_detector", "segmentation", "gru", "ts_transformer"):
         try:
             if mtype == "ngram":
                 from aweai.models.registry import create_model
@@ -86,10 +88,29 @@ def _smoke_train() -> Dict[str, Any]:
             elif mtype == "cnn":
                 from aweai.models.registry import create_model
 
-                Xc = X[:, :16]
-                m = create_model(mtype, input_dim=16, height=4, channels=[2, 4], num_classes=2)
+                Xc = X[:, :4].reshape(24, 2, 2)
+                m = create_model(mtype, input_dim=4, height=2, kernel=1, channels=[1], num_classes=2)
                 m.fit(Xc, y=y, epochs=2)
                 m.predict(Xc[:4])
+            elif mtype == "vision_cnn":
+                from aweai.models.registry import create_model
+
+                Xc = X[:, :4].reshape(24, 1, 2, 2)
+                m = create_model(mtype, input_dim=4, height=2, kernel=1, pool=1, channels=[1], num_classes=2)
+                m.fit(Xc, y=y, epochs=2)
+                m.predict(Xc[:4])
+            elif mtype == "object_detector":
+                from aweai.models.registry import create_model
+
+                m = create_model(mtype, input_dim=4, grid=2, num_anchors=1, num_classes=2)
+                m.fit(X, epochs=2)
+                m.predict(X[:4])
+            elif mtype == "segmentation":
+                from aweai.models.registry import create_model
+
+                m = create_model(mtype, input_dim=4, height=2, num_classes=2, hidden=[8, 8])
+                m.fit(X, y=y, epochs=2)
+                m.predict(X[:4])
             elif mtype in ("mlp",):
                 from aweai.models.registry import create_model
 
@@ -115,10 +136,17 @@ def _smoke_train() -> Dict[str, Any]:
                 m = create_model(mtype, input_dim=1, hidden=4, output_dim=1)
                 m.fit(seq, epochs=2)
                 m.predict(seq)
+            elif mtype in ("gru",):
+                from aweai.models.registry import create_model
+
+                seq = X[:4].reshape(4, 4, 1)
+                m = create_model(mtype, input_dim=1, hidden=4, output_dim=1)
+                m.fit(seq, epochs=2)
+                m.predict(seq)
             elif mtype == "transformer":
                 from aweai.models.registry import create_model
 
-                Xt = np.random.randint(0, 8, (4, 6))
+                Xt = np.random.randint(0, 8, (4, 6))  # token ids (B,T)
                 yt = np.random.randint(0, 2, (4,))
                 m = create_model(mtype, vocab_size=10, d_model=8, nhead=2, layers=1, num_classes=2)
                 m.fit(Xt, y=yt, epochs=2)
@@ -135,6 +163,13 @@ def _smoke_train() -> Dict[str, Any]:
                 m = create_model(mtype, input_dim=4, latent=2, hidden=[4, 4])
                 m.fit(X, epochs=2, batch_size=8)
                 m.generate(3)
+            elif mtype == "ts_transformer":
+                from aweai.models.registry import create_model
+
+                seq = X[:4].reshape(4, 4, 1)
+                m = create_model(mtype, input_dim=1, d_model=4, nhead=2, layers=1, output_dim=1)
+                m.fit(seq, epochs=2)
+                m.predict(seq)
             results[mtype] = "ok"
         except Exception as e:
             failed.append(f"{mtype}: {e}")
@@ -234,22 +269,30 @@ def check_ui(no_ui: bool = False) -> Dict[str, Any]:
 def check_cli() -> Dict[str, Any]:
     r = _check("cli")
     try:
+        from typer.testing import CliRunner
+
         from aweai.cli import app
 
-        names = []
-        for c in app.registered_commands:
-            n = getattr(c, "name", None)
-            if n:
-                names.append(n)
-            elif getattr(c, "callback", None) is not None:
-                # Newer typer: name lives on the callback function.
-                names.append(c.callback.__name__)
-        required = {"train", "eval", "models", "export", "data", "rag", "actions", "serve", "autotest"}
-        missing = required - set(names)
+        runner = CliRunner()
+        # introspect registered commands
+        info = app.registered_commands
+        names = sorted([c.name or c.callback.__name__ for c in info])
+        required = ["train", "eval", "export", "quantize", "export_edge", "edge_footprint",
+                    "dtrain", "dworld", "market", "integrations", "allc", "autoallc",
+                    "terminal", "autotest", "serve", "version", "recommend", "types"]
+        missing = [x for x in required if x not in names]
+        # run version + a few lightweight commands through the runner
+        rv = runner.invoke(app, ["version"])
+        assert rv.exit_code == 0, rv.output
+        rv2 = runner.invoke(app, ["hardware"])
+        assert rv2.exit_code == 0, rv2.output
+        rv3 = runner.invoke(app, ["types"])
+        assert rv3.exit_code == 0, rv3.output
         if missing:
-            raise RuntimeError(f"missing commands: {missing}")
-        r["ok"] = True
-        r["detail"] = f"{len(names)} commands OK"
+            r["detail"] = f"missing commands: {missing}; have {len(names)} commands"
+        else:
+            r["ok"] = True
+            r["detail"] = f"{len(names)} commands OK (incl. all new v3 commands)"
     except Exception as e:
         r["detail"] = str(e)
     return r
