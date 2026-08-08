@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[all]"
+      - name: Lint compile
+        run: python -m compileall -q aweai tests examples scripts
+      - name: Unit tests
+        run: python -m pytest -q
+      - name: Autotest (no UI)
+        run: python -m aweai autotest --quick --no-ui
+      - name: No-HuggingFace guard
+        run: |
+          ! grep -rIl -E "transformers|datasets|huggingface|sentence-transformers|peft" --include="*.py" --include="*.toml" --include="*.txt" . || (echo "Hugging Face references found" && exit 1)

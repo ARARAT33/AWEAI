@@ -1,23 +1,17 @@
 #!/usr/bin/env bash
-# Build the AWEAI Android APK using python-for-android via buildozer.
-#
-# Prerequisites: buildozer, JDK, Android SDK (see buildozer docs).
-# Output: bin/aweai-*.apk
+# Build the AWEAI Android APK (lightweight local UI wrapper).
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+echo "AWEAI Android build"
+echo "==================="
+echo "1. Ensure buildozer is installed: pip install buildozer"
+echo "2. Build with: buildozer android debug"
+echo ""
 
-echo "[aweai] Building Android APK…"
-pip install --quiet buildozer cython
-
-if ! command -v buildozer >/dev/null 2>&1; then
-  echo "buildozer not on PATH; trying python -m buildozer"
-  buildozer_cmd="python -m buildozer"
+if command -v buildozer >/dev/null 2>&1; then
+  (cd android && buildozer android debug)
 else
-  buildozer_cmd="buildozer"
+  echo "buildozer not found. Install it first:"
+  echo "  pip install buildozer"
+  echo "Then run: buildozer android debug (in android/)"
 fi
-
-$buildozer_cmd android debug
-
-echo "[aweai] APK built: bin/"
-ls -lh bin/ || true
