@@ -1,0 +1,13 @@
+# AWEAI core — lightweight, no Hugging Face, no built-in AI
+numpy>=1.21
+
+# Optional extras (uncomment as needed):
+# torch>=1.13          # ONNX / TorchScript export, faster training
+# scikit-learn>=1.0    # sklearn interop
+# fastapi>=0.100       # browser UI
+# uvicorn>=0.23
+# pydantic>=1.10
+# onnx>=1.13           # ONNX export
+# psutil>=5.9          # better hardware detection
+# typer>=0.9           # CLI (bundled via console script)
+# rich>=13.0           # pretty CLI tables
