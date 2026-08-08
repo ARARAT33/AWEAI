@@ -14,6 +14,11 @@ source.exclude_dirs = tests, docs, .git, .github
 
 requirements = python3,kivy==2.3.0,plyer,urllib3,numpy
 
+# Pin a stable NDK that works with buildozer/p4a for arm64-v8a API 33.
+# NDK r28c (default) fails compiling libffi via autoreconf.
+android.ndk_path = /opt/android-ndk-r25b
+android.ndk_api = 24
+
 gradle.api_level = 33
 android.archs = arm64-v8a
 android.accept_sdk_license = True
