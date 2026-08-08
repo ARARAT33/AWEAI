@@ -1,114 +1,135 @@
-"""Small shared utilities: file helpers, hashing, text chunking, JSON I/O."""
+"""AWEAI model factory utilities: tokenization, chunking, serialization."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import re
+import time
 from pathlib import Path
-from typing import Any, Iterable, List, Optional
+from typing import Any, List, Sequence, Tuple, Union
 
-STOP_WORDS = {
-    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "of",
-    "for", "with", "is", "are", "was", "were", "be", "been", "by", "as",
-    "it", "its", "this", "that", "from", "up", "down", "out", "over",
-    "ը", "է", "եւ", "և", "որ", "մի", "այն", "այս", "համար", "դեպի", "վրա",
-    "и", "в", "на", "с", "по", "для", "не", "что", "это",
-    "le", "la", "les", "un", "une", "de", "du", "des", "et",
-    "der", "die", "das", "und", "mit", "für",
-    "el", "la", "los", "las", "y", "de", "del",
-    "il", "lo", "la", "e", "di", "del",
-    "o", "a", "os", "as", "de", "do", "da",
-    "的", "了", "在", "是", "和", "就", "不",
-    "の", "に", "は", "を", "が",
-    "의", "에", "는", "이", "가",
-    "ve", "bir", "bu", "şu", "için",
-}
+import numpy as np
 
+try:  # pragma: no cover - optional
+    import torch  # type: ignore
 
-def read_json(path: Path) -> Any:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    _HAS_TORCH = True
+except Exception:  # pragma: no cover
+    _HAS_TORCH = False
 
-
-def write_json(path: Path, data: Any) -> None:
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(
-        json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-
-
-def sha256_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def tokenize(text: str) -> List[str]:
-    """Rough multilingual tokenizer: words + CJK characters + Armenian."""
-    tokens = re.findall(r"[\w]+|[\u4e00-\u9fff]|[\u3040-\u30ff]|[\uac00-\ud7af]|[\u0560-\u058f]", text.lower())
-    return [t for t in tokens if t and t not in STOP_WORDS]
-
-
-def cosine_similarity(a: List[str], b: List[str]) -> float:
-    """Cosine similarity between two token bags (no numpy dependency)."""
-    if not a or not b:
-        return 0.0
-    counts: dict = {}
-    for t in set(a):
-        counts[t] = counts.get(t, 0) + 1
-    score = 0.0
-    for t in set(b):
-        if t in counts:
-            score += counts[t]
-    return score / ((len(set(a)) ** 0.5) * (len(set(b)) ** 0.5)) if a and b else 0.0
-
-
-def chunk_text(text: str, size: int = 500, overlap: int = 50) -> List[str]:
-    """Split text into overlapping chunks on paragraph/sentence boundaries."""
-    text = re.sub(r"\s+", " ", text).strip()
-    if len(text) <= size:
-        return [text] if text else []
-    parts: List[str] = []
-    start = 0
-    while start < len(text):
-        end = min(start + size, len(text))
-        if end < len(text):
-            # try to break at a sentence or word boundary
-            for sep in (". ", "! ", "? ", "\n", " "):
-                idx = text.rfind(sep, start + size // 2, end)
-                if idx != -1:
-                    end = idx + len(sep)
-                    break
-        parts.append(text[start:end].strip())
-        start = max(end - overlap, start + 1)
-        if start >= len(text):
-            break
-    return [p for p in parts if p]
-
-
-def flatten(items: Iterable[Any]) -> List[Any]:
-    out: List[Any] = []
-    for it in items:
-        if isinstance(it, (list, tuple)):
-            out.extend(flatten(it))
-        else:
-            out.append(it)
-    return out
+_ALNUM_RE = re.compile(r"[\w\u0561-\u0587\u0531-\u0556]+", re.UNICODE)
 
 
 def safe_filename(name: str) -> str:
-    name = re.sub(r"[^a-zA-Z0-9_-]+", "_", name).strip("_")
-    return name or "model"
+    """Turn arbitrary text into a safe directory/file name."""
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", name).strip("._")
+    return cleaned or "model"
 
 
-def format_bytes(num: Optional[float]) -> str:
-    if num is None:
-        return "?"
-    for unit in ("B", "KB", "MB", "GB", "TB"):
-        if num < 1024.0:
-            return f"{num:.1f} {unit}"
-        num /= 1024.0
-    return f"{num:.1f} PB"
+def tokenize(text: str) -> List[str]:
+    """Lightweight word tokenizer (no external deps, supports Armenian/Cyrillic)."""
+    return _ALNUM_RE.findall(text.lower())
 
 
-def truncate(text: str, limit: int = 300) -> str:
-    text = text.strip().replace("\n", " ")
-    return text if len(text) <= limit else text[: limit - 3] + "..."
+def chunk_text(text: str, size: int = 500, overlap: int = 50) -> List[str]:
+    """Split text into overlapping chunks by character length (no tokenizers dep)."""
+    if size <= 0:
+        return [text]
+    step = max(size - overlap, 1)
+    chunks: List[str] = []
+    for i in range(0, len(text), step):
+        chunk = text[i : i + size]
+        if chunk:
+            chunks.append(chunk)
+    return chunks
+
+
+def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
+    """Cosine similarity between two vectors (numpy fallback included)."""
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    na = float(np.linalg.norm(a))
+    nb = float(np.linalg.norm(b))
+    if na == 0.0 or nb == 0.0:
+        return 0.0
+    return float(np.dot(a, b) / (na * nb))
+
+
+def write_json(path: Union[str, Path], data: Any) -> None:
+    """Write JSON with a serialization hook for numpy/torch objects."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(data, indent=2, ensure_ascii=False, default=_json_default), encoding="utf-8")
+
+
+def read_json(path: Union[str, Path], default: Any = None) -> Any:
+    p = Path(path)
+    if not p.exists():
+        return default
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def _json_default(o: Any) -> Any:
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    if isinstance(o, np.generic):
+        return o.item()
+    if isinstance(o, (tuple, set)):
+        return list(o)
+    if _HAS_TORCH and isinstance(o, torch.Tensor):
+        return o.detach().cpu().tolist()
+    return str(o)
+
+
+def now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def stable_hash(*parts: Any) -> str:
+    """Stable short hash used for model ids / n-gram keys."""
+    raw = "|".join(str(p) for p in parts)
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
+
+
+# ---------------------------------------------------------------- n-gram keys
+def serialize_ngram_key(key: Tuple[str, ...]) -> str:
+    """Serialize an n-gram tuple key into a JSON-safe string.
+
+    Fixes the classic n-gram tuple-key serialization bug where keys were
+    stored as Python tuple repr (e.g. "('the', 'cat')") and broke when the
+    tokens contained quotes, or when loading from JSON.
+    """
+    return json.dumps(list(key), ensure_ascii=False, separators=(",", ":"))
+
+
+def deserialize_ngram_key(key: str) -> Tuple[str, ...]:
+    """Deserialize an n-gram key serialized by :func:`serialize_ngram_key`."""
+    if isinstance(key, tuple):
+        return key
+    try:
+        data = json.loads(key)
+        return tuple(str(t) for t in data)
+    except Exception:
+        # Legacy fallback: Python tuple repr like "('a', 'b')"
+        if key.startswith("(") and key.endswith(")"):
+            inner = key[1:-1]
+            parts = []
+            for m in re.finditer(r"'([^']*)'|\"([^\"]*)\"|([^,]+)", inner):
+                parts.append(m.group(1) or m.group(2) or m.group(3).strip())
+            return tuple(parts)
+        return (key,)
+
+
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-np.clip(x, -500, 500)))
+
+
+def softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
+    x = np.asarray(x, dtype=float)
+    x = x - np.max(x, axis=axis, keepdims=True)
+    e = np.exp(x)
+    return e / np.sum(e, axis=axis, keepdims=True)
