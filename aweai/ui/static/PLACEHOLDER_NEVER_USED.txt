@@ -1,1 +1,0 @@
-/* SPA frontend logic placeholder — actual content in app.js */
