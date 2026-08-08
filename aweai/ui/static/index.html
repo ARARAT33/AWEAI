@@ -28,6 +28,8 @@
   <button class="tab" data-tab="datasets">🗃 Datasets</button>
   <button class="tab" data-tab="hyper">🎛 Hyperparameters</button>
   <button class="tab" data-tab="rag">🔍 RAG</button>
+  <button class="tab" data-tab="terminal">💻 Terminal</button>
+  <button class="tab" data-tab="market">🏪 Market</button>
   <button class="tab" data-tab="actions">⚙️ Actions</button>
   <button class="tab" data-tab="settings">⚙️ Settings</button>
 </nav>
@@ -144,6 +146,42 @@
     </div>
   </section>
 
+  <!-- Terminal -->
+  <section id="tab-terminal" class="tab-content">
+    <div class="card">
+      <h3>In-app terminal</h3>
+      <p class="hint">Type any AWEAI command — try <code>allc</code>, <code>autoallc</code>, <code>types</code>, <code>hardware</code>, <code>market list</code>, <code>dtrain mlp --name demo</code>.</p>
+      <label>Command
+        <input id="term-input" class="input" placeholder="e.g. allc --count 20" style="width:100%">
+      </label>
+      <button id="term-run" class="btn btn-primary">▶ Run</button>
+      <pre id="term-output" class="output" style="max-height:420px; overflow:auto;"></pre>
+    </div>
+  </section>
+
+  <!-- Marketplace -->
+  <section id="tab-market" class="tab-content">
+    <div class="card">
+      <h3>Model marketplace</h3>
+      <div class="form-grid">
+        <label>Action
+          <select id="mkt-action" class="select">
+            <option value="list">List</option>
+            <option value="search">Search</option>
+            <option value="publish">Publish</option>
+            <option value="download">Download</option>
+            <option value="stats">Stats</option>
+          </select>
+        </label>
+        <label>Model / query / id
+          <input id="mkt-arg" class="input" placeholder="model name or query">
+        </label>
+      </div>
+      <button id="mkt-run" class="btn btn-primary">▶ Run</button>
+      <pre id="mkt-result" class="output"></pre>
+    </div>
+  </section>
+
   <!-- Settings -->
   <section id="tab-settings" class="tab-content">
     <div class="card">
@@ -153,7 +191,7 @@
   </section>
 </main>
 
-<footer class="footer">AWEAI v2.0.0 — AI Model Factory · no Hugging Face · no built-in AI · Apache-2.0-friendly MIT</footer>
+<footer class="footer">AWEAI v3.0.0 — AI Model Factory · no Hugging Face · no built-in AI · MIT</footer>
 
 <script src="/static/app.js"></script>
 </body>
