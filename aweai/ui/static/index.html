@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWEAI — Universal AI Toolbox</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">AWE</div>
+        <div class="brand-text">
+          <strong>AI</strong>
+          <span data-i18n="app_title">Universal AI Toolbox</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-item active" data-view="chat"><span>💬</span> <span data-i18n="chat">Chat</span></button>
+        <button class="nav-item" data-view="models"><span>🧠</span> <span data-i18n="models">Models</span></button>
+        <button class="nav-item" data-view="train"><span>🎓</span> <span data-i18n="train">Train</span></button>
+        <button class="nav-item" data-view="rag"><span>📚</span> <span data-i18n="rag">RAG</span></button>
+        <button class="nav-item" data-view="agents"><span>🤖</span> <span data-i18n="agents">Agents</span></button>
+        <button class="nav-item" data-view="actions"><span>⚡</span> <span data-i18n="actions">Actions</span></button>
+        <button class="nav-item" data-view="settings"><span>⚙️</span> <span data-i18n="settings">Settings</span></button>
+      </nav>
+      <div class="sidebar-foot">
+        <select id="lang-select" title="Language"></select>
+        <div id="hw-badge" class="hw-badge">—</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Chat view -->
+      <section id="view-chat" class="view active">
+        <header class="view-head">
+          <h1 data-i18n="chat">Chat</h1>
+          <div class="status-pill"><span class="dot"></span><span id="chat-status" data-i18n="status">Status</span></div>
+        </header>
+        <div id="chat-messages" class="messages">
+          <div class="msg bot">
+            <div class="bubble"><strong data-i18n="welcome">Welcome to AWEAI</strong><br><span data-i18n="tagline">Everything AI in one place</span></div>
+          </div>
+        </div>
+        <form id="chat-form" class="composer">
+          <input id="chat-input" type="text" placeholder="Type your message…" data-i18n-ph="enter_message" autocomplete="off">
+          <button type="submit" class="btn primary" data-i18n="send">Send</button>
+        </form>
+      </section>
+
+      <!-- Models view -->
+      <section id="view-models" class="view">
+        <header class="view-head">
+          <h1 data-i18n="models">Models</h1>
+          <button id="refresh-models" class="btn">↻</button>
+        </header>
+        <div class="card">
+          <h3 id="rec-header">Recommended for this machine</h3>
+          <div id="rec-model" class="rec-box">—</div>
+        </div>
+        <div class="card">
+          <h3>Catalog</h3>
+          <div id="model-table" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <!-- Train view -->
+      <section id="view-train" class="view">
+        <header class="view-head"><h1 data-i18n="train">Train</h1></header>
+        <div class="card form-card">
+          <label data-i18n="model">Model</label>
+          <input id="train-name" type="text" value="my_model" placeholder="my_model">
+          <label data-i18n="data_path">Data path</label>
+          <input id="train-data" type="text" placeholder="/path/to/data.jsonl">
+          <label>Mode</label>
+          <select id="train-mode">
+            <option value="scratch">Scratch (0 → model)</option>
+            <option value="finetune">Fine-tune (LoRA)</option>
+            <option value="continue">Continue training</option>
+          </select>
+          <label>Base model / checkpoint</label>
+          <input id="train-base" type="text" placeholder="Qwen/Qwen2.5-0.5B-Instruct">
+          <button id="train-btn" class="btn primary big" data-i18n="start">Start</button>
+          <pre id="train-output" class="output">—</pre>
+        </div>
+      </section>
+
+      <!-- RAG view -->
+      <section id="view-rag" class="view">
+        <header class="view-head"><h1 data-i18n="rag">RAG</h1></header>
+        <div class="card form-card">
+          <label data-i18n="data_path">Data path</label>
+          <input id="rag-path" type="text" placeholder="/path/to/documents/">
+          <button id="rag-index-btn" class="btn">Index</button>
+          <pre id="rag-stats" class="output">—</pre>
+        </div>
+        <div class="card form-card">
+          <label>Query</label>
+          <input id="rag-query" type="text" placeholder="Ask your documents…">
+          <button id="rag-ask-btn" class="btn primary">Ask</button>
+          <div id="rag-answer" class="output">—</div>
+        </div>
+      </section>
+
+      <!-- Agents view -->
+      <section id="view-agents" class="view">
+        <header class="view-head"><h1 data-i18n="agents">Agents</h1></header>
+        <div class="card form-card">
+          <label>Task</label>
+          <textarea id="agent-task" rows="3" placeholder="e.g. List the files in /tmp and calculate 15*4"></textarea>
+          <button id="agent-run-btn" class="btn primary" data-i18n="start">Start</button>
+          <pre id="agent-output" class="output">—</pre>
+        </div>
+      </section>
+
+      <!-- Actions view -->
+      <section id="view-actions" class="view">
+        <header class="view-head"><h1 data-i18n="actions">Actions</h1></header>
+        <div class="card form-card">
+          <label>⚡ <span data-i18n="tagline">Everything AI in one place</span></label>
+          <input id="action-text" type="text" placeholder='Try: "new model with this data"'>
+          <button id="action-run-btn" class="btn primary big" data-i18n="start">Start</button>
+          <pre id="action-output" class="output">—</pre>
+        </div>
+      </section>
+
+      <!-- Settings view -->
+      <section id="view-settings" class="view">
+        <header class="view-head"><h1 data-i18n="settings">Settings</h1></header>
+        <div class="card form-card">
+          <label data-i18n="language">Language</label>
+          <select id="settings-lang"></select>
+          <label>Port</label>
+          <input id="settings-port" type="number" value="8888">
+          <label>Default model</label>
+          <input id="settings-model" type="text" placeholder="auto">
+          <button id="settings-save" class="btn primary">Save</button>
+          <pre id="settings-output" class="output">—</pre>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
