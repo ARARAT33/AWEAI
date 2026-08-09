@@ -18,11 +18,15 @@ source.exclude_dirs = tests, docs, .git, .github
 # tag literally ("git checkout 1.24.4"), but numpy's git tags use a "v"
 # prefix, so a pin like numpy==1.24.4 fails with "pathspec did not match".
 # Pin a stable Python for python-for-android: p4a currently resolves to
-# Python 3.14, which fails compiling Kivy 2.3.0's Cython code
+# Python 3.14, which fails compiling Kivy's Cython code
 # (_PyUnicode_FastCopyCharacters undeclared). 3.11.x builds cleanly.
 # hostpython3 MUST match python3 exactly (p4a error:
 # "python3 should have same version as hostpython3").
-requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.0,plyer,urllib3,numpy
+# kivy 2.3.1 is required on NDK r26: kivy 2.3.0's graphics/cgl_backend
+# cgl_gl.c fails to compile with the newer NDK r26 libc++/sysroot layout
+# (see kivy/python-for-android#3320 - incompatible function pointer
+# types and the stray -INOTNONE/usr/include sysroot include path).
+requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.1,plyer,urllib3,numpy
 
 # NDK r26d is the pinned NDK for python-for-android + Kivy on the CI
 # runners (see .github/workflows/build-apk.yml and build-release.yml).
