@@ -18,7 +18,9 @@ source.exclude_dirs = tests, docs, .git, .github
 # Pin a stable Python for python-for-android: p4a currently resolves to
 # Python 3.14, which fails compiling Kivy 2.3.0's Cython code
 # (_PyUnicode_FastCopyCharacters undeclared). 3.11.x builds cleanly.
-requirements = python3==3.11.9,kivy==2.3.0,plyer,urllib3,numpy
+# hostpython3 MUST match python3 exactly (p4a error:
+# "python3 should have same version as hostpython3").
+requirements = hostpython3==3.11.9,python3==3.11.9,kivy==2.3.0,plyer,urllib3,numpy
 
 # Pin a stable NDK that works with buildozer/p4a for arm64-v8a API 33.
 # NDK r28c (default) fails compiling libffi via autoreconf; r25b fails
