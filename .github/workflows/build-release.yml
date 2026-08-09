@@ -29,7 +29,7 @@ jobs:
             asset_name: aweai-linux-x86_64
           - name: macOS app
             os: macos-latest
-            asset_ext: ""
+            asset_ext: .app.zip
             asset_name: aweai-macos-x86_64
     permissions:
       contents: write
@@ -117,9 +117,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
-          files: |
-            dist/${{ matrix.asset_name }}${{ matrix.asset_ext }}
-            dist/${{ matrix.asset_name }}.app.zip
+          files: dist/${{ matrix.asset_name }}${{ matrix.asset_ext }}
           fail_on_unmatched_files: true
           generate_release_notes: false
           overwrite_files: true
@@ -187,7 +185,7 @@ jobs:
 
   android-apk:
     name: Android APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
