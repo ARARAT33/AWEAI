@@ -1,1 +1,481 @@
-IiIiQVdFQUkgVUkg4oCUIHBvd2VyZnVsIGJyb3dzZXIgaW50ZXJmYWNlIGZvciB0aGUgbW9kZWwgZmFjdG9yeS4KCkVuZHBvaW50czoKICAvICAgICAgICAgICAgICAgICBTUEEgKGluZGV4Lmh0bWwpCiAgL2FwaS9oZWFsdGggICAgICAgICBoZWFsdGggY2hlY2sKICAvYXBpL2VudiAgICAgICAgICAgIGVudmlyb25tZW50IGRldGVjdGlvbiAoYW55LWRldmljZSBjb21wYXRpYmlsaXR5KQogIC9hcGkvaGFyZHdhcmUgICAgICBoYXJkd2FyZSArIHJlY29tbWVuZGF0aW9uCiAgL2FwaS9tb2RlbC10eXBlcyAgICBsaXN0IG1vZGVsIHR5cGVzCiAgL2FwaS9tb2RlbHMgICAgICAgIGxpc3Qgem9vIG1vZGVscwogIC9hcGkvbW9kZWxzL3RyYWluICBjcmVhdGUrdHJhaW4gYSBtb2RlbAogIC9hcGkvbW9kZWxzL2V2YWwgICBldmFsdWF0ZSBhIG1vZGVsCiAgL2FwaS9tb2RlbHMvZXhwb3J0IGV4cG9ydCBhIG1vZGVsCiAgL2FwaS9tb2RlbHMvZGVsZXRlIGRlbGV0ZSBhIG1vZGVsCiAgL2FwaS9kYXRhL2xvYWQgICAgIGxvYWQgZGF0YXNldCBpbmZvCiAgL2FwaS9kYXRhL2F1Z21lbnQgYXVnbWVudCB0ZXh0cwogIC9hcGkvcmFnL2luZGV4ICAgICBpbmRleCBkb2N1bWVudHMKICAvYXBpL3JhZy9hc2sgICAgICAgYXNrIFJBRwogIC9hcGkvYWN0aW9ucy9ydW4gIHJ1biBuYXR1cmFsLWxhbmd1YWdlIGFjdGlvbgogIC9hcGkvYXV0b3Rlc3QgICAgIHJ1biBhdXRvdGVzdCAodGhlIEF1dG90ZXN0IGJ1dHRvbikKICAvYXBpL2xhbmd1YWdlcyAgICBsaXN0IGxhbmd1YWdlcwogIC9hcGkvY29uZmlnICAgICAgIGdldC9zZXQgY29uZmlnCiAgL2FwaS9xdWFudGl6ZSAgICAgcXVhbnRpemUgYSBtb2RlbAogIC9hcGkvZXhwb3J0L2VkZ2UgICBlZGdlIGV4cG9ydAogIC9hcGkvZWRnZS9mb290cHJpbnQgIGVkZ2UgZm9vdHByaW50IGVzdGltYXRlCiAgL2FwaS9tYXJrZXQgICAgICAgbWFya2V0cGxhY2UgKHB1Ymxpc2gvc2VhcmNoL2xpc3QvaW5mby9kb3dubG9hZC9yYXRlL3N0YXRzKQogIC9hcGkvaW50ZWdyYXRpb25zIEFJLXRvb2wgaW50ZWdyYXRpb25zIGxpc3QKICAvYXBpL2ludGVncmF0aW9ucy9jaGF0ICBjaGF0IHZpYSBhIHByb3ZpZGVyCiAgL2FwaS90ZXJtaW5hbCAgICAgaW4tYXBwIHRlcm1pbmFsCiAgL2FwaS90b29scyAgICAgICAgIGV4dGVuc2lvbiB0b29sa2l0IChjYXRlZ29yaWVzL2xpc3QvZGVzY3JpYmUvcnVuKQogIC9hcGkvYWxsYyAgICAgICAgIDEwLDAwMCsgbWVudSBjYXRhbG9nCiAgL2FwaS9hdXRvYWxsYyAgICAgMTAsMDAwKyBhdXRvbWF0aW9uIGNhdGFsb2cKIiIiCgpmcm9tIF9fZnV0dXJlX18gaW1wb3J0IGFubm90YXRpb25zCgppbXBvcnQganNvbgpmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKZnJvbSB0eXBpbmcgaW1wb3J0IEFueSwgRGljdCwgTGlzdCwgT3B0aW9uYWwKCmZyb20gZmFzdGFwaSBpbXBvcnQgRmFzdEFQSSwgSFRUUEV4Y2VwdGlvbgpmcm9tIGZhc3RhcGkubWlkZGxld2FyZS5jb3JzIGltcG9ydCBDT1JTTWlkZGxld2FyZQpmcm9tIGZhc3RhcGkucmVzcG9uc2VzIGltcG9ydCBGaWxlUmVzcG9uc2UsIEpTT05SZXNwb25zZQpmcm9tIGZhc3RhcGkuc3RhdGljZmlsZXMgaW1wb3J0IFN0YXRpY0ZpbGVzCmZyb20gcHlkYW50aWMgaW1wb3J0IEJhc2VNb2RlbAoKZnJvbSBhd2VhaSBpbXBvcnQgX192ZXJzaW9uX18KZnJvbSBhd2VhaS5wb3J0cyBpbXBvcnQgcmVzb2x2ZV9wb3J0CgpTVEFUSUNfRElSID0gUGF0aChfX2ZpbGVfXykucGFyZW50IC8gInN0YXRpYyIKCgpjbGFzcyBUcmFpblJlcXVlc3QoQmFzZU1vZGVsKToKICAgIG1vZGVsX3R5cGU6IHN0ciA9ICJtbHAiCiAgICBuYW1lOiBzdHIgPSAibW9kZWxfMSIKICAgIGRhdGFfcGF0aDogT3B0aW9uYWxbc3RyXSA9IE5vbmUKICAgIHRhcmdldDogT3B0aW9uYWxbc3RyXSA9IE5vbmUKICAgIHRleHRfcGF0aDogT3B0aW9uYWxbc3RyXSA9IE5vbmUKICAgIHBhcmFtczogRGljdFtzdHIsIEFueV0gPSB7fQogICAgbm9ybWFsaXplOiBPcHRpb25hbFtzdHJdID0gTm9uZQoKCmNsYXNzIEV2YWxSZXF1ZXN0KEJhc2VNb2RlbCk6CiAgICBuYW1lOiBzdHIKICAgIGRhdGFfcGF0aDogT3B0aW9uYWxbc3RyXSA9IE5vbmUKICAgIHRhcmdldDogT3B0aW9uYWxbc3RyXSA9IE5vbmUKCgpjbGFzcyBFeHBvcnRSZXF1ZXN0KEJhc2VNb2RlbCk6CiAgICBuYW1lOiBzdHIKICAgIGZtdDogc3RyID0gImpzb24iCgoKY2xhc3MgRGVsZXRlUmVxdWVzdChCYXNlTW9kZWwpOgogICAgbmFtZTogc3RyCgoKY2xhc3MgRGF0YVJlcXVlc3QoQmFzZU1vZGVsKToKICAgIHBhdGg6IHN0cgogICAgdGFyZ2V0OiBPcHRpb25hbFtzdHJdID0gTm9uZQoKCmNsYXNzIEF1Z21lbnRSZXF1ZXN0KEJhc2VNb2RlbCk6CiAgICB0ZXh0czogTGlzdFtzdHJdCiAgICBuOiBpbnQgPSAxCgoKY2xhc3MgUmFnSW5kZXhSZXF1ZXN0KEJhc2VNb2RlbCk6CiAgICBwYXRoOiBPcHRpb25hbFtzdHJdID0gTm9uZQogICAgdGV4dHM6IE9wdGlvbmFsW0xpc3Rbc3RyXV0gPSBOb25lCgoKY2xhc3MgUmFnQXNrUmVxdWVzdChCYXNlTW9kZWwpOgogICAgcXVlcnk6IHN0cgogICAgdG9wX2s6IE9wdGlvbmFsW2ludF0gPSBOb25lCgoKY2xhc3MgQWN0aW9uUmVxdWVzdChCYXNlTW9kZWwpOgogICAgdGV4dDogc3RyCgoKY2xhc3MgQ29uZmlnUmVxdWVzdChCYXNlTW9kZWwpOgogICAga2V5OiBzdHIKICAgIHZhbHVlOiBBbnkgPSBOb25lCgoKY2xhc3MgUXVhbnRpemVSZXF1ZXN0KEJhc2VNb2RlbCk6CiAgICBuYW1lOiBzdHIKICAgIGZtdDogc3RyID0gImludDgiCgoKY2xhc3MgRWRnZUV4cG9ydFJlcXVlc3QoQmFzZU1vZGVsKToKICAgIG5hbWU6IHN0cgogICAgZm10OiBzdHIgPSAib25ueCIKICAgIHF1YW50aXplOiBPcHRpb25hbFtzdHJdID0gTm9uZQoKCmNsYXNzIE1hcmtldFJlcXVlc3QoQmFzZU1vZGVsKToKICAgIGFjdGlvbjogc3RyCiAgICBhcmc6IE9wdGlvbmFsW3N0cl0gPSBOb25lCiAgICB0YWc6IE9wdGlvbmFsW3N0cl0gPSBOb25lCiAgICBkZXNjcmlwdGlvbjogT3B0aW9uYWxbc3RyXSA9IE5vbmUKICAgIHN0YXJzOiBPcHRpb25hbFtmbG9hdF0gPSBOb25lCgoKY2xhc3MgVGVybWluYWxSZXF1ZXN0KEJhc2VNb2RlbCk6CiAgICBsaW5lOiBzdHIKCgpjbGFzcyBJbnRlZ3JhdGlvbkNoYXRSZXF1ZXN0KEJhc2VNb2RlbCk6CiAgICBwcm92aWRlcjogc3RyCiAgICBtZXNzYWdlOiBzdHIKCgpjbGFzcyBUb29sUnVuUmVxdWVzdChCYXNlTW9kZWwpOgogICAgbmFtZTogc3RyCiAgICBwYXJhbXM6IERpY3Rbc3RyLCBBbnldID0ge30KCgpkZWYgY3JlYXRlX2FwcCgpIC0+IEZhc3RBUEk6CiAgICBhcHAgPSBGYXN0QVBJKHRpdGxlPSJBV0VBSSDigJQgQUkgTW9kZWwgRmFjdG9yeSIsIHZlcnNpb249X192ZXJzaW9uX18sIGRvY3NfdXJsPSIvZG9jcyIsIHJlZG9jX3VybD0iL3JlZG9jIikKICAgIGFwcC5hZGRfbWlkZGxld2FyZSgKICAgICAgICBDT1JTTWlkZGxld2FyZSwKICAgICAgICBhbGxvd19vcmlnaW5zPVsiKiJdLAogICAgICAgIGFsbG93X2NyZWRlbnRpYWxzPVRydWUsCiAgICAgICAgYWxsb3dfbWV0aG9kcz1bIioiXSwKICAgICAgICBhbGxvd19oZWFkZXJzPVsiKiJdLAogICAgKQoKICAgIEBhcHAuZ2V0KCIvIikKICAgIGRlZiBpbmRleCgpOgogICAgICAgIHJldHVybiBGaWxlUmVzcG9uc2UoU1RBVElDX0RJUiAvICJpbmRleC5odG1sIikKCiAgICBhcHAubW91bnQoIi9zdGF0aWMiLCBTdGF0aWNGaWxlcyhkaXJlY3Rvcnk9c3RyKFNUQVRJQ19ESVIpKSwgbmFtZT0ic3RhdGljIikKCiAgICBAYXBwLmdldCgiL2FwaS9oZWFsdGgiKQogICAgZGVmIGhlYWx0aCgpOgogICAgICAgIHJldHVybiB7InN0YXR1cyI6ICJvayIsICJ2ZXJzaW9uIjogX192ZXJzaW9uX18sICJuYW1lIjogIkFXRUFJIE1vZGVsIEZhY3RvcnkifQoKICAgIEBhcHAuZ2V0KCIvYXBpL2VudiIpCiAgICBkZWYgYXBpX2VudigpOgogICAgICAgICIiIkVudmlyb25tZW50IGRldGVjdGlvbiBmb3IgYW55LWRldmljZSBjb21wYXRpYmlsaXR5LgoKICAgICAgICBSZXBvcnRzIHdoZXJlIHRoZSBhcHAgaXMgcnVubmluZyAobG9jYWxob3N0IC8gTEFOIC8gY2xvdWQgLyBjb250YWluZXIgLwogICAgICAgIHBob25lKSwgdGhlIHJlc29sdmVkIGhvc3QvcG9ydCwgb25saW5lIHN0YXR1cyBhbmQgY29ubmVjdGl2aXR5LCBzbyB0aGUKICAgICAgICBVSSBjYW4gYWRhcHQgKG9mZmxpbmUvb25saW5lIGZhbGxiYWNrLCBDT1JTLCBwb3J0IGhpbnRzKS4KICAgICAgICAiIiIKICAgICAgICBpbXBvcnQgb3MKICAgICAgICBpbXBvcnQgcGxhdGZvcm0KICAgICAgICBpbXBvcnQgc29ja2V0CgogICAgICAgIGhvc3RuYW1lID0gc29ja2V0LmdldGhvc3RuYW1lKCkKICAgICAgICBtb2RlID0gImNsb3VkIgogICAgICAgIHRyeToKICAgICAgICAgICAgaG9zdF9pcHMgPSB7aVs0XVswXSBmb3IgaSBpbiBzb2NrZXQuZ2V0YWRkcmluZm8oaG9zdG5hbWUsIE5vbmUsIHNvY2tldC5BRl9JTkVUKX0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uOgogICAgICAgICAgICBob3N0X2lwcyA9IHNldCgpCiAgICAgICAgbG9jYWxfbG9vcCA9IHsiMTI3LjAuMC4xIiwgIjo6MSJ9CiAgICAgICAgY29udGFpbmVyID0gYm9vbChvcy5wYXRoLmV4aXN0cygiLy5kb2NrZXJlbnYiKSkKICAgICAgICBtb2RlID0gImNvbnRhaW5lciIgaWYgY29udGFpbmVyIGVsc2UgKCJsb2NhbGhvc3QiIGlmIGhvc3RfaXBzIDw9IGxvY2FsX2xvb3AgZWxzZSAibGFuIikKICAgICAgICBvbmxpbmUgPSBGYWxzZQogICAgICAgIHRyeToKICAgICAgICAgICAgd2l0aCBzb2NrZXQuY3JlYXRlX2Nvbm5lY3Rpb24oKCI4LjguOC44IiwgNTMpLCB0aW1lb3V0PTMpOgogICAgICAgICAgICAgICAgb25saW5lID0gVHJ1ZQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb246CiAgICAgICAgICAgIG9ubGluZSA9IEZhbHNlCiAgICAgICAgcmV0dXJuIHsKICAgICAgICAgICAgIm9rIjogVHJ1ZSwKICAgICAgICAgICAgImVudiI6IHsKICAgICAgICAgICAgICAgICJtb2RlIjogbW9kZSwKICAgICAgICAgICAgICAgICJjb250YWluZXIiOiBjb250YWluZXIsCiAgICAgICAgICAgICAgICAiaG9zdG5hbWUiOiBob3N0bmFtZSwKICAgICAgICAgICAgICAgICJob3N0X2lwcyI6IHNvcnRlZChob3N0X2lwcyksCiAgICAgICAgICAgICAgICAicGxhdGZvcm0iOiBwbGF0Zm9ybS5zeXN0ZW0oKSwKICAgICAgICAgICAgICAgICJweXRob24iOiBwbGF0Zm9ybS5weXRob25fdmVyc2lvbigpLAogICAgICAgICAgICAgICAgImN3ZCI6IG9zLmdldGN3ZCgpLAogICAgICAgICAgICAgICAgIm9ubGluZSI6IG9ubGluZSwKICAgICAgICAgICAgICAgICJvZmZsaW5lX2ZhbGxiYWNrIjogVHJ1ZSwKICAgICAgICAgICAgICAgICJjb3JzIjogIioiLAogICAgICAgICAgICAgICAgImJpbmQiOiAiMC4wLjAuMCIsCiAgICAgICAgICAgICAgICAicG9ydF9oaW50IjogcmVzb2x2ZV9wb3J0KDg4ODgsICIwLjAuMC4wIiksCiAgICAgICAgICAgIH0sCiAgICAgICAgfQoKICAgIEBhcHAuZ2V0KCIvYXBpL2hhcmR3YXJlIikKICAgIGRlZiBhcGlfaGFyZHdhcmUoKToKICAgICAgICBmcm9tIGF3ZWFpLmhhcmR3YXJlIGltcG9ydCBkZXRlY3QKICAgICAgICBmcm9tIGF3ZWFpLnNlbGVjdG9yIGltcG9ydCByZWNvbW1lbmQKCiAgICAgICAgaHcgPSBkZXRlY3QoKQogICAgICAgIHJldHVybiB7ImhhcmR3YXJlIjogaHcudG9fZGljdCgpLCAicmVjb21tZW5kYXRpb24iOiByZWNvbW1lbmQoImNsYXNzaWZpY2F0aW9uIiwgaHcpfQoKICAgIEBhcHAuZ2V0KCIvYXBpL21vZGVsLXR5cGVzIikKICAgIGRlZiBhcGlfbW9kZWxfdHlwZXMoKToKICAgICAgICBmcm9tIGF3ZWFpLm1vZGVscy5yZWdpc3RyeSBpbXBvcnQgTU9ERUxfVFlQRVMKCiAgICAgICAgcmV0dXJuIHsidHlwZXMiOiBbeyJuYW1lIjogaywgInRhc2siOiB2WyJ0YXNrIl0sICJkZXNjIjogdlsiZGVzYyJdfSBmb3IgaywgdiBpbiBNT0RFTF9UWVBFUy5pdGVtcygpXX0KCiAgICBAYXBwLmdldCgiL2FwaS9tb2RlbHMiKQogICAgZGVmIGFwaV9tb2RlbHMoKToKICAgICAgICBmcm9tIGF3ZWFpLm1hbmFnZW1lbnQgaW1wb3J0IGxpc3RfbW9kZWxzCgogICAgICAgIHJldHVybiB7Im1vZGVscyI6IGxpc3RfbW9kZWxzKCl9CgogICAgQGFwcC5wb3N0KCIvYXBpL21vZGVscy90cmFpbiIpCiAgICBkZWYgYXBpX3RyYWluKHJlcTogVHJhaW5SZXF1ZXN0KToKICAgICAgICBmcm9tIGF3ZWFpLnRyYWluIGltcG9ydCB0cmFpbgoKICAgICAgICB0cnk6CiAgICAgICAgICAgIHJlcyA9IHRyYWluKAogICAgICAgICAgICAgICAgcmVxLm1vZGVsX3R5cGUsIHJlcS5uYW1lLCBkYXRhX3BhdGg9cmVxLmRhdGFfcGF0aCwgdGV4dF9wYXRoPXJlcS50ZXh0X3BhdGgsCiAgICAgICAgICAgICAgICB0YXJnZXQ9cmVxLnRhcmdldCwgcGFyYW1zPWRpY3QocmVxLnBhcmFtcyksIG5vcm1hbGl6ZT1yZXEubm9ybWFsaXplLAogICAgICAgICAgICApCiAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IHJlc30KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAucG9zdCgiL2FwaS9tb2RlbHMvZXZhbCIpCiAgICBkZWYgYXBpX2V2YWwocmVxOiBFdmFsUmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS5kYXRhIGltcG9ydCBsb2FkX2FueQogICAgICAgIGZyb20gYXdlYWkuZXZhbCBpbXBvcnQgY2xhc3NpZmljYXRpb25fcmVwb3J0CiAgICAgICAgZnJvbSBhd2VhaS5tYW5hZ2VtZW50IGltcG9ydCBsb2FkX21vZGVsCgogICAgICAgIHRyeToKICAgICAgICAgICAgbW9kZWwsIG1ldGEgPSBsb2FkX21vZGVsKHJlcS5uYW1lKQogICAgICAgICAgICBpZiByZXEuZGF0YV9wYXRoOgogICAgICAgICAgICAgICAgZHMgPSBsb2FkX2FueShyZXEuZGF0YV9wYXRoLCB0YXJnZXRfY29sdW1uPXJlcS50YXJnZXQgb3IgTm9uZSkKICAgICAgICAgICAgICAgIHByZWQgPSBtb2RlbC5wcmVkaWN0KGRzLlggaWYgZHMuWCBpcyBub3QgTm9uZSBlbHNlIGRzLnRleHRzKQogICAgICAgICAgICAgICAgcmVwb3J0ID0gY2xhc3NpZmljYXRpb25fcmVwb3J0KGRzLnksIHByZWQpIGlmIGRzLnkgaXMgbm90IE5vbmUgZWxzZSB7InByZWQiOiBwcmVkLnRvbGlzdCgpfQogICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgcmVwb3J0ID0geyJtZXRyaWNzIjogbWV0YS5nZXQoIm1ldHJpY3MiLCB7fSl9CiAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IHJlcG9ydH0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAucG9zdCgiL2FwaS9tb2RlbHMvZXhwb3J0IikKICAgIGRlZiBhcGlfZXhwb3J0KHJlcTogRXhwb3J0UmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS5tYW5hZ2VtZW50IGltcG9ydCBleHBvcnRfbW9kZWwKCiAgICAgICAgdHJ5OgogICAgICAgICAgICByZXR1cm4geyJvayI6IFRydWUsICJyZXN1bHQiOiBleHBvcnRfbW9kZWwocmVxLm5hbWUsIGZtdD1yZXEuZm10KX0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAucG9zdCgiL2FwaS9tb2RlbHMvZGVsZXRlIikKICAgIGRlZiBhcGlfZGVsZXRlKHJlcTogRGVsZXRlUmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS5tYW5hZ2VtZW50IGltcG9ydCBkZWxldGVfbW9kZWwKCiAgICAgICAgdHJ5OgogICAgICAgICAgICByZXR1cm4geyJvayI6IFRydWUsICJyZXN1bHQiOiB7ImRlbGV0ZWQiOiBkZWxldGVfbW9kZWwocmVxLm5hbWUpfX0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAucG9zdCgiL2FwaS9kYXRhL2xvYWQiKQogICAgZGVmIGFwaV9kYXRhX2xvYWQocmVxOiBEYXRhUmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS5kYXRhIGltcG9ydCBsb2FkX2FueQoKICAgICAgICB0cnk6CiAgICAgICAgICAgIGRzID0gbG9hZF9hbnkocmVxLnBhdGgsIHRhcmdldF9jb2x1bW49cmVxLnRhcmdldCBvciBOb25lKQogICAgICAgICAgICByZXR1cm4geyJvayI6IFRydWUsICJyZXN1bHQiOiBkcy50b19kaWN0KCl9CiAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgICAgICByYWlzZSBIVFRQRXhjZXB0aW9uKHN0YXR1c19jb2RlPTQwMCwgZGV0YWlsPXN0cihlKSkKCiAgICBAYXBwLnBvc3QoIi9hcGkvZGF0YS9hdWdtZW50IikKICAgIGRlZiBhcGlfZGF0YV9hdWdtZW50KHJlcTogQXVnbWVudFJlcXVlc3QpOgogICAgICAgIGZyb20gYXdlYWkuZGF0YSBpbXBvcnQgdGV4dF9hdWdtZW50CgogICAgICAgIHRyeToKICAgICAgICAgICAgb3V0ID0gW3QgZm9yIHR4dCBpbiByZXEudGV4dHMgZm9yIHQgaW4gdGV4dF9hdWdtZW50KHR4dCwgbj1yZXEubildCiAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IHsiYXVnbWVudGVkIjogb3V0fX0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAucG9zdCgiL2FwaS9yYWcvaW5kZXgiKQogICAgZGVmIGFwaV9yYWdfaW5kZXgocmVxOiBSYWdJbmRleFJlcXVlc3QpOgogICAgICAgIGZyb20gYXdlYWkucmFnIGltcG9ydCBSQUdFbmdpbmUKCiAgICAgICAgdHJ5OgogICAgICAgICAgICBlbmcgPSBSQUdFbmdpbmUoKQogICAgICAgICAgICBpZiByZXEucGF0aDoKICAgICAgICAgICAgICAgIHJlcyA9IGVuZy5pbmRleF9kaXJlY3RvcnkocmVxLnBhdGgpCiAgICAgICAgICAgIGVsc2U6CiAgICAgICAgICAgICAgICByZXMgPSBlbmcuaW5kZXhfZG9jdW1lbnRzKHJlcS50ZXh0cyBvciBbXSkKICAgICAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlLCAicmVzdWx0IjogcmVzfQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgcmFpc2UgSFRUUEV4Y2VwdGlvbihzdGF0dXNfY29kZT00MDAsIGRldGFpbD1zdHIoZSkpCgogICAgQGFwcC5wb3N0KCIvYXBpL3JhZy9hc2siKQogICAgZGVmIGFwaV9yYWdfYXNrKHJlcTogUmFnQXNrUmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS5yYWcgaW1wb3J0IFJBR0VuZ2luZQoKICAgICAgICB0cnk6CiAgICAgICAgICAgIGVuZyA9IFJBR0VuZ2luZSgpCiAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IGVuZy5hc2socmVxLnF1ZXJ5LCB0b3Bfaz1yZXEudG9wX2spfQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgcmFpc2UgSFRUUEV4Y2VwdGlvbihzdGF0dXNfY29kZT00MDAsIGRldGFpbD1zdHIoZSkpCgogICAgQGFwcC5wb3N0KCIvYXBpL2FjdGlvbnMvcnVuIikKICAgIGRlZiBhcGlfYWN0aW9ucyhyZXE6IEFjdGlvblJlcXVlc3QpOgogICAgICAgIGZyb20gYXdlYWkuYWN0aW9ucyBpbXBvcnQgcnVuX2FjdGlvbgoKICAgICAgICB0cnk6CiAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IHJ1bl9hY3Rpb24ocmVxLnRleHQpfQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgcmFpc2UgSFRUUEV4Y2VwdGlvbihzdGF0dXNfY29kZT00MDAsIGRldGFpbD1zdHIoZSkpCgogICAgQGFwcC5wb3N0KCIvYXBpL2F1dG90ZXN0IikKICAgIGRlZiBhcGlfYXV0b3Rlc3QocXVpY2s6IGJvb2wgPSBGYWxzZSwgbm9fdWk6IGJvb2wgPSBGYWxzZSk6CiAgICAgICAgZnJvbSBhd2VhaS5hdXRvdGVzdCBpbXBvcnQgcnVuX2F1dG90ZXN0CgogICAgICAgIHJlcG9ydCA9IHJ1bl9hdXRvdGVzdChxdWljaz1xdWljaywgbm9fdWk9bm9fdWksIHZlcmJvc2U9RmFsc2UpCiAgICAgICAgcmV0dXJuIHJlcG9ydAoKICAgIEBhcHAuZ2V0KCIvYXBpL2xhbmd1YWdlcyIpCiAgICBkZWYgYXBpX2xhbmd1YWdlcygpOgogICAgICAgIGZyb20gYXdlYWkuaTE4biBpbXBvcnQgbGFuZ3VhZ2VfbmFtZXMKCiAgICAgICAgcmV0dXJuIHsibGFuZ3VhZ2VzIjogbGFuZ3VhZ2VfbmFtZXMoKX0KCiAgICBAYXBwLmdldCgiL2FwaS9jb25maWciKQogICAgZGVmIGFwaV9jb25maWdfZ2V0KCk6CiAgICAgICAgZnJvbSBhd2VhaS5jb25maWcgaW1wb3J0IGdldF9jb25maWcKCiAgICAgICAgcmV0dXJuIHsiY29uZmlnIjogZ2V0X2NvbmZpZygpLmFsbCgpfQoKICAgIEBhcHAucG9zdCgiL2FwaS9jb25maWciKQogICAgZGVmIGFwaV9jb25maWdfc2V0KHJlcTogQ29uZmlnUmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS5jb25maWcgaW1wb3J0IGdldF9jb25maWcKCiAgICAgICAgdHJ5OgogICAgICAgICAgICBnZXRfY29uZmlnKCkuc2V0KHJlcS5rZXksIHJlcS52YWx1ZSkKICAgICAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlfQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgcmFpc2UgSFRUUEV4Y2VwdGlvbihzdGF0dXNfY29kZT00MDAsIGRldGFpbD1zdHIoZSkpCgogICAgQGFwcC5wb3N0KCIvYXBpL3F1YW50aXplIikKICAgIGRlZiBhcGlfcXVhbnRpemUocmVxOiBRdWFudGl6ZVJlcXVlc3QpOgogICAgICAgIGZyb20gYXdlYWkucXVhbnRpemUgaW1wb3J0IHF1YW50aXplX21vZGVsCgogICAgICAgIHRyeToKICAgICAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlLCAicmVzdWx0IjogcXVhbnRpemVfbW9kZWwocmVxLm5hbWUsIGZtdD1yZXEuZm10KX0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAucG9zdCgiL2FwaS9leHBvcnQvZWRnZSIpCiAgICBkZWYgYXBpX2V4cG9ydF9lZGdlKHJlcTogRWRnZUV4cG9ydFJlcXVlc3QpOgogICAgICAgIGZyb20gYXdlYWkuZXhwb3J0IGltcG9ydCBleHBvcnRfZWRnZQoKICAgICAgICB0cnk6CiAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IGV4cG9ydF9lZGdlKHJlcS5uYW1lLCBmbXQ9cmVxLmZtdCwgcXVhbnRpemU9cmVxLnF1YW50aXplKX0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAuZ2V0KCIvYXBpL2VkZ2UvZm9vdHByaW50IikKICAgIGRlZiBhcGlfZWRnZV9mb290cHJpbnQobmFtZTogc3RyKToKICAgICAgICBmcm9tIGF3ZWFpLmV4cG9ydCBpbXBvcnQgZXN0aW1hdGVfZWRnZV9mb290cHJpbnQKCiAgICAgICAgdHJ5OgogICAgICAgICAgICByZXR1cm4geyJvayI6IFRydWUsICJyZXN1bHQiOiBlc3RpbWF0ZV9lZGdlX2Zvb3RwcmludChuYW1lKX0KICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHJhaXNlIEhUVFBFeGNlcHRpb24oc3RhdHVzX2NvZGU9NDAwLCBkZXRhaWw9c3RyKGUpKQoKICAgIEBhcHAucG9zdCgiL2FwaS9tYXJrZXQiKQogICAgZGVmIGFwaV9tYXJrZXQocmVxOiBNYXJrZXRSZXF1ZXN0KToKICAgICAgICBmcm9tIGF3ZWFpIGltcG9ydCBtYXJrZXQgYXMgbWt0CgogICAgICAgIHRyeToKICAgICAgICAgICAgaWYgcmVxLmFjdGlvbiA9PSAicHVibGlzaCI6CiAgICAgICAgICAgICAgICByZXR1cm4geyJvayI6IFRydWUsICJyZXN1bHQiOiBta3QucHVibGlzaChyZXEuYXJnIG9yICIiLCB0YWc9cmVxLnRhZyBvciAidjEiLCBkZXNjcmlwdGlvbj1yZXEuZGVzY3JpcHRpb24gb3IgIiIpfQogICAgICAgICAgICBpZiByZXEuYWN0aW9uID09ICJzZWFyY2giOgogICAgICAgICAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlLCAicmVzdWx0IjogbWt0LnNlYXJjaChyZXEuYXJnIG9yICIiKX0KICAgICAgICAgICAgaWYgcmVxLmFjdGlvbiA9PSAibGlzdCI6CiAgICAgICAgICAgICAgICByZXR1cm4geyJvayI6IFRydWUsICJyZXN1bHQiOiBta3QubGlzdF9saXN0aW5ncygpfQogICAgICAgICAgICBpZiByZXEuYWN0aW9uID09ICJpbmZvIjoKICAgICAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IG1rdC5pbmZvKHJlcS5hcmcgb3IgIiIpfQogICAgICAgICAgICBpZiByZXEuYWN0aW9uID09ICJkb3dubG9hZCI6CiAgICAgICAgICAgICAgICByZXR1cm4geyJvayI6IFRydWUsICJyZXN1bHQiOiBta3QuZG93bmxvYWQocmVxLmFyZyBvciAiIil9CiAgICAgICAgICAgIGlmIHJlcS5hY3Rpb24gPT0gInJhdGUiOgogICAgICAgICAgICAgICAgcGFydHMgPSAocmVxLmFyZyBvciAiIikuc3BsaXQoKQogICAgICAgICAgICAgICAgaWYgbGVuKHBhcnRzKSA8IDI6CiAgICAgICAgICAgICAgICAgICAgcmFpc2UgVmFsdWVFcnJvcigicmF0ZSByZXF1aXJlcyA8aWQ+IDxzdGFycz4iKQogICAgICAgICAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlLCAicmVzdWx0IjogbWt0LnJhdGUocGFydHNbMF0sIGZsb2F0KHBhcnRzWzFdKSl9CiAgICAgICAgICAgIGlmIHJlcS5hY3Rpb24gPT0gInN0YXRzIjoKICAgICAgICAgICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IG1rdC5zdGF0cygpfQogICAgICAgICAgICByYWlzZSBWYWx1ZUVycm9yKGYiVW5rbm93biBtYXJrZXQgYWN0aW9uOiB7cmVxLmFjdGlvbn0iKQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgcmFpc2UgSFRUUEV4Y2VwdGlvbihzdGF0dXNfY29kZT00MDAsIGRldGFpbD1zdHIoZSkpCgogICAgQGFwcC5nZXQoIi9hcGkvaW50ZWdyYXRpb25zIikKICAgIGRlZiBhcGlfaW50ZWdyYXRpb25zKCk6CiAgICAgICAgZnJvbSBhd2VhaS5pbnRlZ3JhdGlvbnMgaW1wb3J0IGxpc3RfdG9vbHMKCiAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlLCAicmVzdWx0IjogbGlzdF90b29scygpfQoKICAgIEBhcHAucG9zdCgiL2FwaS9pbnRlZ3JhdGlvbnMvY2hhdCIpCiAgICBkZWYgYXBpX2ludGVncmF0aW9uc19jaGF0KHJlcTogSW50ZWdyYXRpb25DaGF0UmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS5pbnRlZ3JhdGlvbnMgaW1wb3J0IGNoYXQKCiAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlLCAicmVzdWx0IjogY2hhdChyZXEucHJvdmlkZXIsIHJlcS5tZXNzYWdlKX0KCiAgICBAYXBwLnBvc3QoIi9hcGkvdGVybWluYWwiKQogICAgZGVmIGFwaV90ZXJtaW5hbChyZXE6IFRlcm1pbmFsUmVxdWVzdCk6CiAgICAgICAgZnJvbSBhd2VhaS50ZXJtaW5hbCBpbXBvcnQgcnVuIGFzIHRlcm1fcnVuCgogICAgICAgIHJldHVybiB7Im9rIjogVHJ1ZSwgInJlc3VsdCI6IHRlcm1fcnVuKHJlcS5saW5lKX0KCiAgICBAYXBwLmdldCgiL2FwaS9hbGxjIikKICAgIGRlZiBhcGlfYWxsYyhzZWFyY2g6IHN0ciA9ICIiLCBjYXRlZ29yeTogc3RyID0gIiIsIGNvdW50OiBpbnQgPSA1MCk6CiAgICAgICAgZnJvbSBhd2VhaS5tZW51cyBpbXBvcnQgYnVpbGRfY2F0YWxvZywgc2VhcmNoX2NhdGFsb2cKCiAgICAgICAgaXRlbXMgPSBidWlsZF9jYXRhbG9nKG1pbl9jb3VudD0xMDAwMCkKICAgICAgICBpZiBzZWFyY2ggb3IgY2F0ZWdvcnk6CiAgICAgICAgICAgIGl0ZW1zID0gc2VhcmNoX2NhdGFsb2coaXRlbXMsIHF1ZXJ5PXNlYXJjaCwgY2F0ZWdvcnk9Y2F0ZWdvcnkpCiAgICAgICAgcmV0dXJuIHsib2siOiBUcnVlLCAidG90YWwiOiBsZW4oaXRlbXMpLCAiaXRlbXMiOiBpdGVtc1s6Y291bnRdfQoKICAgIEBhcHAuZ2V0KCIvYXBpL3Rvb2xzIikKICAgIGRlZiBhcGlfdG9vbHMoY2Ftegp
+"""AWEAI UI — powerful browser interface for the model factory.
+
+Endpoints:
+  /                 SPA (index.html)
+  /api/health       health check
+  /api/hardware     hardware + recommendation
+  /api/model-types  list model types
+  /api/models       list zoo models
+  /api/models/train create+train a model
+  /api/models/eval  evaluate a model
+  /api/models/export export a model
+  /api/models/delete delete a model
+  /api/data/load    load dataset info
+  /api/data/augment augment texts
+  /api/rag/index    index documents
+  /api/rag/ask      ask RAG
+  /api/actions/run  run natural-language action
+  /api/autotest     run autotest (the Autotest button)
+  /api/languages    list languages
+  /api/config       get/set config
+  /api/quantize     quantize a model
+  /api/export/edge  edge export
+  /api/edge/footprint  edge footprint estimate
+  /api/market       marketplace (publish/search/list/info/download/rate/stats)
+  /api/integrations AI-tool integrations list
+  /api/integrations/chat  chat via a provider
+  /api/terminal     in-app terminal
+  /api/allc         10,000+ command catalog
+  /api/autoallc     10,000+ automation catalog
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+from aweai import __version__
+from aweai.ports import resolve_port
+
+STATIC_DIR = Path(__file__).parent / "static"
+
+
+class TrainRequest(BaseModel):
+    model_type: str = "mlp"
+    name: str = "model_1"
+    data_path: Optional[str] = None
+    target: Optional[str] = None
+    text_path: Optional[str] = None
+    params: Dict[str, Any] = {}
+    normalize: Optional[str] = None
+
+
+class EvalRequest(BaseModel):
+    name: str
+    data_path: Optional[str] = None
+    target: Optional[str] = None
+
+
+class ExportRequest(BaseModel):
+    name: str
+    fmt: str = "json"
+
+
+class DeleteRequest(BaseModel):
+    name: str
+
+
+class DataRequest(BaseModel):
+    path: str
+    target: Optional[str] = None
+
+
+class AugmentRequest(BaseModel):
+    texts: List[str]
+    n: int = 1
+
+
+class RagIndexRequest(BaseModel):
+    path: Optional[str] = None
+    texts: Optional[List[str]] = None
+
+
+class RagAskRequest(BaseModel):
+    query: str
+    top_k: Optional[int] = None
+
+
+class ActionRequest(BaseModel):
+    text: str
+
+
+class ConfigRequest(BaseModel):
+    key: str
+    value: Any = None
+
+
+class QuantizeRequest(BaseModel):
+    name: str
+    fmt: str = "int8"
+
+
+class EdgeExportRequest(BaseModel):
+    name: str
+    fmt: str = "onnx"
+    quantize: Optional[str] = None
+
+
+class MarketRequest(BaseModel):
+    action: str
+    arg: Optional[str] = None
+    tag: Optional[str] = None
+    description: Optional[str] = None
+    stars: Optional[float] = None
+
+
+class TerminalRequest(BaseModel):
+    line: str
+
+
+class IntegrationChatRequest(BaseModel):
+    provider: str
+    message: str
+
+
+class ToolRunRequest(BaseModel):
+    name: str
+    params: Dict[str, Any] = {}
+
+
+def create_app() -> FastAPI:
+    app = FastAPI(title="AWEAI — AI Model Factory", version=__version__, docs_url="/docs", redoc_url="/redoc")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    @app.get("/")
+    def index():
+        return FileResponse(STATIC_DIR / "index.html")
+
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    @app.get("/api/health")
+    def health():
+        return {"status": "ok", "version": __version__, "name": "AWEAI Model Factory"}
+
+    @app.get("/api/env")
+    def api_env():
+        """Environment detection for any-device compatibility.
+
+        Reports where the app is running (localhost / LAN / cloud / container /
+        phone), the resolved host/port, online status and connectivity, so the
+        UI can adapt (offline/online fallback, CORS, port hints).
+        """
+        import os
+        import platform
+        import socket
+
+        hostname = socket.gethostname()
+        mode = "cloud"
+        try:
+            host_ips = {i[4][0] for i in socket.getaddrinfo(hostname, None, socket.AF_INET)}
+        except Exception:
+            host_ips = set()
+        local_loop = {"127.0.0.1", "::1"}
+        container = bool(os.path.exists("/.dockerenv"))
+        mode = "container" if container else ("localhost" if host_ips <= local_loop else "lan")
+        online = False
+        try:
+            with socket.create_connection(("8.8.8.8", 53), timeout=3):
+                online = True
+        except Exception:
+            online = False
+        return {
+            "ok": True,
+            "env": {
+                "mode": mode,
+                "container": container,
+                "hostname": hostname,
+                "host_ips": sorted(host_ips),
+                "platform": platform.system(),
+                "python": platform.python_version(),
+                "cwd": os.getcwd(),
+                "online": online,
+                "offline_fallback": True,
+                "cors": "*",
+                "bind": "0.0.0.0",
+                "port_hint": resolve_port(8888, "0.0.0.0"),
+            },
+        }
+
+    @app.get("/api/hardware")
+    def api_hardware():
+        from aweai.hardware import detect
+        from aweai.selector import recommend
+
+        hw = detect()
+        return {"hardware": hw.to_dict(), "recommendation": recommend("classification", hw)}
+
+    @app.get("/api/model-types")
+    def api_model_types():
+        from aweai.models.registry import MODEL_TYPES
+
+        return {"types": [{"name": k, "task": v["task"], "desc": v["desc"]} for k, v in MODEL_TYPES.items()]}
+
+    @app.get("/api/models")
+    def api_models():
+        from aweai.management import list_models
+
+        return {"models": list_models()}
+
+    @app.post("/api/models/train")
+    def api_train(req: TrainRequest):
+        from aweai.train import train
+
+        try:
+            res = train(
+                req.model_type, req.name, data_path=req.data_path, text_path=req.text_path,
+                target=req.target, params=dict(req.params), normalize=req.normalize,
+            )
+            return {"ok": True, "result": res}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/models/eval")
+    def api_eval(req: EvalRequest):
+        from aweai.data import load_any
+        from aweai.eval import classification_report
+        from aweai.management import load_model
+
+        try:
+            model, meta = load_model(req.name)
+            if req.data_path:
+                ds = load_any(req.data_path, target_column=req.target or None)
+                pred = model.predict(ds.X if ds.X is not None else ds.texts)
+                report = classification_report(ds.y, pred) if ds.y is not None else {"pred": pred.tolist()}
+            else:
+                report = {"metrics": meta.get("metrics", {})}
+            return {"ok": True, "result": report}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/models/export")
+    def api_export(req: ExportRequest):
+        from aweai.management import export_model
+
+        try:
+            return {"ok": True, "result": export_model(req.name, fmt=req.fmt)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/models/delete")
+    def api_delete(req: DeleteRequest):
+        from aweai.management import delete_model
+
+        try:
+            return {"ok": True, "result": {"deleted": delete_model(req.name)}}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/data/load")
+    def api_data_load(req: DataRequest):
+        from aweai.data import load_any
+
+        try:
+            ds = load_any(req.path, target_column=req.target or None)
+            return {"ok": True, "result": ds.to_dict()}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/data/augment")
+    def api_data_augment(req: AugmentRequest):
+        from aweai.data import text_augment
+
+        try:
+            out = [t for txt in req.texts for t in text_augment(txt, n=req.n)]
+            return {"ok": True, "result": {"augmented": out}}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/rag/index")
+    def api_rag_index(req: RagIndexRequest):
+        from aweai.rag import RAGEngine
+
+        try:
+            eng = RAGEngine()
+            if req.path:
+                res = eng.index_directory(req.path)
+            else:
+                res = eng.index_documents(req.texts or [])
+            return {"ok": True, "result": res}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/rag/ask")
+    def api_rag_ask(req: RagAskRequest):
+        from aweai.rag import RAGEngine
+
+        try:
+            eng = RAGEngine()
+            return {"ok": True, "result": eng.ask(req.query, top_k=req.top_k)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/actions/run")
+    def api_actions(req: ActionRequest):
+        from aweai.actions import run_action
+
+        try:
+            return {"ok": True, "result": run_action(req.text)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/autotest")
+    def api_autotest(quick: bool = False, no_ui: bool = False):
+        from aweai.autotest import run_autotest
+
+        report = run_autotest(quick=quick, no_ui=no_ui, verbose=False)
+        return report
+
+    @app.get("/api/languages")
+    def api_languages():
+        from aweai.i18n import language_names
+
+        return {"languages": language_names()}
+
+    @app.get("/api/config")
+    def api_config_get():
+        from aweai.config import get_config
+
+        return {"config": get_config().all()}
+
+    @app.post("/api/config")
+    def api_config_set(req: ConfigRequest):
+        from aweai.config import get_config
+
+        try:
+            get_config().set(req.key, req.value)
+            return {"ok": True}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/quantize")
+    def api_quantize(req: QuantizeRequest):
+        from aweai.quantize import quantize_model
+
+        try:
+            return {"ok": True, "result": quantize_model(req.name, fmt=req.fmt)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/export/edge")
+    def api_export_edge(req: EdgeExportRequest):
+        from aweai.export import export_edge
+
+        try:
+            return {"ok": True, "result": export_edge(req.name, fmt=req.fmt, quantize=req.quantize)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.get("/api/edge/footprint")
+    def api_edge_footprint(name: str):
+        from aweai.export import estimate_edge_footprint
+
+        try:
+            return {"ok": True, "result": estimate_edge_footprint(name)}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.post("/api/market")
+    def api_market(req: MarketRequest):
+        from aweai import market as mkt
+
+        try:
+            if req.action == "publish":
+                return {"ok": True, "result": mkt.publish(req.arg or "", tag=req.tag or "v1", description=req.description or "")}
+            if req.action == "search":
+                return {"ok": True, "result": mkt.search(req.arg or "")}
+            if req.action == "list":
+                return {"ok": True, "result": mkt.list_listings()}
+            if req.action == "info":
+                return {"ok": True, "result": mkt.info(req.arg or "")}
+            if req.action == "download":
+                return {"ok": True, "result": mkt.download(req.arg or "")}
+            if req.action == "rate":
+                parts = (req.arg or "").split()
+                if len(parts) < 2:
+                    raise ValueError("rate requires <id> <stars>")
+                return {"ok": True, "result": mkt.rate(parts[0], float(parts[1]))}
+            if req.action == "stats":
+                return {"ok": True, "result": mkt.stats()}
+            raise ValueError(f"Unknown market action: {req.action}")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.get("/api/integrations")
+    def api_integrations():
+        from aweai.integrations import list_tools
+
+        return {"ok": True, "result": list_tools()}
+
+    @app.post("/api/integrations/chat")
+    def api_integrations_chat(req: IntegrationChatRequest):
+        from aweai.integrations import chat
+
+        return {"ok": True, "result": chat(req.provider, req.message)}
+
+    @app.post("/api/terminal")
+    def api_terminal(req: TerminalRequest):
+        from aweai.terminal import run as term_run
+
+        return {"ok": True, "result": term_run(req.line)}
+
+    @app.get("/api/allc")
+    def api_allc(search: str = "", category: str = "", count: int = 50):
+        from aweai.menus import build_catalog, search_catalog
+
+        items = build_catalog(min_count=10000)
+        if search or category:
+            items = search_catalog(items, query=search, category=category)
+        return {"ok": True, "total": len(items), "items": items[:count]}
+
+    @app.get("/api/tools")
+    def api_tools(category: str = ""):
+        from aweai.tools import list_categories, list_tools
+
+        if category:
+            return {"ok": True, "category": category, "tools": list_tools(category=category)}
+        return {"ok": True, "categories": list_categories(), "tools": list_tools(), "total": len(list_tools())}
+
+    @app.get("/api/tools/describe")
+    def api_tools_describe(name: str):
+        from aweai.tools import get_tool
+
+        meta = get_tool(name)
+        if meta is None:
+            raise HTTPException(status_code=404, detail=f"Unknown tool: {name}")
+        return {"ok": True, "tool": {k: v for k, v in meta.items() if k != "fn"}}
+
+    @app.post("/api/tools/run")
+    def api_tools_run(req: ToolRunRequest):
+        from aweai.tools import run_tool
+
+        try:
+            return run_tool(req.name, **dict(req.params or {}))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @app.get("/api/autoallc")
+    def api_autoallc(search: str = "", category: str = "", count: int = 50):
+        from aweai.menus import build_automations, search_catalog
+
+        items = build_automations(min_count=10000)
+        if search or category:
+            items = search_catalog(items, query=search, category=category)
+        return {"ok": True, "total": len(items), "items": items[:count]}
+
+    return app
+
+
+def serve(port: int = 8888, host: str = "0.0.0.0", open_browser: bool = True) -> None:
+    import threading
+    import webbrowser
+
+    import uvicorn
+
+    resolved = resolve_port(port, host)
+    print(f"AWEAI Model Factory UI → http://{host}:{resolved}  (docs at /docs)")
+    if open_browser and host in ("127.0.0.1", "localhost", "0.0.0.0"):
+        threading.Timer(1.0, lambda: webbrowser.open(f"http://127.0.0.1:{resolved}")).start()
+    uvicorn.run(create_app(), host=host, port=resolved, log_level="info")
