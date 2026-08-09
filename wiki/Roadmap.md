@@ -17,12 +17,14 @@
 - Distributed training (multi-GPU / multi-node / multi-thread)
 - Marketplace (publish / search / download / rate)
 - In-app terminal (`aweai terminal`), BYOK integrations
-- Megamenus: `aweai allc` = 10,000+ commands, `aweai autoallc` = 5,000+ automations
-- Release pipeline: APK (buildozer + NDK r26d), EXE / Linux / macOS / AppImage / web
+- Megamenus: `aweai allc` = 10,000+ commands, `aweai autoallc` = 10,000+ automations
+- Huge UI menu system (100,000+ pages/menus)
+- Release pipeline: EXE / Linux / macOS (arm64 + x86_64) / AppImage / web static
+- Android APK pipeline removed (web/desktop targets instead)
 
 ## v3.0.x (planned maintenance)
 - Keep CI green on the latest runner images
-- Reproducible Android builds (NDK/Python pins documented in buildozer.spec)
+- Optional mobile target via responsive web UI (PWA)
 
 ## v4.0 (idea backlog)
 - WASM/edge in-browser inference

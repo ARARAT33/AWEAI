@@ -27,8 +27,8 @@ aweai serve [--port N] [--host H]
 
 ## The 10,000+ command catalog
 
-- `aweai allc` prints **10,000 commands & instructions**, searchable by category and keyword.
-- `aweai autoallc` prints **5,000 automations** (pipelines, batch jobs, workflows).
+- `aweai allc` prints **10,000+ commands & instructions**, searchable by category and keyword.
+- `aweai autoallc` prints **10,000+ automations** (pipelines, batch jobs, workflows).
 - Options: `--category`, `--search`, `--count`, `--json`.
 
 ```bash

@@ -9,30 +9,15 @@ git tag v3.0.0
 git push origin v3.0.0
 ```
 
-Pushing a `v*` tag runs both workflows:
+Pushing a `v*` tag runs `.github/workflows/build-release.yml`:
 
-1. `.github/workflows/build-apk.yml` → Android APK
-2. `.github/workflows/build-release.yml` → Windows EXE, Linux binary, macOS app, AppImage, web static
+1. **PyInstaller matrix** → Windows EXE, Linux binary, macOS app (arm64), macOS app (x86_64)
+2. **linux-appimage** → Linux AppImage (linuxdeploy)
+3. **web-build** → web static bundle (aweai-web-static.tar.gz)
 
-You can also run either workflow manually from the Actions tab (workflow_dispatch) with `tag=v3.0.0`.
+You can also run the workflow manually from the Actions tab (workflow_dispatch) with `tag=v3.0.0`.
 
-## Android APK (buildozer)
-
-Toolchain pinned for reproducibility:
-
-- Python **3.11.9** (`hostpython3==3.11.9,python3==3.11.9`)
-- **NDK r26d** (`/opt/android-ndk-r26d`) — pinned NDK: r25b's older libc++ cannot compile numpy 2.x (`std::unordered_map` in `unique.cpp`); r26d builds numpy 2.3.0 + Kivy cleanly on arm64-v8a
-- **numpy** via the python-for-android recipe (v2.3.0, unpinned — a literal pin like `numpy==1.24.4` fails because p4a checks out `1.24.4` while numpy's git tag is `v1.24.4`)
-- Kivy 2.3.0, buildozer, API 33 / min API 24, arm64-v8a
-
-Local build:
-
-```bash
-pip install buildozer cython
-# install NDK r26d to /opt/android-ndk-r26d
-buildozer android debug
-# APK at bin/*.apk
-```
+> Note: the Android APK pipeline (build-apk.yml / buildozer.spec / android/) was removed in v3.0.0. The project now targets macOS, Linux, Windows, Web and CLI.
 
 ## Desktop binaries (PyInstaller)
 
@@ -45,11 +30,21 @@ Artifacts: `dist/aweai` (Linux), `dist/aweai.exe` (Windows), macOS `.app` bundle
 
 ## AppImage (linuxdeploy)
 
-The workflow downloads `linuxdeploy-x86_64.AppImage`, extracts it (FUSE-less), and packages `AppDir` into `AWEAI-*.AppImage`. If linuxdeploy fails, a `aweai-x86_64.AppImage.tar.gz` fallback is uploaded.
+The workflow downloads `linuxdeploy-x86_64.AppImage`, extracts it (FUSE-less), and packages `AppDir` (with a desktop entry and generated PNG icon) into `AWEAI-*.AppImage`.
 
 ## Web static
 
 ```bash
 mkdir -p dist-web && cp -r aweai/ui/static/* dist-web/
 tar -czf aweai-web-static.tar.gz dist-web
+```
+
+Uploaded to the Release as `aweai-web-static.tar.gz`.
+
+## Local dev
+
+```bash
+pip install -e ".[ui]"
+aweai autotest
+aweai serve
 ```
