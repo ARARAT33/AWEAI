@@ -216,7 +216,7 @@ def build_catalog(expand: bool = True, min_count: int = 10000) -> List[Dict[str,
     return items
 
 
-def build_automations(min_count: int = 5000) -> List[Dict[str, str]]:
+def build_automations(min_count: int = 10000) -> List[Dict[str, str]]:
     """Build the full automations catalog (deterministic)."""
     items = list(AUTOMATIONS)
     mtypes = list_model_types()

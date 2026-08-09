@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """AWEAI command-line interface — AI Model Factory.
 
 Usage:
@@ -539,10 +540,10 @@ def autoallc(
     count: int = typer.Option(200, "--count", help="Max lines to render"),
     as_json: bool = typer.Option(False, "--json", help="Output raw JSON"),
 ):
-    """Print ALL automations (5,000+)."""
+    """Print ALL automations (10,000+)."""
     from aweai.menus import build_automations, catalog_stats, render_catalog, search_catalog
 
-    items = build_automations(min_count=5000)
+    items = build_automations(min_count=10000)
     if category or search:
         items = search_catalog(items, query=search or "", category=category or "")
     if as_json:

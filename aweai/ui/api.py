@@ -26,7 +26,7 @@ Endpoints:
   /api/integrations/chat  chat via a provider
   /api/terminal     in-app terminal
   /api/allc         10,000+ command catalog
-  /api/autoallc     5,000+ automation catalog
+  /api/autoallc     10,000+ automation catalog
 """
 
 from __future__ import annotations
@@ -384,7 +384,7 @@ def create_app() -> FastAPI:
     def api_autoallc(search: str = "", category: str = "", count: int = 50):
         from aweai.menus import build_automations, search_catalog
 
-        items = build_automations(min_count=5000)
+        items = build_automations(min_count=10000)
         if search or category:
             items = search_catalog(items, query=search, category=category)
         return {"ok": True, "total": len(items), "items": items[:count]}
