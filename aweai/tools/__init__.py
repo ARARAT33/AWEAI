@@ -2,12 +2,12 @@
 
 This package grows AWEAI into a universal workbench:
 
-* :mod:`registry`    — tool registry + dispatcher (list/run/describe)
-* :mod:`core`        — system, file, process, network and info tools
+* :mod:`registry`   — tool registry + dispatcher (list/run/describe)
+* :mod:`core`       — system, file, process, network and info tools
 * :mod:`security`   — hashing, crypto, auditing and scanning tools
 * :mod:`devops`     — git, docker, CI, packaging and deploy tools
 * :mod:`datascience`— statistics, ML metrics, transforms and text tools
-* :mod:`media`       — image, audio, video and OCR helpers
+* :mod:`media`      — image, audio, video and OCR helpers
 * :mod:`automation` — jobs, workflows, alerts, timers and batch tools
 * :mod:`networking` — DNS, HTTP, ping, ports, TLS and web tools
 * :mod:`aiagents`   — prompts, chains, memory, evals and RAG helpers
@@ -15,13 +15,14 @@ This package grows AWEAI into a universal workbench:
 * :mod:`testing`    — pytest, fuzz, coverage, benchmark and assert tools
 * :mod:`monitoring` — metrics, traces, logs, health and alert tools
 * :mod:`creative`   — ideas, naming, design, content and 100k-menu tools
-* :mod:`mega`       — 1000+ more generated stdlib-only tools (40 families)
+* :mod:`mega`       — 1000+ declarative stdlib tools (math, str, json, ...)
+* :mod:`mega2`      — 697+ more stdlib tools (crypto, ml, web, db, cloud, ...)
 
 Usage::
 
     from aweai.tools import list_tools, run_tool, tool_count
-    print(tool_count())          # e.g. 1100+
-+    run_tool("hash_sha256", text="hello")
+    print(tool_count())          # e.g. 1800+
+    run_tool("hash_sha256", text="hello")
 """
 
 from __future__ import annotations
@@ -42,7 +43,7 @@ from aweai.tools.registry import (
 from aweai.tools import core  # noqa: F401  (side-effect registration)
 from aweai.tools import security  # noqa: F401
 for _optional_family in (
-    "mega", "aiagents", "automation", "codegen", "creative", "datascience",
+    "mega", "mega2", "aiagents", "automation", "codegen", "creative", "datascience",
     "devops", "media", "monitoring", "networking", "testing",
 ):
     try:
@@ -76,4 +77,5 @@ __all__ = [
     "monitoring",
     "creative",
     "mega",
+    "mega2",
 ]
