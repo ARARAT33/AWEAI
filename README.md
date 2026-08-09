@@ -4,7 +4,6 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-v3.0.0-brightgreen.svg)]()
 [![CI](https://github.com/ARARAT33/AWEAI/actions/workflows/ci.yml/badge.svg)](https://github.com/ARARAT33/AWEAI/actions/workflows/ci.yml)
-[![Build APK](https://github.com/ARARAT33/AWEAI/actions/workflows/build-apk.yml/badge.svg)](https://github.com/ARARAT33/AWEAI/actions/workflows/build-apk.yml)
 [![Build Release](https://github.com/ARARAT33/AWEAI/actions/workflows/build-release.yml/badge.svg)](https://github.com/ARARAT33/AWEAI/actions/workflows/build-release.yml)
 
 **AWEAI is an AI model factory.** It creates, trains, tunes, evaluates,
@@ -13,7 +12,7 @@ AI** and has **no Hugging Face dependencies**.
 
 Everything from the model zoo to the tokenizer to the RAG embeddings is
 implemented in plain Python + numpy, so the factory runs on modest hardware
-(CPU, Raspberry Pi, Android via buildozer) and is fully auditable.
+(CPU, Raspberry Pi) and is fully auditable.
 
 ## Why a model factory?
 
@@ -29,7 +28,7 @@ implemented in plain Python + numpy, so the factory runs on modest hardware
 - **Marketplace** — publish / download / rate models (local-first registry).
 - **Automate** — natural-language actions, pipelines, batch jobs, REST API.
 - **Megamenus** — `aweai allc` prints **10,000+ commands & instructions**;
-  `aweai autoallc` prints **5,000+ automations**; searchable by category.
+  `aweai autoallc` prints **10,000+ automations**; searchable by category.
 - **Terminal** — `aweai terminal` launches a full in-app terminal with every
   tool available from the CLI and the browser UI.
 - **Integrations** — OpenAI / Google Gemini / Microsoft Azure OpenAI /
@@ -64,8 +63,9 @@ print(res)
 | Distributed | `aweai dtrain TYPE --name N --workers 4` | multi-GPU / multi-node / multi-thread |
 | Marketplace | `aweai market publish/search/download/rate` | local-first model marketplace |
 | Integrations | `aweai integrations chat --provider openai --message hi` | BYOK AI adapters |
-| Megamenus | `aweai allc` / `aweai autoallc` | 10,000+ commands, 5,000+ automations |
+| Megamenus | `aweai allc` / `aweai autoallc` | 10,000+ commands, 10,000+ automations |
 | Terminal | `aweai terminal` | full in-app terminal REPL |
+| Web UI | `aweai serve` | huge responsive menu system (100,000+ pages/menus) |
 
 ## CLI overview
 
@@ -98,22 +98,53 @@ For **v3.0.0** you can download directly:
 
 | Platform | Asset | How to run |
 |----------|-------|------------|
-| Android | `aweai-*-arm64-v8a.apk` | Install on any Android 7+ (API 24+) device |
 | Windows | `aweai-windows-x86_64.exe` | `aweai-windows-x86_64.exe version` |
 | Linux | `aweai-linux-x86_64` | `./aweai-linux-x86_64 version` |
-| macOS | `aweai-macos-x86_64.app.zip` | Unzip, open the `.app` |
+| macOS (Apple Silicon) | `aweai-macos-arm64.app.zip` | Unzip, open the `.app` |
+| macOS (Intel) | `aweai-macos-x86_64.app.zip` | Unzip, open the `.app` |
 | Linux (GUI) | `AWEAI-*.AppImage` | `chmod +x AWEAI-*.AppImage && ./AWEAI-*.AppImage` |
 | Web | `aweai-web-static.tar.gz` | `tar xzf ... && python -m http.server 8888` |
 
-Trigger the builds yourself:
+The tag `v3.0.0` triggers `.github/workflows/build-release.yml`
+(PyInstaller matrix for Windows/Linux/macOS + linuxdeploy AppImage + web
+static bundle) and uploads every asset straight to the GitHub Release.
 
-- **APK**: `git tag v3.0.0 && git push origin v3.0.0` triggers
-  `.github/workflows/build-apk.yml` (buildozer + NDK r26d + Python 3.11) →
-  APK → GitHub Release.
-- **EXE / Linux / macOS / AppImage / web**: the same tag triggers
-  `.github/workflows/build-release.yml` (PyInstaller matrix + linuxdeploy)
-  → all five assets → GitHub Release.
-- Local build: `pip install -e ".[ui]" pyinstaller && pyinstaller --clean --noconfirm aweai.spec`
+Local build:
+
+```bash
+pip install -e ".[ui]" pyinstaller
+pyinstaller --clean --noconfirm aweai.spec
+# dist/aweai[.exe] — single-file binary
+```
+
+## Web UI (huge menu system)
+
+`aweai serve` opens a responsive browser UI that works on mobile, tablet and
+desktop. The sidebar is a combinatorial menu system — 22 groups × sub-actions
+× variants produce **100,000+ navigable pages/menus**, all backed by the
+factory's REST API:
+
+- Dashboard (hardware, recommendations, live loss curves)
+- Wizard (train / continue / tune / recommend)
+- Model Zoo (list / export / import / delete / compare)
+- Datasets (load / split / augment / tokenize / normalize)
+- Hyperparameters (grid / random / bayes / defaults / history)
+- Evaluation (report / curves / confusion / compare / metrics)
+- Quantization (float16 / int8 / uint8 / int4)
+- Edge Export (onnx / tflite / torchscript / edge_json / footprint)
+- Distributed (dtrain / dworld / workers / nodes / backend)
+- RAG (index / ask / stats / clear / documents)
+- Marketplace (list / search / publish / download / rate / stats)
+- AI Tools / Integrations (openai / google / microsoft / anthropic / hf)
+- In-app Terminal (full REPL, `Ctrl+\`` drawer)
+- Megamenus (browse the 10,000+ command catalog)
+- Automations (NL actions + pipelines)
+- Debuggers (inspect / trace / profiler)
+- Libraries (inventory of every library)
+- Tests (unit / smoke / integration / coverage)
+- Autotest (full system check)
+- Config / i18n (12 languages)
+- API docs (Swagger at `/docs`)
 
 ## Documentation & Wiki
 
@@ -121,6 +152,7 @@ Full line-by-line documentation lives in the
 [**GitHub Wiki**](https://github.com/ARARAT33/AWEAI/wiki):
 
 - [Home](https://github.com/ARARAT33/AWEAI/wiki/Home)
+- [API](https://github.com/ARARAT33/AWEAI/wiki/API)
 - [CLI Commands](https://github.com/ARARAT33/AWEAI/wiki/CLI-Commands)
 - [UI Guide](https://github.com/ARARAT33/AWEAI/wiki/UI-Guide)
 - [Build Instructions](https://github.com/ARARAT33/AWEAI/wiki/Build-Instructions)
@@ -128,9 +160,8 @@ Full line-by-line documentation lives in the
 - [Roadmap](https://github.com/ARARAT33/AWEAI/wiki/Roadmap)
 
 Local docs: see `docs/` — ARCHITECTURE, USER_GUIDE, MODEL_ZOO, TRAINING, DATA,
-EVALUATION, EXPORT, RAG, AUTOMATION, AUTOTEST, API, ANDROID, RELEASES,
-CHANGELOG, QUANTIZATION, EDGE, DISTRIBUTED, MARKETPLACE, MENUS, TERMINAL,
-INTEGRATIONS.
+EVALUATION, EXPORT, RAG, AUTOMATION, AUTOTEST, API, RELEASES, CHANGELOG,
+QUANTIZATION, EDGE, DISTRIBUTED, MARKETPLACE, MENUS, TERMINAL, INTEGRATIONS.
 
 ## License
 
