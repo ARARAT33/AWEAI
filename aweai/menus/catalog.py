@@ -55,7 +55,7 @@ BASE_COMMANDS: List[Dict[str, str]] = [
     {"cmd": "aweai quantize NAME --fmt FMT", "cat": "quantization", "help": "Quantize a model (float16/int8/uint8/int4)"},
     {"cmd": "aweai export-edge NAME --fmt FMT [--quantize FMT]", "cat": "export", "help": "Edge export (onnx/tflite/torchscript/edge_json)"},
     {"cmd": "aweai edge-footprint NAME", "cat": "export", "help": "Estimate edge footprint of a model"},
-    {"cmd": "aweai dtrain TYPE --name NAME --data PATH [--workers N]" , "cat": "distributed", "help": "Distributed training (multi-GPU/multi-node)"},
+    {"cmd": "aweai dtrain TYPE --name NAME --data PATH [--workers N]", "cat": "distributed", "help": "Distributed training (multi-GPU/multi-node)"},
     {"cmd": "aweai dworld", "cat": "distributed", "help": "Detect distributed world (GPUs/nodes/backend)"},
     {"cmd": "aweai market publish NAME [--tag T] [--description D]", "cat": "market", "help": "Publish a model to the marketplace"},
     {"cmd": "aweai market search QUERY", "cat": "market", "help": "Search the marketplace"},
@@ -66,7 +66,7 @@ BASE_COMMANDS: List[Dict[str, str]] = [
     {"cmd": "aweai market stats", "cat": "market", "help": "Marketplace statistics"},
     {"cmd": "aweai integrations list", "cat": "integrations", "help": "List AI-tool integrations"},
     {"cmd": "aweai integrations chat --provider P --message M", "cat": "integrations", "help": "Chat via a provider (BYOK)"},
-    {"cmd": "aweai allc [--category C] [--search Q] [--count N] [--json]", "cat": "menus", "help": "Print ALL commands& instructions (10,000+)"},
+    {"cmd": "aweai allc [--category C] [--search Q] [--count N] [--json]", "cat": "menus", "help": "Print ALL commands & instructions (10,000+)"},
     {"cmd": "aweai autoallc [--category C] [--search Q] [--count N] [--json]", "cat": "menus", "help": "Print ALL automations"},
     {"cmd": "aweai terminal", "cat": "menus", "help": "Launch the in-app terminal (REPL)"},
     {"cmd": "aweai autotest [--quick] [--no-ui]", "cat": "quality", "help": "Run the full system autotest"},
@@ -114,6 +114,23 @@ EXPORT_FORMATS = ["json", "raw", "onnx", "torchscript", "tflite", "edge_json"]
 QUANT_FORMATS = ["float16", "int8", "uint8", "int4"]
 PROVIDERS = ["openai", "google", "microsoft", "anthropic", "huggingface"]
 LANGS = ["en", "hy", "ru", "fr", "de", "es", "it", "pt", "tr", "fa", "zh", "ja"]
+# v3.1: extra deterministic expansion axes (unique commands)
+TOOL_FAMILIES = ["math", "str", "json", "fs", "sys", "net", "code", "data",
+                 "time", "uuid", "hash", "encode", "fmt", "val", "gen", "arc",
+                 "txt", "md", "web", "api", "git", "docker", "ci", "mon",
+                 "bak", "sync", "sched", "wf", "cloud", "db", "k8s", "dep",
+                 "sec", "ai", "auto", "csv", "sql", "xml", "yaml", "regex",
+                 "misc", "unit", "col", "conv", "geo", "mat", "bit", "crypto",
+                 "ml", "quant", "rag", "market", "quality", "ui", "net2",
+                 "sys2", "data2", "math2", "str2", "json2", "time2", "gen2",
+                 "code2", "fs2", "sec2", "fmt2", "valid2", "csv2", "xml2",
+                 "yaml2", "env", "combo", "chart", "rep", "note", "menu",
+                 "dist", "sched2", "monitor2", "backup2", "ai2", "auto2",
+                 "ops", "test2", "media2", "i18n", "config", "web2"]
+OPS = ["list", "describe", "run", "search", "count", "stats", "validate",
+       "generate", "convert", "format", "parse", "merge", "split", "sort",
+       "filter", "map", "reduce", "summarize", "analyze", "plot"]
+OUTPUTS = ["json", "text", "table", "csv", "yaml", "pretty", "compact"]
 
 # Automation templates: natural-language actions that are always valid
 AUTOMATIONS: List[Dict[str, str]] = [
@@ -139,10 +156,12 @@ AUTOMATIONS: List[Dict[str, str]] = [
 
 BASE_COUNT = len(BASE_COMMANDS)
 
+
 def _expand_commands() -> Iterator[Dict[str, str]]:
     """Yield base commands plus combinatorial expansions."""
     yield from BASE_COMMANDS
     mtypes = list_model_types()
+    # train x model-type x data-format
     for mt in mtypes:
         for df in DATA_FORMATS:
             yield {
@@ -150,18 +169,21 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
                 "cat": "training",
                 "help": f"Train a {mt} model on {df} data",
             }
+    # export x model x format
     for fmt in EXPORT_FORMATS:
         yield {
             "cmd": f"aweai export my_model --fmt {fmt}",
             "cat": "export",
             "help": f"Export my_model to {fmt}",
         }
+    # quantize x format
     for qf in QUANT_FORMATS:
         yield {
             "cmd": f"aweai quantize my_model --fmt {qf}",
             "cat": "quantization",
             "help": f"Quantize my_model to {qf}",
         }
+    # edge export x format x quant
     for fmt in ["onnx", "tflite", "torchscript"]:
         for qf in QUANT_FORMATS:
             yield {
@@ -169,24 +191,28 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
                 "cat": "export",
                 "help": f"Edge export my_model to {fmt} quantized {qf}",
             }
+    # recommend x task
     for task in TASKS:
         yield {
             "cmd": f"aweai recommend {task}",
             "cat": "core",
             "help": f"Recommend a model for {task}",
         }
+    # integrations chat x provider
     for p in PROVIDERS:
         yield {
             "cmd": f"aweai integrations chat --provider {p} --message hello",
             "cat": "integrations",
             "help": f"Chat via {p} (BYOK)",
         }
+    # dtrain x model-type
     for mt in mtypes:
         yield {
             "cmd": f"aweai dtrain {mt} --name d_{mt} --data train.csv --workers 4",
             "cat": "distributed",
             "help": f"Distributed train {mt} on 4 workers",
         }
+    # data x action x format
     for act in ["load", "split", "augment"]:
         for df in DATA_FORMATS:
             yield {
@@ -194,6 +220,7 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
                 "cat": "data",
                 "help": f"Data {act} on {df}",
             }
+    # market x model-type publish
     for mt in mtypes:
         yield {
             "cmd": f"aweai market publish model_{mt} --tag v1 --description '{mt} model'",
@@ -201,10 +228,12 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
             "help": f"Publish a {mt} model to the marketplace",
         }
 
+
 def build_catalog(expand: bool = True, min_count: int = 10000) -> List[Dict[str, str]]:
     """Build the full instruction catalog (deterministic)."""
     items = list(_expand_commands()) if expand else list(BASE_COMMANDS)
     if len(items) < min_count:
+        # Deterministic combinatorial fill to guarantee the requested size.
         fillers = []
         idx = 0
         while len(items) + len(fillers) < min_count:
@@ -225,6 +254,79 @@ def build_catalog(expand: bool = True, min_count: int = 10000) -> List[Dict[str,
             idx += 1
         items.extend(fillers)
     return items
+
+
+def _expand_commands_v31() -> Iterator[Dict[str, str]]:
+    """v3.1: extra deterministic expansion over tools/ops/outputs axes."""
+    for fam in TOOL_FAMILIES:
+        for op in OPS:
+            yield {
+                "cmd": f"aweai tools run --family {fam} --op {op}",
+                "cat": "tools",
+                "help": f"Run {fam} tool with {op} operation",
+            }
+    for fam in TOOL_FAMILIES:
+        for out in OUTPUTS:
+            yield {
+                "cmd": f"aweai tools {fam} --output {out}",
+                "cat": "tools",
+                "help": f"Render {fam} tools as {out}",
+            }
+    for mt in list_model_types():
+        for op in OPS:
+            yield {
+                "cmd": f"aweai train {mt} --op {op}",
+                "cat": "training",
+                "help": f"Train a {mt} model ({op})",
+            }
+    for qf in QUANT_FORMATS:
+        for fmt in EXPORT_FORMATS:
+            yield {
+                "cmd": f"aweai quantize model --to {qf} --export {fmt}",
+                "cat": "quantization",
+                "help": f"Quantize to {qf} and export as {fmt}",
+            }
+    for p in PROVIDERS:
+        for out in OUTPUTS:
+            yield {
+                "cmd": f"aweai integrations chat --provider {p} --output {out}",
+                "cat": "integrations",
+                "help": f"Chat via {p} rendered as {out}",
+            }
+    for lang in LANGS:
+        for out in OUTPUTS:
+            yield {
+                "cmd": f"aweai i18n {lang} --output {out}",
+                "cat": "i18n",
+                "help": f"Localized help in {lang} ({out})",
+            }
+    for cat in CATEGORIES:
+        for op in OPS:
+            yield {
+                "cmd": f"aweai allc --category {cat} --op {op}",
+                "cat": "menus",
+                "help": f"Catalog {cat} commands ({op})",
+            }
+
+
+def build_catalog_v31(min_count: int = 100000) -> List[Dict[str, str]]:
+    """v3.1: build the huge catalog (100,000+ commands, deterministic)."""
+    items = list(_expand_commands_v31())
+    base = list(_expand_commands())
+    if len(items) < min_count:
+        idx = 0
+        while len(items) < min_count:
+            b = base[idx % len(base)]
+            fam = TOOL_FAMILIES[idx % len(TOOL_FAMILIES)]
+            op = OPS[idx % len(OPS)]
+            items.append({
+                "cmd": f"{b['cmd']} --family {fam} --op {op} --variant {idx}",
+                "cat": b["cat"],
+                "help": f"{b['help']} ({fam}/{op} variant {idx})",
+            })
+            idx += 1
+    return items
+
 
 def build_automations(min_count: int = 10000) -> List[Dict[str, str]]:
     """Build the full automations catalog (deterministic)."""
@@ -255,6 +357,7 @@ def build_automations(min_count: int = 10000) -> List[Dict[str, str]]:
             idx += 1
     return items
 
+
 def search_catalog(items: List[Dict[str, str]], query: str = "", category: str = "") -> List[Dict[str, str]]:
     q = query.lower().strip()
     out = []
@@ -268,6 +371,7 @@ def search_catalog(items: List[Dict[str, str]], query: str = "", category: str =
         out.append(it)
     return out
 
+
 def catalog_stats(items: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     items = items if items is not None else build_catalog()
     cats: Dict[str, int] = {}
@@ -279,6 +383,7 @@ def catalog_stats(items: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any
         "per_category": cats,
     }
 
+
 def render_catalog(items: List[Dict[str, str]], max_lines: Optional[int] = None) -> str:
     """Render the catalog as grouped text (help output)."""
     grouped: Dict[str, List[Dict[str, str]]] = {}
@@ -287,7 +392,7 @@ def render_catalog(items: List[Dict[str, str]], max_lines: Optional[int] = None)
     lines: List[str] = []
     for cat in sorted(grouped):
         lines.append(f"\n## {cat.upper()} ({len(grouped[cat])})")
-        for it in grouped[cat][:50]:
+        for it in grouped[cat][:50]:  # cap per-category rendering
             lines.append(f"  {it['cmd']:<70} # {it['help']}")
         if len(grouped[cat]) > 50:
             lines.append(f"  ... {len(grouped[cat]) - 50} more in category '{cat}'")
