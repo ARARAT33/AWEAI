@@ -92,18 +92,45 @@ aweai serve [--port N] [--host H]
 
 ## Releases & builds
 
+Prebuilt artifacts for every release are attached to the
+[GitHub Releases](https://github.com/ARARAT33/AWEAI/releases) page.
+For **v3.0.0** you can download directly:
+
+| Platform | Asset | How to run |
+|----------|-------|------------|
+| Android | `aweai-*-arm64-v8a.apk` | Install on any Android 7+ (API 24+) device |
+| Windows | `aweai-windows-x86_64.exe` | `aweai-windows-x86_64.exe version` |
+| Linux | `aweai-linux-x86_64` | `./aweai-linux-x86_64 version` |
+| macOS | `aweai-macos-x86_64.app.zip` | Unzip, open the `.app` |
+| Linux (GUI) | `AWEAI-*.AppImage` | `chmod +x AWEAI-*.AppImage && ./AWEAI-*.AppImage` |
+| Web | `aweai-web-static.tar.gz` | `tar xzf ... && python -m http.server 8888` |
+
+Trigger the builds yourself:
+
 - **APK**: `git tag v3.0.0 && git push origin v3.0.0` triggers
-  `.github/workflows/build-apk.yml` → Android APK → GitHub Release.
+  `.github/workflows/build-apk.yml` (buildozer + NDK r25b + Python 3.11) →
+  APK → GitHub Release.
 - **EXE / Linux / macOS / AppImage / web**: the same tag triggers
-  `.github/workflows/build-release.yml` → Windows `.exe`, Linux binary,
-  macOS `.app`, `AWEAI-*.AppImage`, `aweai-web-static.tar.gz` → GitHub Release.
-- Local build: `pip install -e ".[all]" pyinstaller && pyinstaller --clean --noconfirm aweai.spec`
+  `.github/workflows/build-release.yml` (PyInstaller matrix + linuxdeploy)
+  → all five assets → GitHub Release.
+- Local build: `pip install -e ".[ui]" pyinstaller && pyinstaller --clean --noconfirm aweai.spec`
 
-## Docs
+## Documentation & Wiki
 
-See `docs/` — ARCHITECTURE, USER_GUIDE, MODEL_ZOO, TRAINING, DATA, EVALUATION,
-EXPORT, RAG, AUTOMATION, AUTOTEST, API, ANDROID, RELEASES, CHANGELOG,
-QUANTIZATION, EDGE, DISTRIBUTED, MARKETPLACE, MENUS, TERMINAL, INTEGRATIONS.
+Full line-by-line documentation lives in the
+[**GitHub Wiki**](https://github.com/ARARAT33/AWEAI/wiki):
+
+- [Home](https://github.com/ARARAT33/AWEAI/wiki/Home)
+- [CLI Commands](https://github.com/ARARAT33/AWEAI/wiki/CLI-Commands)
+- [UI Guide](https://github.com/ARARAT33/AWEAI/wiki/UI-Guide)
+- [Build Instructions](https://github.com/ARARAT33/AWEAI/wiki/Build-Instructions)
+- [Architecture](https://github.com/ARARAT33/AWEAI/wiki/Architecture)
+- [Roadmap](https://github.com/ARARAT33/AWEAI/wiki/Roadmap)
+
+Local docs: see `docs/` — ARCHITECTURE, USER_GUIDE, MODEL_ZOO, TRAINING, DATA,
+EVALUATION, EXPORT, RAG, AUTOMATION, AUTOTEST, API, ANDROID, RELEASES,
+CHANGELOG, QUANTIZATION, EDGE, DISTRIBUTED, MARKETPLACE, MENUS, TERMINAL,
+INTEGRATIONS.
 
 ## License
 
