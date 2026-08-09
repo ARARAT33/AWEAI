@@ -15,11 +15,12 @@ This package grows AWEAI into a universal workbench:
 * :mod:`testing`    — pytest, fuzz, coverage, benchmark and assert tools
 * :mod:`monitoring` — metrics, traces, logs, health and alert tools
 * :mod:`creative`   — ideas, naming, design, content and 100k-menu tools
+* :mod:`mega`       — 1000+ generated stdlib-only tools (40 families)
 
 Usage::
 
     from aweai.tools import list_tools, run_tool, tool_count
-    print(tool_count())          # e.g. 400+
+    print(tool_count())          # e.g. 1100+
     run_tool("hash_sha256", text="hello")
 """
 
@@ -40,9 +41,8 @@ from aweai.tools.registry import (
 # Optional families are guarded so partial deployments still import.
 from aweai.tools import core  # noqa: F401  (side-effect registration)
 from aweai.tools import security  # noqa: F401
-from aweai.tools import mega  # noqa: F401
 for _optional_family in (
-    "aiagents", "automation", "codegen", "creative", "datascience",
+    "mega", "aiagents", "automation", "codegen", "creative", "datascience",
     "devops", "media", "monitoring", "networking", "testing",
 ):
     try:
