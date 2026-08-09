@@ -18,8 +18,10 @@ source.exclude_dirs = tests, docs, .git, .github
 requirements = python3,kivy==2.3.0,plyer,urllib3,numpy
 
 # Pin a stable NDK that works with buildozer/p4a for arm64-v8a API 33.
-# NDK r28c (default) fails compiling libffi via autoreconf.
-android.ndk_path = /opt/android-ndk-r25b
+# NDK r28c (default) fails compiling libffi via autoreconf; r25b fails
+# compiling numpy 2.x (std::unordered_map missing in its libc++). r26d
+# builds both libffi and numpy 2.x cleanly on arm64-v8a.
+android.ndk_path = /opt/android-ndk-r26d
 android.ndk_api = 24
 
 gradle.api_level = 33

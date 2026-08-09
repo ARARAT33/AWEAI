@@ -31,15 +31,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Install Android NDK r25b (compatible with buildozer)
+      - name: Install Android NDK r26d (compatible with buildozer)
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends unzip
           curl -fsSL -o /tmp/ndk.zip \
-            "https://dl.google.com/android/repository/android-ndk-r25b-linux.zip"
+            "https://dl.google.com/android/repository/android-ndk-r26d-linux.zip"
           sudo mkdir -p /opt
           sudo unzip -q /tmp/ndk.zip -d /opt
-          ls /opt/android-ndk-r25b | head
+          ls /opt/android-ndk-r26d | head
 
       - name: Install dependencies
         run: |
