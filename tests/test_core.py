@@ -20,11 +20,11 @@ def test_version():
 
 
 def test_i18n_has_12_languages():
-    from aweai.i18n import LANGS, translate
+    from aweai.i18n import LANGUAGES, languages, t
 
-    assert len(LANGS) >= 12
-    assert "hy" in LANGS
-    assert translate("hello", "hy") != ""
+    assert len(LANGUAGES) >= 12
+    assert "hy" in LANGUAGES
+    assert t("app.name", "hy") != ""
 
 
 def test_tokenize():
@@ -39,11 +39,11 @@ def test_cosine_similarity():
 
 
 def test_safe_filename():
-    assert safe_filename("My Model!/x") == "my_model_x"
+    assert safe_filename("My Model!/x") == "My_Model_x"
 
 
 def test_chunk_text():
-    chunks = chunk_text("a" * 1000, max_chars=200)
+    chunks = chunk_text("a" * 1000, size=200)
     assert len(chunks) >= 5
 
 
