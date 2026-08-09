@@ -212,13 +212,13 @@ jobs:
             autoconf libtool pkg-config zlib1g-dev libffi-dev libssl-dev \
             libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
-      - name: Install Android NDK r26d (compatible with buildozer)
+      - name: Install Android NDK r25b (stable with p4a + Kivy)
         run: |
           curl -fsSL -o /tmp/ndk.zip \
-            "https://dl.google.com/android/repository/android-ndk-r26d-linux.zip"
+            "https://dl.google.com/android/repository/android-ndk-r25b-linux.zip"
           sudo mkdir -p /opt
           sudo unzip -q /tmp/ndk.zip -d /opt
-          ls /opt/android-ndk-r26d | head
+          ls /opt/android-ndk-r25b | head
 
       - name: Build APK
         run: bash scripts/build_apk.sh
