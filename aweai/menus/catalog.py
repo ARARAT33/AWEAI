@@ -55,7 +55,7 @@ BASE_COMMANDS: List[Dict[str, str]] = [
     {"cmd": "aweai quantize NAME --fmt FMT", "cat": "quantization", "help": "Quantize a model (float16/int8/uint8/int4)"},
     {"cmd": "aweai export-edge NAME --fmt FMT [--quantize FMT]", "cat": "export", "help": "Edge export (onnx/tflite/torchscript/edge_json)"},
     {"cmd": "aweai edge-footprint NAME", "cat": "export", "help": "Estimate edge footprint of a model"},
-    {"cmd": "aweai dtrain TYPE --name NAME --data PATH [--workers N]", "cat": "distributed", "help": "Distributed training (multi-GPU/multi-node)"},
+    {"cmd": "aweai dtrain TYPE --name NAME --data PATH [--workers N]" , "cat": "distributed", "help": "Distributed training (multi-GPU/multi-node)"},
     {"cmd": "aweai dworld", "cat": "distributed", "help": "Detect distributed world (GPUs/nodes/backend)"},
     {"cmd": "aweai market publish NAME [--tag T] [--description D]", "cat": "market", "help": "Publish a model to the marketplace"},
     {"cmd": "aweai market search QUERY", "cat": "market", "help": "Search the marketplace"},
@@ -66,13 +66,29 @@ BASE_COMMANDS: List[Dict[str, str]] = [
     {"cmd": "aweai market stats", "cat": "market", "help": "Marketplace statistics"},
     {"cmd": "aweai integrations list", "cat": "integrations", "help": "List AI-tool integrations"},
     {"cmd": "aweai integrations chat --provider P --message M", "cat": "integrations", "help": "Chat via a provider (BYOK)"},
-    {"cmd": "aweai allc [--category C] [--search Q] [--count N] [--json]", "cat": "menus", "help": "Print ALL commands & instructions (10,000+)"},
+    {"cmd": "aweai allc [--category C] [--search Q] [--count N] [--json]", "cat": "menus", "help": "Print ALL commands& instructions (10,000+)"},
     {"cmd": "aweai autoallc [--category C] [--search Q] [--count N] [--json]", "cat": "menus", "help": "Print ALL automations"},
     {"cmd": "aweai terminal", "cat": "menus", "help": "Launch the in-app terminal (REPL)"},
     {"cmd": "aweai autotest [--quick] [--no-ui]", "cat": "quality", "help": "Run the full system autotest"},
     {"cmd": "aweai serve [--port N] [--host H]", "cat": "ui", "help": "Launch the browser UI"},
     {"cmd": "aweai langs", "cat": "i18n", "help": "List supported languages"},
     {"cmd": "aweai config get|set|show", "cat": "config", "help": "Configuration management"},
+    {"cmd": "aweai tools list [--category C]", "cat": "tools", "help": "List hundreds of extension tools"},
+    {"cmd": "aweai tools run --name NAME --params JSON", "cat": "tools", "help": "Run an extension tool"},
+    {"cmd": "aweai tools describe --name NAME", "cat": "tools", "help": "Describe an extension tool"},
+    {"cmd": "aweai tools categories", "cat": "tools", "help": "List tool categories with counts"},
+    {"cmd": "aweai tools run --name math_add --params '{\"a\":2,\"b\":3}'", "cat": "tools", "help": "Run the math_add tool"},
+    {"cmd": "aweai tools run --name str_upper --params '{\"text\":\"hi\"}'", "cat": "tools", "help": "Run the str_upper tool"},
+    {"cmd": "aweai tools run --name unit_km_to_mi --params '{\"x\":10}'", "cat": "tools", "help": "Run the unit_km_to_mi tool"},
+    {"cmd": "aweai tools run --name json_validate --params '{\"text\":\"{}\"}'", "cat": "tools", "help": "Run the json_validate tool"},
+    {"cmd": "aweai tools run --name gen_uuid4", "cat": "tools", "help": "Run the gen_uuid4 tool"},
+    {"cmd": "aweai tools run --name col_hex_to_rgb --params '{\"h\":\"#ff0000\"}'", "cat": "tools", "help": "Run the col_hex_to_rgb tool"},
+    {"cmd": "aweai tools run --name conv_int_to_roman --params '{\"x\":1999}'", "cat": "tools", "help": "Run the conv_int_to_roman tool"},
+    {"cmd": "aweai tools run --name ai_cosine_sim --params '{\"a\":\"hi\",\"b\":\"hello\"}'", "cat": "tools", "help": "Run the ai_cosine_sim tool"},
+    {"cmd": "aweai tools run --name geo_distance_km --params '{\"lat1\":40,\"lon1\":44,\"lat2\":41,\"lon2\":45}'", "cat": "tools", "help": "Run the geo_distance_km tool"},
+    {"cmd": "aweai tools run --name mat_identity --params '{\"n\":3}'", "cat": "tools", "help": "Run the mat_identity tool"},
+    {"cmd": "aweai tools run --name bit_count_ones --params '{\"a\":15}'", "cat": "tools", "help": "Run the bit_count_ones tool"},
+    {"cmd": "aweai tools run --name time_weekday_name --params '{\"d\":\"2026-08-09\"}'", "cat": "tools", "help": "Run the time_weekday_name tool"},
 ]
 
 # Categories used for the generated catalog
@@ -80,6 +96,13 @@ CATEGORIES: List[str] = [
     "core", "models", "training", "evaluation", "zoo", "export",
     "data", "rag", "automation", "quantization", "distributed",
     "market", "integrations", "menus", "quality", "ui", "i18n", "config",
+    "tools", "security", "devops", "datascience", "media", "networking",
+    "aiagents", "codegen", "testing", "monitoring", "creative",
+    "math", "str", "json", "fs", "net", "code", "time", "fmt", "val",
+    "gen", "arc", "txt", "col", "unit", "bit", "mat", "vec", "stat",
+    "sys", "crypto", "ai", "auto", "db", "conv", "http", "git", "docker",
+    "mon", "bak", "sync", "sched", "wf", "cloud", "k8s", "dep", "enc",
+    "misc", "sl", "geo", "combo", "chart", "rep", "note",
 ]
 
 # Expansion axes (deterministic, safe)
@@ -116,12 +139,10 @@ AUTOMATIONS: List[Dict[str, str]] = [
 
 BASE_COUNT = len(BASE_COMMANDS)
 
-
 def _expand_commands() -> Iterator[Dict[str, str]]:
     """Yield base commands plus combinatorial expansions."""
     yield from BASE_COMMANDS
     mtypes = list_model_types()
-    # train x model-type x data-format
     for mt in mtypes:
         for df in DATA_FORMATS:
             yield {
@@ -129,21 +150,18 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
                 "cat": "training",
                 "help": f"Train a {mt} model on {df} data",
             }
-    # export x model x format
     for fmt in EXPORT_FORMATS:
         yield {
             "cmd": f"aweai export my_model --fmt {fmt}",
             "cat": "export",
             "help": f"Export my_model to {fmt}",
         }
-    # quantize x format
     for qf in QUANT_FORMATS:
         yield {
             "cmd": f"aweai quantize my_model --fmt {qf}",
             "cat": "quantization",
             "help": f"Quantize my_model to {qf}",
         }
-    # edge export x format x quant
     for fmt in ["onnx", "tflite", "torchscript"]:
         for qf in QUANT_FORMATS:
             yield {
@@ -151,28 +169,24 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
                 "cat": "export",
                 "help": f"Edge export my_model to {fmt} quantized {qf}",
             }
-    # recommend x task
     for task in TASKS:
         yield {
             "cmd": f"aweai recommend {task}",
             "cat": "core",
             "help": f"Recommend a model for {task}",
         }
-    # integrations chat x provider
     for p in PROVIDERS:
         yield {
             "cmd": f"aweai integrations chat --provider {p} --message hello",
             "cat": "integrations",
             "help": f"Chat via {p} (BYOK)",
         }
-    # dtrain x model-type
     for mt in mtypes:
         yield {
             "cmd": f"aweai dtrain {mt} --name d_{mt} --data train.csv --workers 4",
             "cat": "distributed",
             "help": f"Distributed train {mt} on 4 workers",
         }
-    # data x action x format
     for act in ["load", "split", "augment"]:
         for df in DATA_FORMATS:
             yield {
@@ -180,7 +194,6 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
                 "cat": "data",
                 "help": f"Data {act} on {df}",
             }
-    # market x model-type publish
     for mt in mtypes:
         yield {
             "cmd": f"aweai market publish model_{mt} --tag v1 --description '{mt} model'",
@@ -188,12 +201,10 @@ def _expand_commands() -> Iterator[Dict[str, str]]:
             "help": f"Publish a {mt} model to the marketplace",
         }
 
-
 def build_catalog(expand: bool = True, min_count: int = 10000) -> List[Dict[str, str]]:
     """Build the full instruction catalog (deterministic)."""
     items = list(_expand_commands()) if expand else list(BASE_COMMANDS)
     if len(items) < min_count:
-        # Deterministic combinatorial fill to guarantee the requested size.
         fillers = []
         idx = 0
         while len(items) + len(fillers) < min_count:
@@ -214,7 +225,6 @@ def build_catalog(expand: bool = True, min_count: int = 10000) -> List[Dict[str,
             idx += 1
         items.extend(fillers)
     return items
-
 
 def build_automations(min_count: int = 10000) -> List[Dict[str, str]]:
     """Build the full automations catalog (deterministic)."""
@@ -245,7 +255,6 @@ def build_automations(min_count: int = 10000) -> List[Dict[str, str]]:
             idx += 1
     return items
 
-
 def search_catalog(items: List[Dict[str, str]], query: str = "", category: str = "") -> List[Dict[str, str]]:
     q = query.lower().strip()
     out = []
@@ -259,7 +268,6 @@ def search_catalog(items: List[Dict[str, str]], query: str = "", category: str =
         out.append(it)
     return out
 
-
 def catalog_stats(items: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     items = items if items is not None else build_catalog()
     cats: Dict[str, int] = {}
@@ -271,7 +279,6 @@ def catalog_stats(items: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any
         "per_category": cats,
     }
 
-
 def render_catalog(items: List[Dict[str, str]], max_lines: Optional[int] = None) -> str:
     """Render the catalog as grouped text (help output)."""
     grouped: Dict[str, List[Dict[str, str]]] = {}
@@ -280,7 +287,7 @@ def render_catalog(items: List[Dict[str, str]], max_lines: Optional[int] = None)
     lines: List[str] = []
     for cat in sorted(grouped):
         lines.append(f"\n## {cat.upper()} ({len(grouped[cat])})")
-        for it in grouped[cat][:50]:  # cap per-category rendering
+        for it in grouped[cat][:50]:
             lines.append(f"  {it['cmd']:<70} # {it['help']}")
         if len(grouped[cat]) > 50:
             lines.append(f"  ... {len(grouped[cat]) - 50} more in category '{cat}'")
