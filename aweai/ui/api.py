@@ -25,6 +25,9 @@ Endpoints:
   /api/integrations AI-tool integrations list
   /api/integrations/chat  chat via a provider
   /api/terminal     in-app terminal
+  /api/tools        tool registry (categories + tools)
+  /api/tools/describe  describe a tool
+  /api/tools/run   run a tool by name+params
   /api/allc         10,000+ command catalog
   /api/autoallc     10,000+ automation catalog
 """
@@ -129,6 +132,11 @@ class IntegrationChatRequest(BaseModel):
     message: str
 
 
+class ToolRunRequest(BaseModel):
+    name: str
+    params: Dict[str, Any] = {}
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="AWEAI — AI Model Factory", version=__version__, docs_url="/docs", redoc_url="/redoc")
     app.add_middleware(
@@ -148,6 +156,51 @@ def create_app() -> FastAPI:
     @app.get("/api/health")
     def health():
         return {"status": "ok", "version": __version__, "name": "AWEAI Model Factory"}
+
+    @app.get("/api/env")
+    def api_env():
+        """Environment detection for any-device compatibility.
+
+        Reports where the app is running (localhost / LAN / cloud / container /
+        phone), the resolved host/port, online status and connectivity, so the
+        UI can adapt (offline/online fallback, CORS, port hints).
+        """
+        import os
+        import platform
+        import socket
+
+        hostname = socket.gethostname()
+        mode = "cloud"
+        try:
+            host_ips = {i[4][0] for i in socket.getaddrinfo(hostname, None, socket.AF_INET)}
+        except Exception:
+            host_ips = set()
+        local_loop = {"127.0.0.1", "::1"}
+        container = bool(os.path.exists("/.dockerenv"))
+        mode = "container" if container else ("localhost" if host_ips <= local_loop else "lan")
+        online = False
+        try:
+            with socket.create_connection(("8.8.8.8", 53), timeout=3):
+                online = True
+        except Exception:
+            online = False
+        return {
+            "ok": True,
+            "env": {
+                "mode": mode,
+                "container": container,
+                "hostname": hostname,
+                "host_ips": sorted(host_ips),
+                "platform": platform.system(),
+                "python": platform.python_version(),
+                "cwd": os.getcwd(),
+                "online": online,
+                "offline_fallback": True,
+                "cors": "*",
+                "bind": "0.0.0.0",
+                "port_hint": resolve_port(8888, "0.0.0.0"),
+            },
+        }
 
     @app.get("/api/hardware")
     def api_hardware():
@@ -380,6 +433,32 @@ def create_app() -> FastAPI:
             items = search_catalog(items, query=search, category=category)
         return {"ok": True, "total": len(items), "items": items[:count]}
 
+    @app.get("/api/tools")
+    def api_tools(category: str = ""):
+        from aweai.tools import list_categories, list_tools
+
+        if category:
+            return {"ok": True, "category": category, "tools": list_tools(category=category)}
+        return {"ok": True, "categories": list_categories(), "tools": list_tools(), "total": len(list_tools())}
+
+    @app.get("/api/tools/describe")
+    def api_tools_describe(name: str):
+        from aweai.tools import get_tool
+
+        meta = get_tool(name)
+        if meta is None:
+            raise HTTPException(status_code=404, detail=f"Unknown tool: {name}")
+        return {"ok": True, "tool": {k: v for k, v in meta.items() if k != "fn"}}
+
+    @app.post("/api/tools/run")
+    def api_tools_run(req: ToolRunRequest):
+        from aweai.tools import run_tool
+
+        try:
+            return run_tool(req.name, **dict(req.params or {}))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
     @app.get("/api/autoallc")
     def api_autoallc(search: str = "", category: str = "", count: int = 50):
         from aweai.menus import build_automations, search_catalog
@@ -392,7 +471,7 @@ def create_app() -> FastAPI:
     return app
 
 
-def serve(port: int = 8888, host: str = "127.0.0.1", open_browser: bool = True) -> None:
+def serve(port: int = 8888, host: str = "0.0.0.0", open_browser: bool = True) -> None:
     import threading
     import webbrowser
 
@@ -400,6 +479,6 @@ def serve(port: int = 8888, host: str = "127.0.0.1", open_browser: bool = True) 
 
     resolved = resolve_port(port, host)
     print(f"AWEAI Model Factory UI → http://{host}:{resolved}  (docs at /docs)")
-    if open_browser:
+    if open_browser and host in ("127.0.0.1", "localhost", "0.0.0.0"):
         threading.Timer(1.0, lambda: webbrowser.open(f"http://127.0.0.1:{resolved}")).start()
     uvicorn.run(create_app(), host=host, port=resolved, log_level="info")
