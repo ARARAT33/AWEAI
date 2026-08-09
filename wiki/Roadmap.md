@@ -18,7 +18,7 @@
 - Marketplace (publish / search / download / rate)
 - In-app terminal (`aweai terminal`), BYOK integrations
 - Megamenus: `aweai allc` = 10,000+ commands, `aweai autoallc` = 5,000+ automations
-- Release pipeline: APK (buildozer + NDK r25b), EXE / Linux / macOS / AppImage / web
+- Release pipeline: APK (buildozer + NDK r26d), EXE / Linux / macOS / AppImage / web
 
 ## v3.0.x (planned maintenance)
 - Keep CI green on the latest runner images

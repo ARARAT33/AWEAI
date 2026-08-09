@@ -29,7 +29,7 @@ AWEAI/
 ├── tests/                   # 23 unit + smoke tests (CI)
 ├── .github/workflows/       # ci.yml, build-apk.yml, build-release.yml
 ├── aweai.spec               # PyInstaller spec
-├── buildozer.spec           # Android build config (NDK r25b, py 3.11.9)
+├── buildozer.spec           # Android build config (NDK r26d, py 3.11.9)
 └── docs/                    # 20+ markdown docs
 ```
 

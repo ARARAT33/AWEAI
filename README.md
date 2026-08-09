@@ -108,7 +108,7 @@ For **v3.0.0** you can download directly:
 Trigger the builds yourself:
 
 - **APK**: `git tag v3.0.0 && git push origin v3.0.0` triggers
-  `.github/workflows/build-apk.yml` (buildozer + NDK r25b + Python 3.11) →
+  `.github/workflows/build-apk.yml` (buildozer + NDK r26d + Python 3.11) →
   APK → GitHub Release.
 - **EXE / Linux / macOS / AppImage / web**: the same tag triggers
   `.github/workflows/build-release.yml` (PyInstaller matrix + linuxdeploy)

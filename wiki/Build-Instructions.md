@@ -21,7 +21,7 @@ You can also run either workflow manually from the Actions tab (workflow_dispatc
 Toolchain pinned for reproducibility:
 
 - Python **3.11.9** (`hostpython3==3.11.9,python3==3.11.9`)
-- **NDK r25b** (`/opt/android-ndk-r25b`) — NDK r26+ breaks Kivy's `cgl_gl.c` sysroot include path
+- **NDK r26d** (`/opt/android-ndk-r26d`) — pinned NDK: r25b's older libc++ cannot compile numpy 2.x (`std::unordered_map` in `unique.cpp`); r26d builds numpy 2.3.0 + Kivy cleanly on arm64-v8a
 - **numpy** via the python-for-android recipe (v2.3.0, unpinned — a literal pin like `numpy==1.24.4` fails because p4a checks out `1.24.4` while numpy's git tag is `v1.24.4`)
 - Kivy 2.3.0, buildozer, API 33 / min API 24, arm64-v8a
 
@@ -29,7 +29,7 @@ Local build:
 
 ```bash
 pip install buildozer cython
-# install NDK r25b to /opt/android-ndk-r25b
+# install NDK r26d to /opt/android-ndk-r26d
 buildozer android debug
 # APK at bin/*.apk
 ```

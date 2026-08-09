@@ -1,3 +1,5 @@
+# Home
+
 # AWEAI — AI Model Factory
 
 **AWEAI** is an AI model factory: it creates, trains, tunes, evaluates, exports and manages AI models **from scratch** — with **no built-in AI** and **no Hugging Face dependencies**. Everything from the model zoo to the tokenizer to RAG embeddings is implemented in plain Python + numpy, so it runs on modest hardware (CPU, Raspberry Pi, Android via buildozer) and is fully auditable.
