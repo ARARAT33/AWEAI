@@ -11,9 +11,20 @@ if ! command -v buildozer >/dev/null 2>&1; then
   exit 1
 fi
 
-# The repo-root buildozer.spec has source.dir = . and includes the whole
-# aweai package + this main.py wrapper; android/main.py does the bootstrap.
-buildozer android debug
+# Run buildozer capturing the full log to a file; on failure print only the
+# tail so the GitHub Actions log stays small and the real error is visible.
+set +e
+buildozer android debug > buildozer.log 2>&1
+RC=$?
+set -e
+
+if [ $RC -ne 0 ]; then
+  echo "Buildozer failed with exit code $RC"
+  echo "================= last 250 lines of buildozer.log ================="
+  tail -n 250 buildozer.log
+  echo "==================================================================="
+  exit $RC
+fi
 
 APK=$(find bin -name "*.apk" -type f 2>/dev/null | head -1)
 if [ -z "$APK" ]; then
