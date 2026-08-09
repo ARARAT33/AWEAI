@@ -27,7 +27,7 @@ implemented in plain Python + numpy, so the factory runs on modest hardware
   **quantization** (float16 / int8 / uint8 / int4).
 - **Marketplace** — publish / download / rate models (local-first registry).
 - **Automate** — natural-language actions, pipelines, batch jobs, REST API.
-- **Megamenus** — `aweai allc` prints **10,000+ commands & instructions**;
+- **Megamenus** — `aweai allc` prints **10,000+ commands** (**100,000+ with `--huge`**);
   `aweai autoallc` prints **10,000+ automations**; searchable by category.
 - **Terminal** — `aweai terminal` launches a full in-app terminal with every
   tool available from the CLI and the browser UI.
@@ -36,6 +36,23 @@ implemented in plain Python + numpy, so the factory runs on modest hardware
 - **Self-check** — `aweai autotest` verifies the whole factory in one command
   (every module, model type, action, UI endpoint, export format, i18n
   language, CLI command, and workflow).
+
+## New in v3.0
+
+* **1800+ extension tools** (`aweai tools list`) across dozens of families:
+  core, security, devops, datascience, media, automation, networking,
+  aiagents, codegen, testing, monitoring, creative, mega (640+) and
+  **mega2 (697+, v3.1)** — each with a unique purpose, CLI access and UI access.
+* **`aweai tools` subcommand** — `list`, `run --name N --params JSON`,
+  `describe --name N`, `categories`.
+* **UI tool panel** — `/api/tools`, `/api/tools/describe`,
+  `/api/tools/run` endpoints; all tools reachable from the browser.
+* **Works everywhere** — UI/backend bind `0.0.0.0` with configurable port,
+  CORS `*` enabled, environment auto-detection, offline/online fallback
+  (BYOK chat falls back to offline echo), responsive mobile/desktop/tablet.
+* **Innovations** — persistent job/workflow/alert/timer stores, RAG index,
+  agent memory, fuzzers, benchmark harness, trace/log stores, 100k-menu
+  combinatorics (`menu_combine`), idea/name/design generators.
 
 ## Quick start
 
@@ -63,7 +80,7 @@ print(res)
 | Distributed | `aweai dtrain TYPE --name N --workers 4` | multi-GPU / multi-node / multi-thread |
 | Marketplace | `aweai market publish/search/download/rate` | local-first model marketplace |
 | Integrations | `aweai integrations chat --provider openai --message hi` | BYOK AI adapters |
-| Megamenus | `aweai allc` / `aweai autoallc` | 10,000+ commands, 10,000+ automations |
+| Megamenus | `aweai allc` / `aweai autoallc` | 10,000+ commands (**100,000+ with `--huge`**), 10,000+ automations |
 | Terminal | `aweai terminal` | full in-app terminal REPL |
 | Web UI | `aweai serve` | huge responsive menu system (100,000+ pages/menus) |
 
@@ -82,7 +99,7 @@ aweai dtrain TYPE --name NAME [--data PATH] [--workers N] [--backend auto|thread
 aweai dworld
 aweai market publish|search|list|info|download|rate|stats ...
 aweai integrations list|chat --provider P --message M
-aweai allc [--category C] [--search Q] [--count N] [--json]
+aweai allc [--category C] [--search Q] [--count N] [--json] [--huge]
 aweai autoallc [--category C] [--search Q] [--count N] [--json]
 aweai terminal
 aweai data load/split/augment | rag index/ask | actions "..." | pipeline ...
@@ -136,8 +153,8 @@ factory's REST API:
 - RAG (index / ask / stats / clear / documents)
 - Marketplace (list / search / publish / download / rate / stats)
 - AI Tools / Integrations (openai / google / microsoft / anthropic / hf)
-- In-app Terminal (full REPL, `Ctrl+\`` drawer)
-- Megamenus (browse the 10,000+ command catalog)
+- In-app Terminal (full REPL, `Ctrl+` drawer)
+- Megamenus (browse the 10,000+ command catalog; **100,000+ with `--huge`**)
 - Automations (NL actions + pipelines)
 - Debuggers (inspect / trace / profiler)
 - Libraries (inventory of every library)
@@ -145,6 +162,75 @@ factory's REST API:
 - Autotest (full system check)
 - Config / i18n (12 languages)
 - API docs (Swagger at `/docs`)
+
+## Extension Toolkit — 1800+ Tools
+
+AWEAI ships an ever-growing **extension toolkit** with **1800+ unique-purpose tools**
+(389 → 1133 → **1819 in v3.1**) across dozens of categories, all reachable from the CLI
+(`aweai tools ...`), the UI (`/api/tools`), the in-app terminal, and the
+megamenus (`allc` / `autoallc`):
+
+```
+core         system, file, process, info, json, time, paths
+security     hashing, hmac, secrets, encoding, scanning, audit
+devops       git, docker, CI, packaging, deploy, health, retry
+datascience  statistics, ML metrics, transforms, text, math
+media        image, audio, video, OCR, media metadata
+automation   jobs, workflows, alerts, timers, webhooks, batches
+networking   DNS, HTTP, TLS, ports, ping, whois, proxy, bandwidth
+aiagents     prompts, chains, memory, evals, RAG, agents
+codegen      code generation, refactoring, linting, docs, templates
+testing      pytest, fuzz, coverage, benchmarks, asserts, properties
+monitoring   metrics, traces, logs, health, thresholds, snapshots
+creative     ideas, naming, design, content, menu combinatorics
+mega         640+ generated tools: math, string, json, fs, net, code,
+             time, fmt, val, gen, arc, txt, col, unit, bit, mat, vec,
+             stat, sys, crypto, ai, auto, db, conv, http, git, docker,
+             mon, bak, sync, sched, wf, cloud, k8s, dep, enc, misc, sl,
+             geo, combo, chart, rep, note, ...
+mega2        697 more tools (v3.1): crypto (hash/hmac/cipher/otp),
+             ml (metrics/activations/losses/clustering), web (url/html),
+             db (sqlite helpers), cloud (s3/gs/blob/colab), i18n (12 langs),
+             config (ini/env/json), quant (int8/int4/scale), rag (chunk/tf),
+             market, quality, ui (color/contrast/responsive), net (cidr/ports),
+             sys2, data2, math2 (special/finance), str2, json2, time2, gen2,
+             code2, fs2, sec2 (validators/luhn), fmt2, valid2, csv2, xml2,
+             yaml2, env (colab/cloud detect), combo, chart (ascii), rep,
+             note, menu, dist, sched2, monitor2 (apdex/sla), backup2, ai2,
+             auto2, ops (semver), test2, media2, ...
+```
+
+Try it:
+
+```bash
+aweai tools categories                 # list categories + counts
+aweai tools list --category security   # list security tools
+aweai tools run --name hash_sha256 --params '{"text":"hello"}'
+aweai tools run --name math_fibonacci --params '{"n":12}'
+aweai tools run --name geo_distance_km --params '{"lat1":40,"lon1":44,"lat2":41,"lon2":45}'
+aweai tools run --name crypto_hash_sha256 --params '{"s":"hello"}'
+aweai tools run --name ml_f1 --params '{"y_true":"[1,0,1]","y_pred":"[1,0,0]"}'
+aweai tools run --name env_detect
+aweai allc --huge                        # 100,000+ command catalog
+```
+
+## Any-Device Compatibility
+
+AWEAI runs **anywhere** — localhost, LAN, cloud servers, containers, Google Colab
+and phone browsers:
+
+- Backend binds to `0.0.0.0` with a **configurable port** (`aweai serve --port`)
+- **CORS enabled** (`allow_origins=["*"]`) so the UI works from any origin
+- **Environment detection** — `/api/env` reports where the app is running
+  (localhost / LAN / cloud / container / Colab), resolved IPs, online status and
+  offline fallback
+- **Colab-ready** — `aweai serve --host 0.0.0.0 --port 8888` + ngrok tunnel
+  exposes a public URL from any cloud notebook
+- **Offline/online fallback** — every tool degrades gracefully without network
+- **Responsive UI** — mobile / tablet / desktop layouts, touch-friendly
+- **100,000+ menu/page structure** — `allc` (10,000+ commands; **100,000+ with
+  `--huge`**) and `autoallc` (10,000+ automations) are served over `/api/allc`
+  and `/api/autoallc`, so every command is UI-addressable
 
 ## Documentation & Wiki
 
