@@ -27,8 +27,12 @@ jobs:
             os: ubuntu-latest
             asset_ext: ""
             asset_name: aweai-linux-x86_64
-          - name: macOS app
+          - name: macOS app (arm64)
             os: macos-latest
+            asset_ext: .app.zip
+            asset_name: aweai-macos-arm64
+          - name: macOS app (x86_64)
+            os: macos-13
             asset_ext: .app.zip
             asset_name: aweai-macos-x86_64
     permissions:
@@ -41,11 +45,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      # NOTE: We deliberately install ONLY the core deps (numpy, typer, UI).
-      # Installing torch+onnx+scikit-learn makes the PyInstaller binary several
-      # GB (torch CUDA wheels alone > 2 GB) which exceeds the GitHub Release
-      # asset limit (2 GB). The heavy features (torch training, ONNX export)
-      # are optional runtime extras, not required for the packaged CLI.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -72,8 +71,6 @@ jobs:
           if [ "${{ runner.os }}" = "Windows" ]; then
             mv dist/aweai.exe "dist/${NAME}${EXT}"
           elif [ "${{ runner.os }}" = "macOS" ]; then
-            # macOS: wrap binary into a .app bundle and zip it so the
-            # download is a single portable artifact.
             mkdir -p "dist/${NAME}.app/Contents/MacOS"
             mv dist/aweai "dist/${NAME}.app/Contents/MacOS/aweai"
             chmod +x "dist/${NAME}.app/Contents/MacOS/aweai"
@@ -147,18 +144,41 @@ jobs:
 
       - name: Build AppImage
         run: |
+          set -euxo pipefail
           mkdir -p AppDir/usr/bin
           cp dist/aweai AppDir/usr/bin/aweai
           chmod +x AppDir/usr/bin/aweai
-          curl -L -o linuxdeploy-x86_64.AppImage "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
+          cat > AppDir/aweai.desktop <<'EOF'
+          [Desktop Entry]
+          Name=AWEAI
+          Comment=AI Model Factory
+          Exec=aweai
+          Icon=aweai
+          Terminal=true
+          Type=Application
+          Categories=Development;AI;
+          EOF
+          python - <<'PY'
+          import struct, zlib
+          def chunk(t, d):
+              c = t + d
+              return struct.pack(">I", len(d)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+          def png(path, w=256, h=256, rgb=(88, 166, 255)):
+              raw = b"".join(b"\x00" + bytes(rgb) * w for _ in range(h))
+              data = b"\x89PNG\r\n\x1a\n"
+              data += chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+              data += chunk(b"IDAT", zlib.compress(raw))
+              data += chunk(b"IEND", b"")
+              with open(path, "wb") as f:
+                  f.write(data)
+          png("AppDir/aweai.png")
+          PY
+          curl -L -o linuxdeploy-x86_64.AppImage \
+            "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
           chmod +x linuxdeploy-x86_64.AppImage
-          # Run inside a Docker-like FUSE-less environment via --appimage-extract
           ./linuxdeploy-x86_64.AppImage --appimage-extract >/dev/null 2>&1
-          ./squashfs-root/AppRun --appdir AppDir \
-            --executable AppDir/usr/bin/aweai \
-            --output appimage || \
-          (echo "linuxdeploy failed; building fallback AppImage" && \
-           tar -czf aweai-x86_64.AppImage.tar.gz -C AppDir .)
+          ./squashfs-root/AppRun --appdir AppDir --output appimage
+          ls -la AWEAI-*.AppImage
 
       - name: Determine release tag
         id: tag
@@ -176,79 +196,7 @@ jobs:
           files: |
             AWEAI-*.AppImage
             aweai-*.AppImage
-            aweai-x86_64.AppImage.tar.gz
           fail_on_unmatched_files: false
-          generate_release_notes: false
-          overwrite_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  android-apk:
-    name: Android APK
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Install Android build tools
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install buildozer cython
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential git zip unzip openjdk-17-jdk \
-            autoconf libtool pkg-config zlib1g-dev libffi-dev libssl-dev \
-            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-
-      - name: Install Android NDK r26d (compatible with buildozer)
-        run: |
-          curl -fsSL -o /tmp/ndk.zip \
-            "https://dl.google.com/android/repository/android-ndk-r26d-linux.zip"
-          sudo mkdir -p /opt
-          sudo unzip -q /tmp/ndk.zip -d /opt
-          ls /opt/android-ndk-r26d | head
-
-      - name: Build APK
-        run: bash scripts/build_apk.sh
-        env:
-          ANDROID_HOME: ${{ github.workspace }}/.android-sdk
-
-      - name: Locate APK
-        id: apk
-        run: |
-          APK=$(find . -name "*.apk" -type f | head -1)
-          if [ -z "$APK" ]; then
-            echo "No APK found" && exit 1
-          fi
-          echo "path=$APK" >> "$GITHUB_OUTPUT"
-
-      - name: Determine release tag
-        id: tag
-        run: |
-          TAG="${{ github.event.inputs.tag }}"
-          if [ -z "$TAG" ]; then
-            TAG="${GITHUB_REF_NAME}"
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Upload APK to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          files: ${{ steps.apk.outputs.path }}
-          fail_on_unmatched_files: true
           generate_release_notes: false
           overwrite_files: true
         env:
@@ -262,21 +210,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
       - name: Assemble static web bundle
         run: |
+          set -euxo pipefail
+          rm -rf dist-web
           mkdir -p dist-web
-          cp -r aweai/ui/static/* dist-web/ 2>/dev/null || true
+          python - <<'PY'
+          import pathlib, shutil
+          src = pathlib.Path("aweai/ui/static")
+          dst = pathlib.Path("dist-web")
+          for f in src.iterdir():
+              if f.is_file():
+                  shutil.copy2(f, dst / f.name)
+          print("copied:", sorted(p.name for p in dst.iterdir()))
+          PY
           cat > dist-web/README.txt <<'EOF'
           AWEAI web static build.
-          Serve this directory with any static file server:
-            python -m http.server 8888
+
+          This bundle contains the complete AWEAI browser UI
+          (index.html, app.js, style.css).
+
+          Two ways to use it:
+
+          1) Full experience (recommended): install AWEAI and start the server
+             python -m pip install -e ".[ui]"
+             aweai serve --port 8888
+             # open http://localhost:8888
+
+          2) Static-only preview (UI shell; API features need the server):
+             python -m http.server 8888 --directory dist-web
+             # open http://localhost:8888
           EOF
           tar -czf aweai-web-static.tar.gz dist-web
+          ls -la aweai-web-static.tar.gz
 
       - name: Determine release tag
         id: tag
@@ -292,7 +258,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
           files: aweai-web-static.tar.gz
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
           generate_release_notes: false
           overwrite_files: true
         env:

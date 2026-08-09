@@ -7,191 +7,62 @@
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="logo">🏭</span>
-    <div>
-      <h1 id="app-name">AWEAI — AI Model Factory</h1>
-      <p id="app-tagline">Create, train, tune and manage AI models from scratch. No built-in AI, no Hugging Face.</p>
+<div class="layout">
+  <!-- ===== Sidebar: the huge menu system ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <span class="logo">🏭</span>
+      <div>
+        <h1 id="app-name">AWEAI</h1>
+        <p id="app-tagline">AI Model Factory · v3.0.0</p>
+      </div>
+    </div>
+    <div class="side-search">
+      <input id="global-search" class="input" placeholder="Search 10,000+ commands / 100,000 menus…" autocomplete="off">
+      <div id="search-results" class="search-results hidden"></div>
+    </div>
+    <nav class="side-nav" id="side-nav">
+      <!-- main menu groups (huge structure injected by JS) -->
+    </nav>
+    <div class="side-footer">
+      <button id="autotest-btn" class="btn btn-primary btn-block">⚡ Autotest</button>
+      <select id="lang-select" class="select"></select>
+    </div>
+  </aside>
+
+  <!-- ===== Main content ===== -->
+  <main class="main">
+    <header class="topbar">
+      <button id="menu-toggle" class="btn icon-btn" title="Toggle sidebar">☰</button>
+      <div class="crumb" id="crumb">Dashboard</div>
+      <div class="top-actions">
+        <button id="fullscreen-btn" class="btn icon-btn" title="Fullscreen">⛶</button>
+        <button id="api-docs-btn" class="btn" title="API docs">📘 API</button>
+      </div>
+    </header>
+
+    <section class="page" id="page-root">
+      <!-- pages injected by JS -->
+    </section>
+  </main>
+</div>
+
+<!-- Terminal drawer -->
+<div class="terminal-drawer hidden" id="terminal-drawer">
+  <div class="terminal-head">
+    <span>💻 In-app terminal — type any AWEAI command</span>
+    <button id="term-close" class="btn icon-btn">✕</button>
+  </div>
+  <div class="terminal-body">
+    <div id="term-output" class="term-output"></div>
+    <div class="term-input-row">
+      <span class="term-prompt">aweai&gt;</span>
+      <input id="term-input" class="input term-input" placeholder="e.g. allc --count 20, autoallc, train --type mlp --name demo, market list…" autocomplete="off">
     </div>
   </div>
-  <div class="top-actions">
-    <button id="autotest-btn" class="btn btn-primary">🧪 Autotest</button>
-    <select id="lang-select" class="select"></select>
-  </div>
-</header>
+</div>
 
-<nav class="tabs">
-  <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
-  <button class="tab" data-tab="wizard">🪄 Wizard</button>
-  <button class="tab" data-tab="zoo">🐾 Model Zoo</button>
-  <button class="tab" data-tab="datasets">🗃 Datasets</button>
-  <button class="tab" data-tab="hyper">🎛 Hyperparameters</button>
-  <button class="tab" data-tab="rag">🔍 RAG</button>
-  <button class="tab" data-tab="terminal">💻 Terminal</button>
-  <button class="tab" data-tab="market">🏪 Market</button>
-  <button class="tab" data-tab="actions">⚙️ Actions</button>
-  <button class="tab" data-tab="settings">⚙️ Settings</button>
-</nav>
-
-<main>
-  <!-- Dashboard -->
-  <section id="tab-dashboard" class="tab-content active">
-    <div class="cards">
-      <div class="card"><h3>Hardware</h3><pre id="hardware-info">Loading…</pre></div>
-      <div class="card"><h3>Recommendation</h3><pre id="recommendation-info">Loading…</pre></div>
-      <div class="card"><h3>Model Zoo</h3><pre id="zoo-count">Loading…</pre></div>
-    </div>
-    <div class="card">
-      <h3>Live Training Curves</h3>
-      <canvas id="loss-canvas" width="900" height="240"></canvas>
-      <p class="hint" id="curve-hint">Train a model in the Wizard to see live loss curves.</p>
-    </div>
-  </section>
-
-  <!-- Wizard -->
-  <section id="tab-wizard" class="tab-content">
-    <div class="card">
-      <h3>Create &amp; train a model</h3>
-      <div class="form-grid">
-        <label>Model type
-          <select id="w-model-type" class="select"></select>
-        </label>
-        <label>Name
-          <input id="w-name" class="input" value="my_model" placeholder="model name">
-        </label>
-        <label>Data path (CSV/JSON/JSONL)
-          <input id="w-data" class="input" placeholder="/path/to/data.csv">
-        </label>
-        <label>Target column
-          <input id="w-target" class="input" placeholder="label">
-        </label>
-        <label>Epochs
-          <input id="w-epochs" class="input" type="number" value="20">
-        </label>
-        <label>Hyperparameters (JSON)
-          <input id="w-params" class="input" placeholder='{"hidden": [16, 8]}'>
-        </label>
-      </div>
-      <button id="train-btn" class="btn btn-primary">🚀 Train</button>
-      <pre id="train-result" class="output"></pre>
-    </div>
-  </section>
-
-  <!-- Model Zoo -->
-  <section id="tab-zoo" class="tab-content">
-    <div class="card">
-      <h3>Model Zoo</h3>
-      <button id="refresh-zoo" class="btn">Refresh</button>
-      <pre id="zoo-list" class="output"></pre>
-    </div>
-  </section>
-
-  <!-- Datasets -->
-  <section id="tab-datasets" class="tab-content">
-    <div class="card">
-      <h3>Dataset Manager</h3>
-      <label>Path
-        <input id="ds-path" class="input" placeholder="/path/to/data.csv">
-      </label>
-      <button id="ds-load" class="btn">Load dataset info</button>
-      <pre id="ds-result" class="output"></pre>
-    </div>
-    <div class="card">
-      <h3>Text augmentation</h3>
-      <label>Texts (one per line)
-        <textarea id="ds-texts" class="input" rows="3">The quick brown fox jumps over the lazy dog.</textarea>
-      </label>
-      <button id="ds-augment" class="btn">Augment</button>
-      <pre id="ds-augment-result" class="output"></pre>
-    </div>
-  </section>
-
-  <!-- Hyperparameters -->
-  <section id="tab-hyper" class="tab-content">
-    <div class="card">
-      <h3>Hyperparameter panel</h3>
-      <p>Run grid/random search via the CLI:</p>
-      <pre class="code">aweai tune mlp --data data.csv --target label --method grid</pre>
-      <p>Resource-adaptive defaults are applied automatically by the factory.</p>
-    </div>
-  </section>
-
-  <!-- RAG -->
-  <section id="tab-rag" class="tab-content">
-    <div class="card">
-      <h3>RAG</h3>
-      <label>Docs directory
-        <input id="rag-path" class="input" placeholder="/path/to/docs">
-      </label>
-      <button id="rag-index" class="btn">Index documents</button>
-      <pre id="rag-index-result" class="output"></pre>
-      <label>Query
-        <input id="rag-query" class="input" placeholder="ask your documents…">
-      </label>
-      <button id="rag-ask" class="btn">Ask</button>
-      <pre id="rag-ask-result" class="output"></pre>
-    </div>
-  </section>
-
-  <!-- Actions -->
-  <section id="tab-actions" class="tab-content">
-    <div class="card">
-      <h3>Natural-language actions</h3>
-      <label>Instruction
-        <input id="act-text" class="input" value="list all models" placeholder="e.g. train an mlp model named demo">
-      </label>
-      <button id="act-run" class="btn">Run action</button>
-      <pre id="act-result" class="output"></pre>
-    </div>
-  </section>
-
-  <!-- Terminal -->
-  <section id="tab-terminal" class="tab-content">
-    <div class="card">
-      <h3>In-app terminal</h3>
-      <p class="hint">Type any AWEAI command — try <code>allc</code>, <code>autoallc</code>, <code>types</code>, <code>hardware</code>, <code>market list</code>, <code>dtrain mlp --name demo</code>.</p>
-      <label>Command
-        <input id="term-input" class="input" placeholder="e.g. allc --count 20" style="width:100%">
-      </label>
-      <button id="term-run" class="btn btn-primary">▶ Run</button>
-      <pre id="term-output" class="output" style="max-height:420px; overflow:auto;"></pre>
-    </div>
-  </section>
-
-  <!-- Marketplace -->
-  <section id="tab-market" class="tab-content">
-    <div class="card">
-      <h3>Model marketplace</h3>
-      <div class="form-grid">
-        <label>Action
-          <select id="mkt-action" class="select">
-            <option value="list">List</option>
-            <option value="search">Search</option>
-            <option value="publish">Publish</option>
-            <option value="download">Download</option>
-            <option value="stats">Stats</option>
-          </select>
-        </label>
-        <label>Model / query / id
-          <input id="mkt-arg" class="input" placeholder="model name or query">
-        </label>
-      </div>
-      <button id="mkt-run" class="btn btn-primary">▶ Run</button>
-      <pre id="mkt-result" class="output"></pre>
-    </div>
-  </section>
-
-  <!-- Settings -->
-  <section id="tab-settings" class="tab-content">
-    <div class="card">
-      <h3>Settings</h3>
-      <pre id="config-info" class="output"></pre>
-    </div>
-  </section>
-</main>
-
-<footer class="footer">AWEAI v3.0.0 — AI Model Factory · no Hugging Face · no built-in AI · MIT</footer>
+<footer class="footer">AWEAI v3.0.0 — AI Model Factory · no Hugging Face · no built-in AI · MIT · 10,000+ CLI commands · 100,000+ UI menus</footer>
 
 <script src="/static/app.js"></script>
 </body>
