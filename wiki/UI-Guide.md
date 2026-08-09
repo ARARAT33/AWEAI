@@ -24,7 +24,7 @@ The sidebar is a combinatorial menu system — 22 groups × sub-actions × varia
 - **Marketplace** — list / search / publish / download / rate / stats.
 - **AI Tools** — BYOK integrations (OpenAI / Gemini / Azure / Claude / HF).
 - **Terminal** — full in-app terminal page.
-- **Megamenus (allc)** — browse the 10,000+ command catalog.
+- **Megamenus (allc)** — browse the 10,000+ command catalog (**100,000+ with `--huge`).
 - **Automations** — NL actions + pipelines.
 - **Debuggers** — model inspection, edge footprint.
 - **Libraries** — inventory of every library.
@@ -46,7 +46,7 @@ The in-app terminal is a real REPL exposed over the web API. Everything availabl
 
 ## Global search
 
-The sidebar search box queries the 10,000+ command catalog live and jumps straight to the Megamenus page.
+The sidebar search box queries the 10,000+ command catalog (100,000+ with `--huge`) live and jumps straight to the Megamenus page.
 
 ## REST API
 
@@ -61,3 +61,14 @@ The UI is backed by a REST API on the same port (Swagger at `/docs`):
 - `POST /api/quantize`, `POST /api/export/edge`, `GET /api/edge/footprint`
 - `POST /api/market`, `GET /api/integrations`, `POST /api/integrations/chat`
 - `POST /api/terminal`, `GET /api/allc`, `GET /api/autoallc`
+- `GET /api/tools`, `GET /api/tools/describe`, `POST /api/tools/run` — the 1800+ tool toolkit
+- `GET /api/env` — environment detection (localhost / LAN / cloud / container, online status)
+
+## Extension tools in the UI
+
+The **Tools** panel is powered by the same registry as the CLI. Open
+`/api/tools` to see every category and tool, and `POST /api/tools/run` with
+`{name, params}` to execute any of the 1800+ tools from the browser. The
+in-app terminal (Ctrl+`) also accepts any tool call. `/api/env` reports
+where the app is running and online status, so the UI adapts (offline/online
+fallback, CORS, port hints).
