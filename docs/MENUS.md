@@ -19,7 +19,7 @@ categorized and can be scaled to millions of entries.
 ## In-app terminal
 
 ```bash
-aweai terminal
+aweai commands list
 ```
 
 A full REPL exposing every factory tool: `train`, `eval`, `models`,
@@ -28,7 +28,7 @@ A full REPL exposing every factory tool: `train`, `eval`, `models`,
 `hardware`, `config`, `search`, `serve`, and more. Type `help` or `allc`
 for the full catalog.
 
-In the browser UI, the **Terminal** tab posts to `/api/terminal`.
+AWEAI is CLI-only; the command universe is browsed with `aweai commands list`.
 
 ## Integrations (BYOK)
 

@@ -5,7 +5,7 @@
 ```bash
 pip install -e .
 aweai autotest        # verify the whole system
-aweai serve           # browser UI on http://localhost:8888
+aweai commands count      # inspect the command universe
 ```
 
 ## Train your first model
@@ -72,7 +72,7 @@ aweai integrations chat --provider openai --message "hello"
 aweai allc                    # 10,000+ commands & instructions
 aweai allc --search "quantize"
 aweai autoallc                # 5,000+ automations
-aweai terminal                # full in-app terminal (all tools)
+aweai commands list         # full command universe
 ```
 
 ## CLI overview
@@ -87,6 +87,6 @@ aweai terminal                # full in-app terminal (all tools)
 - `aweai rag index/ask` — RAG
 - `aweai actions "..."` — natural-language automation
 - `aweai allc/autoallc` — megamenus
-- `aweai terminal` — in-app terminal
+- `aweai wiki build` — generate the Markdown wiki
 - `aweai autotest` — full system self-check
-- `aweai serve` — launch the UI
+- `aweai ai explain <term>` — AI/ASI/AGI knowledge
