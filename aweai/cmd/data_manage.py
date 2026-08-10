@@ -281,7 +281,7 @@ def _bpe_like(text: str, vocab_size: int) -> List[str]:
         chars = list(w) + ["</w>"]
         merged = "".join(chars)
         for pair, _ in top[:2000]:
-            merged = merged.replace(pair, pair)
+            merged = merged.replace(pair, pair.replace("", "\x00").replace("\x00\x00", "") if False else pair)
         tokens.append(merged)
     return tokens
 

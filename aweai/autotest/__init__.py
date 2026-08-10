@@ -1,17 +1,18 @@
 """Autotest: one-command full system self-check.
 
-`aweai autotest` (or the UI Autotest button) runs:
+`aweai autotest` runs:
   1. dependencies   — required packages importable
   2. module imports — every aweai.* module imports
   3. smoke-train    — all model types train briefly
   4. RAG            — index -> search -> reload from disk
   5. actions        — natural-language parsing works
   6. i18n           — 10+ languages load
-  7. UI             — server boots, /api/health responds
-  8. CLI            — all commands registered
+  7. CLI            — all commands registered (incl. v4 groups)
+  8. Knowledge      — AI/ASI/AGI knowledge base imports
 
 Returns a report dict with per-step status, and prints a summary.
 """
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 from __future__ import annotations
 
@@ -52,9 +53,11 @@ def check_module_imports() -> Dict[str, Any]:
         "aweai.hardware", "aweai.selector", "aweai.i18n",
         "aweai.data", "aweai.models", "aweai.train", "aweai.eval",
         "aweai.management", "aweai.export", "aweai.rag", "aweai.actions",
-        "aweai.autotest", "aweai.ui", "aweai.cli",
+        "aweai.autotest", "aweai.cli",
         "aweai.quantize", "aweai.distributed", "aweai.market",
-        "aweai.menus", "aweai.terminal", "aweai.integrations",
+        "aweai.integrations", "aweai.ai", "aweai.bulk", "aweai.wiki",
+        "aweai.cmd", "aweai.cmd.data_collect", "aweai.cmd.data_manage",
+        "aweai.cmd.model", "aweai.cmd.provider", "aweai.cmd.device", "aweai.cmd.ops",
     ]
     failed = []
     for m in modules:
@@ -241,30 +244,6 @@ def check_i18n() -> Dict[str, Any]:
     return r
 
 
-def check_ui(no_ui: bool = False) -> Dict[str, Any]:
-    r = _check("ui")
-    if no_ui:
-        r["ok"] = True
-        r["detail"] = "skipped (--no-ui)"
-        return r
-    try:
-        from aweai.ports import resolve_port
-        from aweai.ui import create_app
-        from fastapi.testclient import TestClient
-
-        port = resolve_port(8999)
-        app = create_app()
-        client = TestClient(app)
-        resp = client.get("/api/health")
-        assert resp.status_code == 200, resp.status_code
-        data = resp.json()
-        assert "status" in data and data["status"] == "ok"
-        r["ok"] = True
-        r["detail"] = "/api/health OK"
-    except Exception as e:
-        r["detail"] = str(e)
-    return r
-
 
 def check_cli() -> Dict[str, Any]:
     r = _check("cli")
@@ -277,10 +256,16 @@ def check_cli() -> Dict[str, Any]:
         # introspect registered commands
         info = app.registered_commands
         names = sorted([c.name or c.callback.__name__ for c in info])
+        group_names = sorted([g.name for g in app.registered_groups])
         required = ["train", "eval", "export", "quantize", "export_edge", "edge_footprint",
-                    "dtrain", "dworld", "market", "integrations", "allc", "autoallc",
-                    "terminal", "autotest", "serve", "version", "recommend", "types"]
+                    "dtrain", "dworld", "market", "integrations", "autotest",
+                    "version", "recommend", "types", "tools"]
+        required_groups = ["ai", "commands", "wiki", "collect", "data", "model",
+                           "providers", "devices", "ops", "math", "string", "json",
+                           "file", "net", "time", "crypto", "ml", "text", "image",
+                           "audio", "video", "sys", "db", "cloud", "llm", "rl", "neuro", "knowledge"]
         missing = [x for x in required if x not in names]
+        missing += [x for x in required_groups if x not in group_names]
         # run version + a few lightweight commands through the runner
         rv = runner.invoke(app, ["version"])
         assert rv.exit_code == 0, rv.output
@@ -288,11 +273,13 @@ def check_cli() -> Dict[str, Any]:
         assert rv2.exit_code == 0, rv2.output
         rv3 = runner.invoke(app, ["types"])
         assert rv3.exit_code == 0, rv3.output
+        rv4 = runner.invoke(app, ["ai", "explain", "rag"])
+        assert rv4.exit_code == 0, rv4.output
         if missing:
-            r["detail"] = f"missing commands: {missing}; have {len(names)} commands"
+            r["detail"] = f"missing commands: {missing}; have {len(names)} commands, {len(group_names)} groups"
         else:
             r["ok"] = True
-            r["detail"] = f"{len(names)} commands OK (incl. all new v3 commands)"
+            r["detail"] = f"{len(names)} commands + {len(group_names)} groups OK (incl. all new v4 commands)"
     except Exception as e:
         r["detail"] = str(e)
     return r
@@ -311,7 +298,6 @@ def run_autotest(quick: bool = False, no_ui: bool = False, verbose: bool = True)
             ("rag", check_rag),
             ("actions", check_actions),
             ("i18n", check_i18n),
-            ("ui", lambda: check_ui(no_ui=no_ui)),
             ("cli", check_cli),
         ]
     else:
