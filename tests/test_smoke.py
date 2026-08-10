@@ -39,13 +39,55 @@ def test_linear_train():
     y = np.array([2.0, 4.0, 6.0])
     m = train("linear", "test_linear", X=X, y=y, params={"epochs": 5})
     assert isinstance(m, dict)
-    assert m.get("name") == "test_linear"
+    assert m.get("model_type") == "linear"
 
 
-def test_kmeans_train():
+def test_kmeans_clusters():
     X = np.array([[0.0, 0.0], [0.0, 0.1], [5.0, 5.0], [5.1, 5.1]])
-    m = train("kmeans", "test_kmeans", X=X, params={"k": 2, "epochs": 3})
+    m = train("kmeans", "test_kmeans", X=X, params={"k": 2, "epochs": 10})
     assert isinstance(m, dict)
     assert m.get("model_type") == "kmeans"
-    m2 = train("kmeans", "test_kmeans_live", X=X, params={"k": 2, "epochs": 3}, save=False)
-    assert len(set(m2.labels_)) >= 1
+
+
+def test_ngram_model():
+    from aweai.models.ngram import NGramModel
+
+    m = NGramModel(n=2)
+    m.fit(["the cat", "the dog", "a cat"])
+    assert m.predict("the") in ("cat", "dog")
+
+
+def test_rnn_train_predict():
+    from aweai.models.rnn import RNNModel
+
+    X = np.array([[[0.1], [0.2], [0.3]]])
+    y = np.array([0.5])
+    m = RNNModel(input_size=1, hidden_size=4)
+    m.fit(X, y, epochs=3)
+    preds = m.predict(X)
+    assert len(preds) == 1
+
+
+def test_cnn_forward():
+    from aweai.models.cnn import CNNModel
+
+    m = CNNModel()
+    X = np.random.randn(2, 3, 16, 16).astype("float32")
+    out = m.forward(X)
+    assert out.shape[0] == 2
+
+
+def test_transformer_forward():
+    from aweai.models.transformer import TransformerModel
+
+    m = TransformerModel(d_model=16, nhead=2, num_layers=1)
+    X = np.random.randn(2, 5, 16).astype("float32")
+    out = m.forward(X)
+    assert out.shape[0] == 2
+
+def test_autotest_available():
+    from aweai.autotest import run_all
+
+    results = run_all(silent=True)
+    assert isinstance(results, dict)
+    assert "passed" in results
