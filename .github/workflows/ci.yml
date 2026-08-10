@@ -31,15 +31,16 @@ jobs:
       - name: Lint compile
         run: python -m compileall -q aweai tests examples scripts
 
-      - name: Import checks
+      - name: Import checks (CLI-only, no UI)
         run: |
-          python -c "import aweai, aweai.cli, aweai.train, aweai.eval, aweai.rag, aweai.actions, aweai.ui, aweai.autotest; print('imports OK')"
+          python -c "import aweai, aweai.cli, aweai.train, aweai.eval, aweai.rag, aweai.actions, aweai.autotest, aweai.ai, aweai.bulk, aweai.wiki, aweai.cmd; print('imports OK')"
           python -m aweai version
+          python -m aweai commands count
 
       - name: Unit tests
         run: python -m pytest -q
 
-      - name: Autotest (no UI)
+      - name: Autotest (CLI-only)
         run: python -m aweai autotest --quick --no-ui
 
       - name: No-HuggingFace guard

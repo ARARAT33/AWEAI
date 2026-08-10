@@ -12,6 +12,24 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
+ATTRIBUTION CLAUSE (additional, mandatory):
+
+1. Any use, copy, modification, merge, publication, distribution,
+   sublicense or sale of the Software, or of any derivative work based on
+   the Software, MUST credit **ARARAT33** as co-author/author of the work.
+   This credit must appear prominently in the documentation, README,
+   about screen or equivalent of the derivative work.
+
+2. Any modification, adaptation or derivative work based on the Software
+   MUST state in its documentation, README or equivalent that the work is
+   **based on AWEAI** by ARARAT33.
+
+3. The attribution notices required by clauses (1) and (2) must survive in
+   the source headers of every file derived from the Software. The
+   recommended header is:
+
+       # Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE

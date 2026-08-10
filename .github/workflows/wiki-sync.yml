@@ -3,7 +3,7 @@ name: Wiki Sync
 on:
   push:
     branches: [main]
-    paths: ["wiki/**"]
+    paths: ["wiki/**", "docs/wiki/**"]
   workflow_dispatch:
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
             cat /tmp/wiki_clone.log
             git init /tmp/aweai-wiki
             git -C /tmp/aweai-wiki remote add origin "${WIKI_URL}"
-            cp -f ${GITHUB_WORKSPACE}/wiki/Home.md /tmp/aweai-wiki/Home.md
+            cp -f ${GITHUB_WORKSPACE}/wiki/Home.md /tmp/aweai-wiki/Home.md 2>/dev/null || cp -f ${GITHUB_WORKSPACE}/docs/wiki/Home.md /tmp/aweai-wiki/Home.md
           fi
           cd /tmp/aweai-wiki
           git checkout -B master 2>/dev/null || true

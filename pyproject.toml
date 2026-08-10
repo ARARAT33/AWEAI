@@ -1,20 +1,28 @@
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "aweai"
-version = "3.0.0"
-description = "AWEAI — AI Model Factory: create, train, tune and manage AI models from scratch. No built-in AI, no Hugging Face."
+version = "4.0.0"
+description = "AWEAI — Universal CLI for AI/ASI/AGI engineering. Pure terminal: create, train, tune and manage AI models + hundreds of CLI commands. No built-in AI, no Hugging Face, no UI."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "ARARAT33" }]
-keywords = ["ai", "ml", "model-factory", "training", "numpy", "torch", "from-scratch", "no-huggingface"]
+authors = [
+    { name = "ARARAT33" },
+]
+maintainers = [
+    { name = "ARARAT33" },
+]
+keywords = ["ai", "agi", "asi", "cli", "model-factory", "training", "numpy", "torch", "from-scratch", "no-huggingface", "terminal"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
 ]
 dependencies = [
     "numpy>=1.21",
@@ -25,14 +33,10 @@ dependencies = [
 torch = ["torch>=1.13"]
 onnx = ["onnx>=1.13"]
 sklearn = ["scikit-learn>=1.0"]
-ui = ["fastapi>=0.100", "uvicorn>=0.23", "pydantic>=1.10"]
 all = [
     "torch>=1.13",
     "onnx>=1.13",
     "scikit-learn>=1.0",
-    "fastapi>=0.100",
-    "uvicorn>=0.23",
-    "pydantic>=1.10",
     "psutil>=5.9",
 ]
 

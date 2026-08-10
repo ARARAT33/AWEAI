@@ -1,5 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for AWEAI — builds a single-file CLI binary.
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+
+"""PyInstaller spec for AWEAI v4.0 — builds a single-file CLI binary.
 
 Usage:
     pyinstaller --clean --noconfirm aweai.spec
@@ -8,6 +10,8 @@ The packaged binary intentionally EXCLUDES the heavy optional ML backends
 (torch, onnx, scikit-learn). Bundling torch pulls in multiple GB of CUDA
 libraries which exceeds the GitHub Release 2 GB asset limit. Those features
 remain available when AWEAI is installed from pip (pip install aweai[all]).
+
+AWEAI is CLI-only: no UI/static assets are bundled.
 """
 
 from PyInstaller.utils.hooks import collect_submodules
@@ -20,7 +24,6 @@ a = Analysis(
     binaries=[],
     datas=[
         ("aweai/i18n_assets.json", "aweai"),
-        ("aweai/ui/static", "aweai/ui/static"),
     ],
     hiddenimports=hiddenimports,
     hookspath=[],
@@ -31,6 +34,9 @@ a = Analysis(
         "matplotlib",
         "PIL",
         "pytest",
+        "fastapi",
+        "uvicorn",
+        "pydantic",
         "torch",
         "torchvision",
         "torchaudio",
