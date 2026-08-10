@@ -640,7 +640,7 @@ def _port_open(host: str, port: int) -> bool:
 
 
 def _net_download(url: str, out: str, timeout: int) -> Dict[str, Any]:
-    req = urllib.request.Request(url, headers={"User-Agent": "AWEAI-CLI/4.0"})
+    req = urllib.request.Request(url, headers={"Agent": "AWEAI-CLI/4.0"})
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         data = r.read()
@@ -882,3 +882,766 @@ def _hist(vals: List[float], bins: int) -> Dict[str, Any]:
         label = f"[{start:.2f},{end:.2f})"
         out[label] = sum(1 for v in vals if start <= v < end)
     return out
+
+
+# ===========================================================================
+# TEXT processing group
+# ===========================================================================
+spec("text", "tokenize", "Split text into words/tokens.", [("text", "hello brave world", "Text")],
+     lambda p: _ok(tokens=re.findall(r"[A-Za-z0-9']+", p["text"].lower())))
+spec("text", "ngrams", "Generate n-grams.", [("text", "the quick brown fox", "Text"), ("n", 2, "N")],
+     lambda p: _ok(ngrams=_ngrams(re.findall(r"[A-Za-z0-9']+", p["text"].lower()), int(p["n"]))))
+spec("text", "freq", "Word frequencies.", [("text", "the cat and the dog", "Text")],
+     lambda p: _ok(frequencies=_freq(re.findall(r"[A-Za-z0-9']+", p["text"].lower()))))
+spec("text", "top_words", "Top frequent words.", [("text", "a a b b b c", "Text"), ("n", 2, "Count")],
+     lambda p: _ok(top=sorted(_freq(re.findall(r"[A-Za-z0-9']+", p["text"].lower())).items(), key=lambda kv: -kv[1])[: int(p["n"])]))
+spec("text", "stopwords", "Remove common stopwords.", [("text", "the quick brown fox jumps", "Text")],
+     lambda p: _ok(result=" ".join(w for w in p["text"].split() if w.lower() not in _STOPWORDS)))
+spec("text", "sentences", "Split into sentences.", [("text", "Hello. World! How are you?", "Text")],
+     lambda p: _ok(sentences=re.split(r"(?<=[.!?])\s+", p["text"].strip())))
+spec("text", "wrap", "Wrap text to width.", [("text", "The quick brown fox jumps over the lazy dog", "Text"), ("width", 20, "Width")],
+     lambda p: _ok(lines=__import__("textwrap").wrap(p["text"], int(p["width"]))))
+spec("text", "dedent", "Remove common leading whitespace.", [("text", "  hello\n  world", "Text")],
+     lambda p: _ok(result=__import__("textwrap").dedent(p["text"])))
+spec("text", "align", "Pad lines to width.", [("text", "a\nbb\nccc", "Text"), ("width", 6, "Width")],
+     lambda p: _ok(result="\n".join(ln.ljust(int(p["width"])) for ln in p["text"].splitlines())))
+spec("text", "csv", "Parse CSV text to rows.", [("text", "a,b\n1,2", "CSV text")],
+     lambda p: _ok(rows=list(csv.reader(io.StringIO(p["text"])))))
+spec("text", "tsv", "Parse TSV text to rows.", [("text", "a\tb\n1\t2", "TSV text")],
+     lambda p: _ok(rows=list(csv.reader(io.StringIO(p["text"]), delimiter="\t"))))
+spec("text", "table", "Render simple table.", [("rows", "Name,Age\nAlice,30\nBob,25", "CSV rows")],
+     lambda p: _ok(table=_render_table([list(r) for r in csv.reader(io.StringIO(p["rows"]))])))
+spec("text", "diff", "Simple line diff (similarity).", [("a", "hello world", "Text A"), ("b", "hello there", "Text B")],
+     lambda p: _ok(similarity=_seq_sim(p["a"], p["b"])))
+spec("text", "indent", "Indent each line.", [("text", "a\nb", "Text"), ("spaces", 4, "Spaces")],
+     lambda p: _ok(result="\n".join(" " * int(p["spaces"]) + ln for ln in p["text"].splitlines())))
+spec("text", "unindent", "Remove up to n leading spaces per line.", [("text", "    a\n    b", "Text"), ("spaces", 4, "Spaces")],
+     lambda p: _ok(result="\n".join(ln[int(p["spaces"]):] if ln.startswith(" " * int(p["spaces"])) else ln for ln in p["text"].splitlines())))
+spec("text", "case_count", "Count letter cases.", [("text", "Hello World", "Text")],
+     lambda p: _ok(upper=sum(c.isupper() for c in p["text"]), lower=sum(c.islower() for c in p["text"])))
+spec("text", "punct", "Extract punctuation.", [("text", "Hi! How are you?", "Text")],
+     lambda p: _ok(punctuation=[c for c in p["text"] if c in string.punctuation]))
+spec("text", "numbers", "Extract numbers from text.", [("text", "price is 12.5 and 3", "Text")],
+     lambda p: _ok(numbers=[float(m) for m in re.findall(r"-?\d+\.?\d*", p["text"])]))
+spec("text", "emails", "Extract email addresses.", [("text", "mail a@b.com and c@d.io", "Text")],
+     lambda p: _ok(emails=re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", p["text"])))
+spec("text", "urls", "Extract URLs.", [("text", "see https://a.com and http://b.org", "Text")],
+     lambda p: _ok(urls=re.findall(r"https?://[^\s]+", p["text"])))
+spec("text", "phones", "Extract phone-like numbers.", [("text", "call +374 91 123456", "Text")],
+     lambda p: _ok(phones=re.findall(r"\+?\d[\d\s\-]{6,}", p["text"])))
+spec("text", "hashtags", "Extract hashtags.", [("text", "love #AI and #AGI", "Text")],
+     lambda p: _ok(hashtags=re.findall(r"#\w+", p["text"])))
+spec("text", "mentions", "Extract @mentions.", [("text", "hello @ararat and @bob", "Text")],
+     lambda p: _ok(mentions=re.findall(r"@\w+", p["text"])))
+spec("text", "acronyms", "Extract uppercase acronyms.", [("text", "AI and NLP and CNN are acronyms", "Text")],
+     lambda p: _ok(acronyms=re.findall(r"\b[A-Z]{2,}\b", p["text"])))
+spec("text", "censored", "Mask emails and phones.", [("text", "mail a@b.com phone 37491123456", "Text")],
+     lambda p: _ok(result=re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "[EMAIL]", re.sub(r"\+?\d[\d\s\-]{6,}", "[PHONE]", p["text"]))))
+spec("text", "detect_latin", "Detect if text contains Latin script.", [("text", "hello", "Text")],
+     lambda p: _ok(latin=any("a" <= c.lower() <= "z" for c in p["text"])))
+spec("text", "detect_armenian", "Detect Armenian script.", [("text", "\u0562\u0561\u0580\u0565\u0582 \u0561\u0577\u056d\u0561\u0580\u0570", "Text")],
+     lambda p: _ok(armenian=any("\u0531" <= c <= "\u0586" for c in p["text"])))
+spec("text", "transliterate_hy", "Transliterate Armenian to Latin.", [("text", "\u0532\u0561\u0580\u0565\u0582", "Armenian text")],
+     lambda p: _ok(result=_translit_hy(p["text"])))
+spec("text", "transliterate_to_hy", "Transliterate Latin to Armenian.", [("text", "Barev", "Latin text")],
+     lambda p: _ok(result=_translit_to_hy(p["text"])))
+spec("text", "language", "Guess language (heuristic).", [("text", "Hello world", "Text")],
+     lambda p: _ok(language=_guess_lang(p["text"])))
+spec("text", "length_stats", "Character/word/line stats.", [("text", "hello world\nfoo", "Text")],
+     lambda p: _ok(chars=len(p["text"]), words=len(p["text"].split()), lines=len(p["text"].splitlines())))
+spec("text", "bom", "UTF-8 BOM strip.", [("text", "\ufeffhello", "Text")],
+     lambda p: _ok(result=p["text"].lstrip("\ufeff")))
+spec("text", "compress", "zlib-compress text (base64).", [("text", "hello hello hello", "Text")],
+     lambda p: _ok(compressed=__import__("base64").b64encode(zlib.compress(p["text"].encode())).decode()))
+spec("text", "decompress", "zlib-decompress base64.", [("text", "eJxLyUhKLElMAClFApE=", "Base64 zlib")],
+     lambda p: _ok(result=zlib.decompress(__import__("base64").b64decode(p["text"])).decode(errors="replace")))
+
+
+_STOPWORDS = {
+    "the", "a", "an", "and", "or", "but", "if", "then", "else", "of", "to", "in",
+    "on", "at", "by", "for", "with", "about", "as", "is", "are", "was", "were",
+    "be", "been", "being", "have", "has", "had", "do", "does", "did", "will",
+    "would", "can", "could", "should", "may", "might", "must", "this", "that",
+    "these", "those", "it", "its", "from", "up", "down", "out", "off", "over",
+}
+
+
+def _ngrams(tokens: List[str], n: int) -> List[List[str]]:
+    return [tokens[i:i + n] for i in range(max(0, len(tokens) - n + 1))]
+
+
+def _freq(tokens: List[str]) -> Dict[str, int]:
+    out: Dict[str, int] = {}
+    for t in tokens:
+        out[t] = out.get(t, 0) + 1
+    return out
+
+
+def _render_table(rows: List[List[str]]) -> str:
+    if not rows:
+        return ""
+    widths = [max(len(str(r[i])) for r in rows) for i in range(len(rows[0]))]
+    lines = []
+    for ri, row in enumerate(rows):
+        lines.append("| " + " | ".join(str(c).ljust(widths[i]) for i, c in enumerate(row)) + " |")
+        if ri == 0:
+            lines.append("|" + "|".join("-" * (w + 2) for w in widths) + "|")
+    return "\n".join(lines)
+
+
+def _seq_sim(a: str, b: str) -> float:
+    # simple bigram Jaccard
+    def bigrams(s: str) -> set:
+        return {s[i:i + 2] for i in range(len(s) - 1)} if len(s) > 1 else {s}
+    ga, gb = bigrams(a), bigrams(b)
+    if not ga and not gb:
+        return 1.0
+    return len(ga & gb) / len(ga | gb)
+
+
+_HY_LATIN = {
+    "\u0561": "a", "\u0562": "b", "\u0563": "g", "\u0564": "d", "\u0565": "e", "\u0566": "z", "\u0567": "e",
+    "\u0568": "y", "\u0569": "t", "\u056a": "zh", "\u056b": "i", "\u056c": "l", "\u056d": "kh", "\u056e": "ts",
+    "\u056f": "k", "\u0570": "h", "\u0571": "dz", "\u0572": "gh", "\u0573": "ch", "\u0574": "m", "\u0575": "y",
+    "\u0576": "n", "\u0577": "sh", "\u0578": "o", "\u0579": "ch", "\u057a": "p", "\u057b": "j", "\u057c": "r",
+    "\u057d": "s", "\u057e": "v", "\u057f": "t", "\u0580": "r", "\u0581": "ts", "\u0578\u0582": "u", "\u0583": "p",
+    "\u0584": "q", "\u0587": "ev", "\u0585": "o", "\u0586": "f",
+}
+_LATIN_HY = {v: k for k, v in _HY_LATIN.items()}
+
+
+def _translit_hy(text: str) -> str:
+    out = []
+    i = 0
+    while i < len(text):
+        c = text[i]
+        low = c.lower()
+        two = text[i:i + 2].lower()
+        if two == "\u0578\u0582":
+            out.append("u" if c.islower() else "U")
+            i += 2
+            continue
+        if low in _HY_LATIN:
+            mapped = _HY_LATIN[low]
+            out.append(mapped.capitalize() if c.isupper() and not c.islower() else mapped)
+        else:
+            out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def _translit_to_hy(text: str) -> str:
+    out = []
+    i = 0
+    while i < len(text):
+        c = text[i]
+        low = c.lower()
+        # two-letter mappings first (longest match)
+        matched = False
+        for ln in (2, 1):
+            if ln == 2 and i + 1 < len(text):
+                pair = text[i:i + 2].lower()
+                if pair in _LATIN_HY:
+                    out.append(_LATIN_HY[pair])
+                    i += 2
+                    matched = True
+                    break
+            elif ln == 1 and low in _LATIN_HY:
+                out.append(_LATIN_HY[low])
+                i += 1
+                matched = True
+                break
+        if not matched:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def _guess_lang(text: str) -> str:
+    hy = sum(1 for c in text if "\u0531" <= c <= "\u0586")
+    if hy > 0:
+        return "hy (Armenian)"
+    ru = sum(1 for c in text if "\u0410" <= c <= "\u044F")
+    if ru > 0:
+        return "ru (Russian)"
+    # very rough Latin heuristic: English stopwords
+    words = set(re.findall(r"[A-Za-z']+", text.lower()))
+    en_stops = {"the", "and", "of", "to", "is", "in", "that", "for", "it", "with"}
+    if words & en_stops:
+        return "en (English)"
+    return "unknown"
+
+
+# ===========================================================================
+# IMAGE / AUDIO / VIDEO group (pure metadata, no heavy deps)
+# ===========================================================================
+spec("image", "info", "Read image dimensions/type from file header.", [("path", "img.png", "Image path")],
+     lambda p: _ok(**_image_info(p["path"])))
+spec("image", "resize_hint", "Suggested resize dims preserving aspect.", [("width", 1920, "Width"), ("height", 1080, "Height"), ("max", 512, "Max side")],
+     lambda p: _ok(dims=_resize_hint(int(p["width"]), int(p["height"]), int(p["max"]))))
+spec("image", "histogram_text", "ASCII brightness histogram (requires PIL).", [("path", "img.png", "Image path")],
+     lambda p: _ok(hist=_ascii_hist(p["path"])))
+spec("audio", "info", "Audio file metadata via stdlib (WAV) or ffprobe.", [("path", "sound.wav", "Audio path")],
+     lambda p: _ok(**_audio_info(p["path"])))
+spec("audio", "tone", "Generate WAV sine tone.", [("path", "tone.wav", "Output path"), ("freq", 440.0, "Hz"), ("seconds", 2.0, "Seconds"), ("rate", 22050, "Sample rate")],
+     lambda p: _ok(**_gen_tone(p["path"], p["freq"], p["seconds"], int(p["rate"]))))
+spec("video", "info", "Video metadata via ffprobe (if available).", [("path", "movie.mp4", "Video path")],
+     lambda p: _ok(**_video_info(p["path"])))
+
+
+def _image_info(path: str) -> Dict[str, Any]:
+    try:
+        head = Path(path).read_bytes()[:64]
+    except Exception as e:
+        return {"error": str(e)}
+    if head[:8] == b"\x89PNG\r\n\x1a\n" and len(head) >= 24:
+        w, h = struct.unpack(">II", head[16:24])
+        return {"type": "png", "width": w, "height": h}
+    if head[:2] == b"\xff\xd8":
+        # scan for SOF markers
+        i = 2
+        while i < len(head) - 8:
+            if head[i] != 0xFF:
+                i += 1
+                continue
+            marker = head[i + 1]
+            if marker in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+                h, w = struct.unpack(">HH", head[i + 5:i + 9])
+                return {"type": "jpeg", "width": w, "height": h}
+            i += 2
+        return {"type": "jpeg", "width": None, "height": None}
+    if head[:6] in (b"GIF87a", b"GIF89a") and len(head) >= 10:
+        w, h = struct.unpack("<HH", head[6:10])
+        return {"type": "gif", "width": w, "height": h}
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return {"type": "webp", "width": None, "height": None}
+    if head[:4] == b"BM" and len(head) >= 26:
+        w, h = struct.unpack("<ii", head[18:26])
+        return {"type": "bmp", "width": w, "height": h}
+    return {"type": "unknown", "width": None, "height": None}
+
+
+def _resize_hint(w: int, h: int, max_side: int) -> Dict[str, int]:
+    scale = min(1.0, max_side / max(w, h))
+    return {"width": max(1, int(w * scale)), "height": max(1, int(h * scale))}
+
+
+def _ascii_hist(path: str) -> Any:
+    try:
+        from PIL import Image
+    except Exception:
+        return {"error": "PIL not installed"}
+    try:
+        img = Image.open(path).convert("L")
+        hist = img.histogram()
+        # 10 buckets
+        buckets = [0] * 10
+        total = img.width * img.height
+        for i, count in enumerate(hist):
+            buckets[min(9, i * 10 // 256)] += count
+        return {"buckets": [round(b / total * 100, 1) for b in buckets], "bars": ["#" * int(b / total * 50) for b in buckets]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def _audio_info(path: str) -> Dict[str, Any]:
+    head = Path(path).read_bytes()[:44] if Path(path).exists() else b""
+    if head[:4] == b"RIFF" and head[8:12] == b"WAVE" and len(head) >= 44:
+        channels, rate = struct.unpack("<HH", head[22:26])
+        bits = struct.unpack("<H", head[34:36])[0]
+        return {"type": "wav", "channels": channels, "sample_rate": rate, "bits": bits}
+    probe = _cmd(f'ffprobe -v error -show_format -show_streams -of json "{path}"')
+    if probe:
+        try:
+            data = json.loads(probe)
+            streams = data.get("streams", [])
+            fmt = data.get("format", {})
+            return {"type": fmt.get("format_long_name", "media"),
+                    "duration_s": fmt.get("duration"), "streams": len(streams)}
+        except Exception:
+            pass
+    return {"type": "unknown"}
+
+
+def _gen_tone(path: str, freq: float, seconds: float, rate: int) -> Dict[str, Any]:
+    import wave
+
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    n = int(rate * seconds)
+    frames = bytearray()
+    for i in range(n):
+        val = int(32767 * math.sin(2 * math.pi * freq * i / rate))
+        frames += struct.pack("<h", val)
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(bytes(frames))
+    return {"path": path, "sample_rate": rate, "seconds": seconds, "samples": n}
+
+
+def _video_info(path: str) -> Dict[str, Any]:
+    probe = _cmd(f'ffprobe -v error -show_format -show_streams -of json "{path}"')
+    if not probe:
+        return {"error": "ffprobe not available"}
+    try:
+        data = json.loads(probe)
+        streams = data.get("streams", [])
+        v = next((s for s in streams if s.get("codec_type") == "video"), None)
+        a = next((s for s in streams if s.get("codec_type") == "audio"), None)
+        return {
+            "duration_s": data.get("format", {}).get("duration"),
+            "video_codec": v.get("codec_name") if v else None,
+            "width": v.get("width") if v else None,
+            "height": v.get("height") if v else None,
+            "audio_codec": a.get("codec_name") if a else None,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ===========================================================================
+# SYSTEM / OS group
+# ===========================================================================
+spec("sys", "info", "System information.", [], lambda p: _ok(**_sys_info()))
+spec("sys", "python", "Python version.", [], lambda p: _ok(version=sys.version.split()[0], executable=sys.executable))
+spec("sys", "platform", "Platform details.", [], lambda p: _ok(system=platform.system(), release=platform.release(), machine=platform.machine()))
+spec("sys", "cwd", "Current working directory.", [], lambda p: _ok(cwd=os.getcwd()))
+spec("sys", "env", "Environment variable.", [("name", "PATH", "Var name")],
+     lambda p: _ok(value=os.environ.get(p["name"], "")))
+spec("sys", "env_all", "All environment variable names.", [], lambda p: _ok(names=sorted(os.environ.keys())))
+spec("sys", "cpu_count", "CPU count.", [], lambda p: _ok(cpus=os.cpu_count()))
+spec("sys", "memory", "Memory info (psutil if available).", [], lambda p: _ok(**_memory_info()))
+spec("sys", "disk", "Disk usage of path.", [("path", ".", "Path")],
+     lambda p: _ok(**_disk_usage(p["path"])))
+spec("sys", "uptime", "System uptime (from /proc).", [], lambda p: _ok(seconds=_uptime()))
+spec("sys", "users", "Current user.", [], lambda p: _ok(user=os.environ.get("USER") or os.environ.get("USERNAME") or "unknown"))
+spec("sys", "arch", "CPU architecture.", [], lambda p: _ok(arch=platform.machine()))
+spec("sys", "python_path", "sys.path entries.", [], lambda p: _ok(path=sys.path))
+spec("sys", "modules", "Loaded module count.", [], lambda p: _ok(count=len(sys.modules)))
+spec("sys", "shell", "Default shell.", [], lambda p: _ok(shell=os.environ.get("SHELL", "unknown")))
+spec("sys", "home", "Home directory.", [], lambda p: _ok(home=str(Path.home())))
+spec("sys", "tempdir", "Temp directory.", [], lambda p: _ok(temp=__import__("tempfile").gettempdir()))
+
+
+def _sys_info() -> Dict[str, Any]:
+    return {
+        "system": platform.system(),
+        "release": platform.release(),
+        "version": platform.version(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+        "python": sys.version.split()[0],
+        "hostname": socket.gethostname(),
+    }
+
+
+def _memory_info() -> Dict[str, Any]:
+    try:
+        import psutil
+
+        vm = psutil.virtual_memory()
+        return {"total": vm.total, "available": vm.available, "percent": vm.percent}
+    except Exception:
+        try:
+            with open("/proc/meminfo") as f:
+                data = {}
+                for line in f:
+                    k, _, v = line.partition(":")
+                    data[k] = int(v.strip().split()[0]) * 1024
+            return {"total": data.get("MemTotal", 0), "available": data.get("MemAvailable", data.get("MemFree", 0))}
+        except Exception:
+            return {"error": "unavailable"}
+
+
+def _disk_usage(path: str) -> Dict[str, Any]:
+    try:
+        import shutil
+
+        total, used, free = shutil.disk_usage(path)
+        return {"total": total, "used": used, "free": free, "percent": round(used / total * 100, 1) if total else 0}
+    except Exception:
+        return {"error": "unavailable"}
+
+
+def _uptime() -> int:
+    try:
+        with open("/proc/uptime") as f:
+            return int(float(f.read().split()[0]))
+    except Exception:
+        return 0
+
+
+# ===========================================================================
+# DB group (SQLite local)
+# ===========================================================================
+spec("db", "create", "Create SQLite table.", [("path", "db.sqlite", "DB path"), ("table", "items", "Table name"), ("schema", "id INTEGER PRIMARY KEY, name TEXT", "Column schema")],
+     lambda p: _db_create(p["path"], p["table"], p["schema"]))
+spec("db", "insert", "Insert row into SQLite.", [("path", "db.sqlite", "DB path"), ("table", "items", "Table"), ("values", "1,'hello'", "Values")],
+     lambda p: _db_insert(p["path"], p["table"], p["values"]))
+spec("db", "query", "Run SQL query.", [("path", "db.sqlite", "DB path"), ("sql", "SELECT * FROM items", "SQL")],
+     lambda p: _db_query(p["path"], p["sql"]))
+spec("db", "tables", "List SQLite tables.", [("path", "db.sqlite", "DB path")],
+     lambda p: _db_tables(p["path"]))
+spec("db", "schema", "Show table schema.", [("path", "db.sqlite", "DB path"), ("table", "items", "Table")],
+     lambda p: _db_schema(p["path"], p["table"]))
+spec("db", "count", "Count rows in table.", [("path", "db.sqlite", "DB path"), ("table", "items", "Table")],
+     lambda p: _db_count(p["path"], p["table"]))
+spec("db", "drop", "Drop table.", [("path", "db.sqlite", "DB path"), ("table", "items", "Table")],
+     lambda p: _db_drop(p["path"], p["table"]))
+spec("db", "delete", "Delete rows.", [("path", "db.sqlite", "DB path"), ("table", "items", "Table"), ("where", "id=1", "WHERE clause")],
+     lambda p: _db_delete(p["path"], p["table"], p["where"]))
+spec("db", "update", "Update rows.", [("path", "db.sqlite", "DB path"), ("table", "items", "Table"), ("set", "name='x'", "SET clause"), ("where", "id=1", "WHERE clause")],
+     lambda p: _db_update(p["path"], p["table"], p["set"], p["where"]))
+
+
+def _db_connect(path: str):
+    import sqlite3
+
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def _db_create(path: str, table: str, schema: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        conn.execute(f"CREATE TABLE IF NOT EXISTS {table} ({schema})")
+        conn.commit()
+        return _ok(table=table, schema=schema)
+    finally:
+        conn.close()
+
+
+def _db_insert(path: str, table: str, values: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        cur = conn.execute(f"INSERT INTO {table} VALUES ({values})")
+        conn.commit()
+        return _ok(rowid=cur.lastrowid)
+    finally:
+        conn.close()
+
+
+def _db_query(path: str, sql: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        cur = conn.execute(sql)
+        rows = [dict(r) for r in cur.fetchall()]
+        return _ok(rows=rows, count=len(rows))
+    finally:
+        conn.close()
+
+
+def _db_tables(path: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        rows = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+        return _ok(tables=rows)
+    finally:
+        conn.close()
+
+
+def _db_schema(path: str, table: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        rows = [dict(r) for r in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+        return _ok(columns=rows)
+    finally:
+        conn.close()
+
+
+def _db_count(path: str, table: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        return _ok(count=conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+    finally:
+        conn.close()
+
+
+def _db_drop(path: str, table: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        conn.execute(f"DROP TABLE IF EXISTS {table}")
+        conn.commit()
+        return _ok(dropped=table)
+    finally:
+        conn.close()
+
+
+def _db_delete(path: str, table: str, where: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        cur = conn.execute(f"DELETE FROM {table} WHERE {where}")
+        conn.commit()
+        return _ok(deleted=cur.rowcount)
+    finally:
+        conn.close()
+
+
+def _db_update(path: str, table: str, set_clause: str, where: str) -> Dict[str, Any]:
+    conn = _db_connect(path)
+    try:
+        cur = conn.execute(f"UPDATE {table} SET {set_clause} WHERE {where}")
+        conn.commit()
+        return _ok(updated=cur.rowcount)
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# CLOUD group (provider endpoints via public APIs)
+# ===========================================================================
+spec("cloud", "weather", "Weather for city (open-meteo, no key).", [("city", "Yerevan", "City name"), ("lat", None, "Latitude (optional)"), ("lon", None, "Longitude (optional)")],
+     lambda p: _cloud_weather(p["city"], p["lat"], p["lon"]))
+spec("cloud", "time", "Time in timezone (worldtimeapi).", [("zone", "Asia/Yerevan", "IANA timezone")],
+     lambda p: _ok(result=_http_get(f"http://worldtimeapi.org/api/timezone/{p['zone']}") if _port_open("worldtimeapi.org", 80) else {"error": "offline"}))
+spec("cloud", "geoip", "GeoIP of current connection.", [],
+     lambda p: _ok(result=_http_get("http://ip-api.com/json/") if _port_open("ip-api.com", 80) else {"error": "offline"}))
+spec("cloud", "ip", "Public IP (alias).", [], lambda p: _ok(ip=_http_get("https://api.ipify.org").strip()))
+spec("cloud", "quote", "Random quote (dummyjson).", [],
+     lambda p: _ok(result=json.loads(_http_get("https://dummyjson.com/quotes/random")) if _port_open("dummyjson.com", 443) else {"error": "offline"}))
+spec("cloud", "users", "Random users (dummyjson).", [("count", 3, "Count")],
+     lambda p: _ok(result=json.loads(_http_get(f"https://dummyjson.com/users?limit={int(p['count'])}")) if _port_open("dummyjson.com", 443) else {"error": "offline"}))
+spec("cloud", "cat_fact", "Random cat fact.", [],
+     lambda p: _ok(fact=json.loads(_http_get("https://catfact.ninja/fact"))["fact"] if _port_open("catfact.ninja", 443) else "offline"))
+
+
+def _cloud_weather(city: str, lat: Optional[str], lon: Optional[str]) -> Dict[str, Any]:
+    try:
+        if not lat or not lon:
+            geo = json.loads(_http_get(f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(city)}&count=1"))
+            results = geo.get("results")
+            if not results:
+                return _err(f"city not found: {city}")
+            lat = str(results[0]["latitude"])
+            lon = str(results[0]["longitude"])
+        data = json.loads(_http_get(f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"))
+        cur = data.get("current_weather", {})
+        return _ok(city=city, temperature_c=cur.get("temperature"), windspeed_kmh=cur.get("windspeed"),
+                   weather_code=cur.get("weathercode"), time=cur.get("time"))
+    except Exception as e:
+        return _err(str(e))
+
+
+# ===========================================================================
+# LLM group (BYOK adapters, no key = instructions)
+# ===========================================================================
+spec("llm", "providers", "List supported LLM providers.", [],
+     lambda p: _ok(providers=["openai", "google", "microsoft", "anthropic", "huggingface", "ollama", "local"]))
+spec("llm", "chat", "Chat with a provider (requires API key).", [("provider", "openai", "Provider"), ("message", "Hello", "Message"), ("model", None, "Model (optional)")],
+     lambda p: _llm_chat(p["provider"], p["message"], p["model"]))
+spec("llm", "prompt", "Print a reusable prompt template.", [("template", "chain_of_thought", "Template name")],
+     lambda p: _ok(template=_PROMPT_TEMPLATES.get(p["template"], _PROMPT_TEMPLATES["chain_of_thought"])))
+spec("llm", "templates", "List prompt templates.", [], lambda p: _ok(templates=sorted(_PROMPT_TEMPLATES.keys())))
+spec("llm", "tokens_est", "Estimate tokens (chars/4).", [("text", "hello world", "Text")],
+     lambda p: _ok(tokens=max(1, len(p["text"]) // 4), chars=len(p["text"])))
+
+
+_PROMPT_TEMPLATES = {
+    "chain_of_thought": "Solve the problem step by step, then give the final answer.\n\nProblem: {question}",
+    "few_shot": "Examples:\n{examples}\n\nNow answer: {question}",
+    "system": "You are a helpful assistant.\n\n{user}",
+    "rag": "Context:\n{context}\n\nQuestion: {question}\nAnswer using only the context.",
+    "summarize": "Summarize the following text concisely:\n\n{text}",
+    "translate": "Translate the following text to {language}:\n\n{text}",
+    "extract": "Extract key facts from the text as a list:\n\n{text}",
+    "code_review": "Review this code for bugs, style and security:\n\n{code}",
+    "explain": "Explain the following concept simply:\n\n{concept}",
+    "brainstorm": "Brainstorm 10 creative ideas about: {topic}",
+}
+
+
+def _llm_chat(provider: str, message: str, model: Optional[str]) -> Dict[str, Any]:
+    try:
+        from aweai.integrations import chat
+        return chat(provider, message, model=model)
+    except Exception as e:
+        return {"ok": False, "error": str(e),
+                "hint": f"Set an API key for '{provider}' (aweai keys set {provider.upper()}_API_KEY) to use live chat."}
+
+
+# ===========================================================================
+# RL group (mini reinforcement learning utilities)
+# ===========================================================================
+spec("rl", "bandit_epsilon", "Epsilon-greedy bandit simulation.", [("arms", 3, "Arms"), ("steps", 100, "Steps"), ("epsilon", 0.1, "Exploration rate"), ("seed", 1, "Seed")],
+     lambda p: _ok(result=_bandit(int(p["arms"]), int(p["steps"]), float(p["epsilon"]), int(p["seed"]))))
+spec("rl", "q_learning", "Run Q-learning on a small grid (1D chain).", [("states", 5, "States"), ("episodes", 100, "Episodes"), ("lr", 0.1, "Learning rate"), ("gamma", 0.9, "Discount"), ("seed", 1, "Seed")],
+     lambda p: _ok(result=_q_learning(int(p["states"]), int(p["episodes"]), float(p["lr"]), float(p["gamma"]), int(p["seed"]))))
+spec("rl", "discount", "Discounted return of rewards.", [("rewards", "1,1,1", "Rewards"), ("gamma", 0.9, "Gamma")],
+     lambda p: _ok(return_=_discounted_return(_floats(p["rewards"]), float(p["gamma"]))))
+spec("rl", "exp_decay", "Exponential decay rate.", [("initial", 1.0, "Initial"), ("decay", 0.99, "Decay per step"), ("steps", 100, "Steps")],
+     lambda p: _ok(result=p["initial"] * (p["decay"] ** int(p["steps"]))))
+
+
+def _bandit(arms: int, steps: int, epsilon: float, seed: int) -> Dict[str, Any]:
+    rng = random.Random(seed)
+    true_means = [rng.random() for _ in range(arms)]
+    counts = [0] * arms
+    sums = [0.0] * arms
+    rewards = []
+    for _ in range(steps):
+        if rng.random() < epsilon:
+            a = rng.randrange(arms)
+        else:
+            a = max(range(arms), key=lambda i: sums[i] / counts[i] if counts[i] else 0.0)
+        r = 1.0 if rng.random() < true_means[a] else 0.0
+        counts[a] += 1
+        sums[a] += r
+        rewards.append(r)
+    return {"true_means": true_means, "counts": counts,
+            "estimated_means": [sums[i] / counts[i] if counts[i] else 0.0 for i in range(arms)],
+            "total_reward": sum(rewards), "avg_reward": sum(rewards) / steps}
+
+
+def _q_learning(states: int, episodes: int, lr: float, gamma: float, seed: int) -> Dict[str, Any]:
+    rng = random.Random(seed)
+    q = [[0.0, 0.0] for _ in range(states)]
+    for _ in range(episodes):
+        s = 0
+        for _step in range(200):
+            a = 0 if rng.random() < 0.5 else 1
+            ns = max(0, min(states - 1, s + (1 if a == 1 else -1)))
+            r = 1.0 if ns == states - 1 else 0.0
+            q[s][a] += lr * (r + gamma * max(q[ns]) - q[s][a])
+            s = ns
+            if r > 0:
+                break
+    return {"states": states, "q_table": q, "policy": [int(q[s][1] > q[s][0]) for s in range(states)]}
+
+
+def _discounted_return(rewards: List[float], gamma: float) -> float:
+    g = 0.0
+    for r in reversed(rewards):
+        g = r + gamma * g
+    return g
+
+
+# ===========================================================================
+# NEURO group (neural-net helpers, numpy-free)
+# ===========================================================================
+spec("neuro", "neuron", "Single neuron output (w*x + b, activation).", [("weights", "1,1", "Weights"), ("inputs", "2,3", "Inputs"), ("bias", 0.0, "Bias"), ("activation", "relu", "relu|sigmoid|tanh|none")],
+     lambda p: _ok(output=_neuron(_floats(p["weights"]), _floats(p["inputs"]), float(p["bias"]), p["activation"])))
+spec("neuro", "layer", "Dense layer forward pass.", [("weights", "1,0,0,1", "Weights (out x in)"), ("inputs", "1,2", "Inputs"), ("bias", "0,0", "Biases"), ("activation", "relu", "Activation")],
+     lambda p: _ok(output=_layer(_floats(p["weights"]), _floats(p["inputs"]), _floats(p["bias"]), p["activation"])))
+spec("neuro", "activation", "Apply activation function.", [("x", 0.0, "Value"), ("name", "relu", "relu|sigmoid|tanh|softplus|gelu|leaky_relu")],
+     lambda p: _ok(result=_activate(float(p["x"]), p["name"])))
+spec("neuro", "param_count", "Count parameters of layer shapes.", [("shapes", "784,128,128,10", "Layer sizes (comma)")],
+     lambda p: _ok(params=_param_count(_ints(p["shapes"]))))
+spec("neuro", "init", "Initialize weights (Xavier).", [("fan_in", 784, "Fan in"), ("fan_out", 128, "Fan out"), ("seed", 1, "Seed")],
+     lambda p: _ok(limit=math.sqrt(6.0 / (int(p["fan_in"]) + int(p["fan_out"]))), note="Xavier uniform bound; sample U(-limit, limit)"))
+spec("neuro", "learning_rate", "Schedule learning rate over steps.", [("base", 0.01, "Base LR"), ("steps", 1000, "Steps"), ("warmup", 100, "Warmup"), ("decay", "cosine", "cosine|linear")],
+     lambda p: _ok(rate=_lr_schedule(float(p["base"]), int(p["steps"]), int(p["warmup"]), p["decay"])))
+
+
+def _activate(x: float, name: str) -> float:
+    name = name.lower()
+    if name == "relu":
+        return max(0.0, x)
+    if name == "sigmoid":
+        return 1.0 / (1.0 + math.exp(-x))
+    if name == "tanh":
+        return math.tanh(x)
+    if name == "softplus":
+        return math.log1p(math.exp(x))
+    if name == "gelu":
+        return 0.5 * x * (1.0 + math.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * x ** 3)))
+    if name == "leaky_relu":
+        return x if x > 0 else 0.01 * x
+    return x
+
+
+def _neuron(weights: List[float], inputs: List[float], bias: float, activation: str) -> float:
+    z = bias + sum(w * x for w, x in zip(weights, inputs))
+    return _activate(z, activation)
+
+
+def _layer(weights: List[float], inputs: List[float], bias: List[float], activation: str) -> List[float]:
+    n_out = len(bias)
+    n_in = len(inputs)
+    out = []
+    for o in range(n_out):
+        z = bias[o]
+        for i in range(n_in):
+            z += weights[o * n_in + i] * inputs[i]
+        out.append(_activate(z, activation))
+    return out
+
+
+def _param_count(shapes: List[int]) -> Dict[str, Any]:
+    total = 0
+    layers = []
+    for i in range(len(shapes) - 1):
+        w = shapes[i] * shapes[i + 1]
+        b = shapes[i + 1]
+        layers.append({"layer": i, "weights": w, "biases": b, "params": w + b})
+        total += w + b
+    return {"layers": layers, "total_params": total}
+
+
+def _lr_schedule(base: float, steps: int, warmup: int, decay: str) -> float:
+    # returns the final scheduled LR after `steps`
+    if warmup > 0 and steps <= warmup:
+        return base * steps / warmup
+    t = max(0, steps - warmup)
+    total = max(1, steps - warmup)
+    if decay == "linear":
+        return base * (1.0 - t / total)
+    return base * 0.5 * (1.0 + math.cos(math.pi * t / total))
+
+
+# ===========================================================================
+# KNOWLEDGE group (AI/ASI/AGI encyclopedia shortcuts)
+# ===========================================================================
+spec("knowledge", "concepts", "Count knowledge-base entries.", [], lambda p: _ok(count=len(CONCEPTS)))
+spec("knowledge", "timeline", "AI history timeline.", [], lambda p: _ok(timeline=TIMELINE))
+spec("knowledge", "agi_levels", "AGI capability levels.", [], lambda p: _ok(levels=AGI_LEVELS))
+spec("knowledge", "roadmap", "AI roadmap phases.", [], lambda p: _ok(roadmap=ROADMAP))
+spec("knowledge", "self_improvement", "Self-improvement hooks.", [], lambda p: _ok(hooks=SELF_IMPROVEMENT_HOOKS))
+spec("knowledge", "about", "Knowledge base stats.", [], lambda p: _ok(**about()))
+
+
+# pull the AI knowledge base in for the knowledge group
+from aweai.ai import CONCEPTS, TIMELINE, AGI_LEVELS, ROADMAP, SELF_IMPROVEMENT_HOOKS, about  # noqa: E402
+
+# ---------------------------------------------------------------------------
+# Registry access
+# ---------------------------------------------------------------------------
+
+GROUPS: List[str] = []
+GROUP_INDEX: Dict[str, List[Dict[str, Any]]] = {}
+
+
+def _build_index() -> None:
+    global GROUPS, GROUP_INDEX
+    GROUP_INDEX = {}
+    for item in S:
+        GROUP_INDEX.setdefault(item["group"], []).append(item)
+    GROUPS = sorted(GROUP_INDEX.keys())
+
+
+_build_index()
+
+
+def count() -> int:
+    return len(S)
+
+
+def group_count() -> int:
+    return len(GROUPS)
+
+def rebuild_index() -> None:
+    """Rebuild the group index after new specs are appended (used by bulk_extra)."""
+    _build_index()
+
+def specs_for(group: str) -> List[Dict[str, Any]]:
+    return GROUP_INDEX.get(group, [])
+
+
+def all_specs() -> List[Dict[str, Any]]:
+    return S
+
+
+def groups() -> List[str]:
+    return GROUPS
