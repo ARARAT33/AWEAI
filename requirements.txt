@@ -1,13 +1,11 @@
-# AWEAI core — lightweight, no Hugging Face, no built-in AI
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+# AWEAI core — lightweight, no Hugging Face, no built-in AI, CLI-only
 numpy>=1.21
 
 # Optional extras (uncomment as needed):
 # torch>=1.13          # ONNX / TorchScript export, faster training
 # scikit-learn>=1.0    # sklearn interop
-# fastapi>=0.100       # browser UI
-# uvicorn>=0.23
-# pydantic>=1.10
 # onnx>=1.13           # ONNX export
-# psutil>=5.9          # better hardware detection
+# psutil>=5.9          # better hardware/device detection, monitoring
 # typer>=0.9           # CLI (bundled via console script)
 # rich>=13.0           # pretty CLI tables

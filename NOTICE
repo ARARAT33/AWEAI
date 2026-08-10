@@ -1,0 +1,31 @@
+AWEAI — Universal CLI for AI/ASI/AGI Engineering
+================================================
+
+Copyright (c) 2026 ARARAT33
+Based on AWEAI.
+All rights reserved.
+
+Attribution & Use Policy
+------------------------
+
+1. **Anyone may use AWEAI** (see LICENSE — MIT License with attribution
+   clause). There is no charge and no registration required.
+
+2. **Mandatory attribution.** Any use, copy, modification, merge,
+   publication, distribution, sublicense or sale of AWEAI, or of any
+   derivative work based on AWEAI, MUST credit **ARARAT33** as
+   co-author/author. This credit must appear prominently in the
+   documentation, README, about screen or equivalent of the derivative
+   work.
+
+3. **Mandatory "based on AWEAI" statement.** Any modification, adaptation
+   or derivative work based on AWEAI MUST state in its documentation,
+   README or equivalent that the work is **based on AWEAI** by ARARAT33.
+
+4. **File headers.** Every file derived from AWEAI should carry the
+   following header:
+
+       # Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+
+Third-party components are governed by their own licenses; see LICENSE and
+the source headers for details.

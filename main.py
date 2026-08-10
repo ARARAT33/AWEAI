@@ -1,10 +1,7 @@
-"""AWEAI Android app entry point (repo root, for buildozer).
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+"""AWEAI CLI entry point (repo root convenience wrapper)."""
 
-Buildozer builds from the repo root (see `buildozer.spec`, `source.dir = .`).
-This thin wrapper delegates to the real app bootstrap in `android/main.py`.
-"""
-
-from android.main import main
+from aweai.cli import app
 
 if __name__ == "__main__":
-    main()
+    app()
