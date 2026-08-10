@@ -72,6 +72,7 @@ def _ensure_loaded() -> None:
         "aweai.tools.core",
         "aweai.tools.security",
         "aweai.tools.devops",
+        "aweai.tools.devops_tools",
         "aweai.tools.datascience",
         "aweai.tools.media",
         "aweai.tools.automation",

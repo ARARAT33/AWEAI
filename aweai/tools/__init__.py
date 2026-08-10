@@ -44,7 +44,7 @@ from aweai.tools import core  # noqa: F401  (side-effect registration)
 from aweai.tools import security  # noqa: F401
 for _optional_family in (
     "mega", "mega2", "aiagents", "automation", "codegen", "creative", "datascience",
-    "devops", "media", "monitoring", "networking", "testing",
+    "devops", "devops_tools", "media", "monitoring", "networking", "testing",
 ):
     try:
         __import__(f"aweai.tools.{_optional_family}")
@@ -67,6 +67,7 @@ __all__ = [
     "core",
     "security",
     "devops",
+    "devops_tools",
     "datascience",
     "media",
     "automation",
