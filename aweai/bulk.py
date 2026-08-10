@@ -435,3 +435,450 @@ def _json_flatten(obj: Any, prefix: str = "") -> Dict[str, Any]:
     else:
         out[prefix] = obj
     return out
+
+
+# ===========================================================================
+# FILE group
+# ===========================================================================
+spec("file", "read", "Read file content.", [("path", "data.txt", "File path")],
+     lambda p: _ok(content=_read(p["path"])))
+spec("file", "write", "Write text to file.", [("path", "out.txt", "File path"), ("text", "hello", "Content")],
+     lambda p: _write(p["path"], p["text"]))
+spec("file", "append", "Append text to file.", [("path", "out.txt", "File path"), ("text", "more", "Content")],
+     lambda p: (Path(p["path"]).parent.mkdir(parents=True, exist_ok=True),
+                Path(p["path"]).open("a", encoding="utf-8").write(p["text"] + "\n"),
+                _ok(path=p["path"]))[2])
+spec("file", "exists", "Check file exists.", [("path", "data.txt", "File path")],
+     lambda p: _ok(exists=Path(p["path"]).exists()))
+spec("file", "size", "File size in bytes.", [("path", "data.txt", "File path")],
+     lambda p: _ok(size=Path(p["path"]).stat().st_size))
+spec("file", "lines", "Count lines in file.", [("path", "data.txt", "File path")],
+     lambda p: _ok(lines=len(_read(p["path"]).splitlines())))
+spec("file", "words", "Count words in file.", [("path", "data.txt", "File path")],
+     lambda p: _ok(words=len(_read(p["path"]).split())))
+spec("file", "bytes", "Count bytes in file.", [("path", "data.txt", "File path")],
+     lambda p: _ok(bytes=Path(p["path"]).stat().st_size))
+spec("file", "type", "File type by magic bytes.", [("path", "data.txt", "File path")],
+     lambda p: _ok(type=_file_magic(p["path"])))
+spec("file", "copy", "Copy file.", [("src", "a.txt", "Source"), ("dst", "b.txt", "Destination")],
+     lambda p: (Path(p["dst"]).parent.mkdir(parents=True, exist_ok=True), shutil.copy2(p["src"], p["dst"]), _ok(dst=p["dst"]))[2])
+spec("file", "move", "Move file.", [("src", "a.txt", "Source"), ("dst", "b.txt", "Destination")],
+     lambda p: (Path(p["dst"]).parent.mkdir(parents=True, exist_ok=True), shutil.move(p["src"], p["dst"]), _ok(dst=p["dst"]))[2])
+spec("file", "delete", "Delete file.", [("path", "tmp.txt", "File path")],
+     lambda p: (Path(p["path"]).unlink(missing_ok=True), _ok(deleted=p["path"]))[1])
+spec("file", "touch", "Create empty file / update mtime.", [("path", "new.txt", "File path")],
+     lambda p: (Path(p["path"]).parent.mkdir(parents=True, exist_ok=True), Path(p["path"]).touch(), _ok(path=p["path"]))[2])
+spec("file", "mkdir", "Create directory (recursive).", [("path", "dir/sub", "Directory path")],
+     lambda p: (Path(p["path"]).mkdir(parents=True, exist_ok=True), _ok(path=p["path"]))[1])
+spec("file", "list", "List directory entries.", [("path", ".", "Directory path")],
+     lambda p: _ok(entries=sorted(os.listdir(p["path"]))))
+spec("file", "tree", "Recursive file tree.", [("path", ".", "Directory path"), ("depth", 2, "Max depth")],
+     lambda p: _ok(tree=_tree(p["path"], int(p["depth"]))))
+spec("file", "glob", "Find files by pattern.", [("pattern", "*.py", "Glob pattern"), ("path", ".", "Base dir")],
+     lambda p: _ok(files=[str(x) for x in sorted(Path(p["path"]).glob(p["pattern"]))]))
+spec("file", "find", "Find files by name.", [("name", "readme.md", "File name"), ("path", ".", "Base dir")],
+     lambda p: _ok(files=[str(x) for x in sorted(Path(p["path"]).rglob(p["name"]))]))
+spec("file", "ext", "File extension.", [("path", "archive.tar.gz", "File path")],
+     lambda p: _ok(ext=Path(p["path"]).suffix))
+spec("file", "basename", "Base name of path.", [("path", "/a/b/c.txt", "File path")],
+     lambda p: _ok(result=os.path.basename(p["path"])))
+spec("file", "dirname", "Directory of path.", [("path", "/a/b/c.txt", "File path")],
+     lambda p: _ok(result=os.path.dirname(p["path"])))
+spec("file", "join_path", "Join path parts.", [("parts", "a,b,c", "Comma-separated parts")],
+     lambda p: _ok(result=str(Path(*p["parts"].split(",")))))
+spec("file", "abs_path", "Absolute path.", [("path", "data.txt", "File path")],
+     lambda p: _ok(result=str(Path(p["path"]).resolve())))
+spec("file", "is_dir", "Check directory.", [("path", ".", "Path")], lambda p: _ok(result=Path(p["path"]).is_dir()))
+spec("file", "is_file", "Check file.", [("path", "data.txt", "Path")], lambda p: _ok(result=Path(p["path"]).is_file()))
+spec("file", "tail", "Last n lines of file.", [("path", "data.txt", "File path"), ("n", 10, "Lines")],
+     lambda p: _ok(lines=_read(p["path"]).splitlines()[-int(p["n"]):]))
+spec("file", "head", "First n lines of file.", [("path", "data.txt", "File path"), ("n", 10, "Lines")],
+     lambda p: _ok(lines=_read(p["path"]).splitlines()[:int(p["n"]):]))
+spec("file", "grep", "Search lines matching pattern.", [("path", "data.txt", "File path"), ("pattern", "hello", "Regex")],
+     lambda p: _ok(matches=[ln for ln in _read(p["path"]).splitlines() if re.search(p["pattern"], ln)]))
+spec("file", "hash", "SHA-256 of file.", [("path", "data.txt", "File path")],
+     lambda p: _ok(sha256=hashlib.sha256(Path(p["path"]).read_bytes()).hexdigest()))
+spec("file", "checksum", "MD5 of file.", [("path", "data.txt", "File path")],
+     lambda p: _ok(md5=hashlib.md5(Path(p["path"]).read_bytes()).hexdigest()))
+spec("file", "zip", "Create zip archive.", [("path", "out.zip", "Zip path"), ("sources", "a.txt,b.txt", "Comma-separated files")],
+     lambda p: _zip_files(p["path"], p["sources"].split(",")))
+spec("file", "unzip", "Extract zip archive.", [("path", "out.zip", "Zip path"), ("dest", "extracted", "Destination dir")],
+     lambda p: _unzip(p["path"], p["dest"]))
+spec("file", "gzip", "Gzip-compress file.", [("path", "data.txt", "File path")],
+     lambda p: _gzip_file(p["path"]))
+spec("file", "gunzip", "Gzip-decompress file.", [("path", "data.txt.gz", "File path")],
+     lambda p: _gunzip_file(p["path"]))
+spec("file", "rename", "Rename file.", [("src", "a.txt", "Old name"), ("dst", "b.txt", "New name")],
+     lambda p: (os.rename(p["src"], p["dst"]), _ok(dst=p["dst"]))[1])
+spec("file", "du", "Directory size.", [("path", ".", "Directory path")],
+     lambda p: _ok(bytes=sum(f.stat().st_size for f in Path(p["path"]).rglob("*") if f.is_file())))
+spec("file", "mime", "Guess MIME type.", [("path", "data.txt", "File path")],
+     lambda p: _ok(mime=__import__("mimetypes").guess_type(p["path"])[0]))
+
+
+def _file_magic(path: str) -> str:
+    try:
+        head = Path(path).read_bytes()[:8]
+    except Exception:
+        return "unknown"
+    if head[:4] == b"\x89PNG":
+        return "png"
+    if head[:3] == b"GIF":
+        return "gif"
+    if head[:2] == b"\xff\xd8":
+        return "jpeg"
+    if head[:4] == b"%PDF":
+        return "pdf"
+    if head[:4] == b"PK\x03\x04":
+        return "zip"
+    if head[:2] == b"\x1f\x8b":
+        return "gzip"
+    if head[:4] == b"RIFF":
+        return "riff"
+    return "text" if all(32 <= b < 127 or b in (9, 10, 13) for b in head[:32] if b) else "binary"
+
+
+def _tree(path: str, depth: int, prefix: str = "") -> List[str]:
+    out: List[str] = []
+    try:
+        entries = sorted(Path(path).iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
+    except Exception:
+        return out
+    for i, p in enumerate(entries):
+        last = i == len(entries) - 1
+        out.append(prefix + ("\u2514\u2500\u2500 " if last else "\u251c\u2500\u2500 ") + p.name + ("/" if p.is_dir() else ""))
+        if p.is_dir() and depth > 0:
+            out.extend(_tree(str(p), depth - 1, prefix + ("    " if last else "\u2502   ")))
+    return out
+
+
+def _zip_files(zip_path: str, sources: List[str]) -> Dict[str, Any]:
+    import zipfile
+
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for src in sources:
+            sp = Path(src)
+            if sp.is_file():
+                zf.write(sp, sp.name)
+            elif sp.is_dir():
+                for f in sp.rglob("*"):
+                    if f.is_file():
+                        zf.write(f, str(f))
+    return _ok(archive=zip_path, files=len(sources))
+
+
+def _unzip(zip_path: str, dest: str) -> Dict[str, Any]:
+    import zipfile
+
+    Path(dest).mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(zip_path) as zf:
+        zf.extractall(dest)
+    return _ok(dest=dest, files=len(zipfile.ZipFile(zip_path).namelist()))
+
+
+def _gzip_file(path: str) -> Dict[str, Any]:
+    data = Path(path).read_bytes()
+    out = path + ".gz"
+    Path(out).write_bytes(__import__("gzip").compress(data))
+    return _ok(path=out, bytes=len(data), compressed=len(Path(out).read_bytes()))
+
+
+def _gunzip_file(path: str) -> Dict[str, Any]:
+    data = __import__("gzip").decompress(Path(path).read_bytes())
+    out = path[:-3] if path.endswith(".gz") else path + ".out"
+    Path(out).write_bytes(data)
+    return _ok(path=out, bytes=len(data))
+
+
+# ===========================================================================
+# NETWORK group
+# ===========================================================================
+spec("net", "ip", "Public IP address.", [], lambda p: _ok(ip=_http_get("https://api.ipify.org").strip()))
+spec("net", "hostname", "Hostname of this machine.", [], lambda p: _ok(hostname=socket.gethostname()))
+spec("net", "resolve", "Resolve hostname to IP.", [("host", "example.com", "Hostname")],
+     lambda p: _ok(ip=socket.gethostbyname(p["host"])))
+spec("net", "reverse_dns", "Reverse DNS lookup.", [("ip", "8.8.8.8", "IP address")],
+     lambda p: _ok(host=socket.gethostbyaddr(p["ip"])[0]))
+spec("net", "port_open", "Check TCP port open.", [("host", "example.com", "Host"), ("port", 80, "Port")],
+     lambda p: _ok(open=_port_open(p["host"], int(p["port"]))))
+spec("net", "http_get", "GET a URL and return text.", [("url", "https://example.com", "URL"), ("timeout", 15, "Timeout seconds")],
+     lambda p: _ok(status=200, body=_http_get(p["url"], int(p["timeout"]))))
+spec("net", "http_head", "HEAD request (headers).", [("url", "https://example.com", "URL"), ("timeout", 15, "Timeout")],
+     lambda p: _ok(headers=_http_head(p["url"], int(p["timeout"]))))
+spec("net", "download", "Download URL to file.", [("url", "https://example.com", "URL"), ("out", "page.html", "Output path"), ("timeout", 60, "Timeout")],
+     lambda p: _net_download(p["url"], p["out"], int(p["timeout"])))
+spec("net", "ping", "Ping host (ICMP via system ping).", [("host", "example.com", "Host"), ("count", 3, "Count")],
+     lambda p: _ok(output=_cmd(f"ping -c {int(p['count'])} -W 3 {p['host']}") if sys.platform != "win32" else _cmd(f"ping -n {int(p['count'])} {p['host']}")))
+spec("net", "dns", "DNS TXT/A records via socket.", [("host", "example.com", "Host")],
+     lambda p: _ok(ip=socket.gethostbyname_ex(p["host"])))
+spec("net", "whois", "Whois lookup (if whois installed).", [("domain", "example.com", "Domain")],
+     lambda p: _ok(output=_cmd(f"whois {p['domain']}") or "whois not available"))
+spec("net", "url_parts", "Parse URL components.", [("url", "https://user:pass@example.com:8080/path?q=1#frag", "URL")],
+     lambda p: _ok(parts={k: v for k, v in urllib.parse.urlsplit(p["url"])._asdict().items()}))
+spec("net", "shorten", "Shorten URL (tinyurl).", [("url", "https://example.com", "URL")],
+     lambda p: _ok(short=_http_get(f"https://tinyurl.com/api-create.php?url={urllib.parse.quote(p['url'])}").strip()))
+
+
+def _http_get(url: str, timeout: int = 15) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": "AWEAI-CLI/4.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8", errors="replace")
+
+
+def _http_head(url: str, timeout: int = 15) -> Dict[str, str]:
+    req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "AWEAI-CLI/4.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return {k: v for k, v in r.headers.items()}
+
+
+def _port_open(host: str, port: int) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=3):
+            return True
+    except Exception:
+        return False
+
+
+def _net_download(url: str, out: str, timeout: int) -> Dict[str, Any]:
+    req = urllib.request.Request(url, headers={"User-Agent": "AWEAI-CLI/4.0"})
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        data = r.read()
+    Path(out).write_bytes(data)
+    return _ok(path=out, bytes=len(data))
+
+
+def _cmd(cmd: str) -> str:
+    try:
+        return subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30).stdout.strip()
+    except Exception:
+        return ""
+
+
+# ===========================================================================
+# TIME group
+# ===========================================================================
+spec("time", "now", "Current timestamp.", [], lambda p: _ok(iso=_now_iso(), unix=time.time()))
+spec("time", "date", "Current date.", [], lambda p: _ok(date=_dt.date.today().isoformat()))
+spec("time", "utc", "Current UTC time.", [], lambda p: _ok(utc=_dt.datetime.now(_dt.timezone.utc).isoformat()))
+spec("time", "unix", "Current Unix epoch.", [], lambda p: _ok(unix=int(time.time())))
+spec("time", "from_unix", "Convert Unix epoch to ISO.", [("unix", 1700000000, "Epoch seconds")],
+     lambda p: _ok(iso=_dt.datetime.fromtimestamp(float(p["unix"])).isoformat()))
+spec("time", "to_unix", "Convert ISO time to Unix.", [("iso", "2026-08-10T00:00:00", "ISO datetime")],
+     lambda p: _ok(unix=int(_dt.datetime.fromisoformat(p["iso"]).timestamp())))
+spec("time", "sleep", "Sleep n seconds.", [("seconds", 1, "Seconds")],
+     lambda p: (time.sleep(float(p["seconds"])), _ok(slept=float(p["seconds"])))[1])
+spec("time", "diff", "Difference between two ISO times.", [("a", "2026-08-10T00:00:00", "Start ISO"), ("b", "2026-08-10T02:30:00", "End ISO")],
+     lambda p: _ok(seconds=(_dt.datetime.fromisoformat(p["b"]) - _dt.datetime.fromisoformat(p["a"])).total_seconds()))
+spec("time", "add", "Add seconds to ISO time.", [("iso", "2026-08-10T00:00:00", "ISO datetime"), ("seconds", 3600, "Seconds")],
+     lambda p: _ok(result=(_dt.datetime.fromisoformat(p["iso"]) + _dt.timedelta(seconds=float(p["seconds"]))).isoformat()))
+spec("time", "age", "Age in years from birthdate.", [("birth", "1990-01-01", "Birth date YYYY-MM-DD")],
+     lambda p: _ok(years=_dt.date.today().year - _dt.date.fromisoformat(p["birth"]).year))
+spec("time", "weekday", "Weekday of date.", [("date", "2026-08-10", "Date YYYY-MM-DD")],
+     lambda p: _ok(weekday=_dt.date.fromisoformat(p["date"]).strftime("%A")))
+spec("time", "days_until", "Days until date.", [("date", "2027-01-01", "Target date")],
+     lambda p: _ok(days=(_dt.date.fromisoformat(p["date"]) - _dt.date.today()).days))
+spec("time", "format", "Format ISO time with strftime.", [("iso", "2026-08-10T13:00:00", "ISO datetime"), ("fmt", "%Y/%m/%d %H:%M", "Format")],
+     lambda p: _ok(result=_dt.datetime.fromisoformat(p["iso"]).strftime(p["fmt"])))
+spec("time", "timezone", "Current timezone info.", [], lambda p: _ok(tz=_dt.datetime.now().astimezone().tzname(), offset=str(_dt.datetime.now().astimezone().utcoffset())))
+spec("time", "timer", "Measure command wall time (demo).", [("seconds", 1, "Seconds to wait")],
+     lambda p: (lambda t0: (time.sleep(float(p["seconds"])), _ok(elapsed_s=round(time.time() - t0, 3)))[1])(time.time()))
+spec("time", "stopwatch", "Elapsed since given epoch.", [("start", 1700000000, "Start epoch")],
+     lambda p: _ok(elapsed_s=time.time() - float(p["start"])))
+
+
+# ===========================================================================
+# CRYPTO / random group
+# ===========================================================================
+spec("crypto", "sha256", "SHA-256 of text.", [("text", "hello", "Input")], lambda p: _ok(result=_sha256(p["text"])))
+spec("crypto", "sha512", "SHA-512 of text.", [("text", "hello", "Input")], lambda p: _ok(result=hashlib.sha512(p["text"].encode()).hexdigest()))
+spec("crypto", "md5", "MD5 of text.", [("text", "hello", "Input")], lambda p: _ok(result=hashlib.md5(p["text"].encode()).hexdigest()))
+spec("crypto", "sha1", "SHA-1 of text.", [("text", "hello", "Input")], lambda p: _ok(result=hashlib.sha1(p["text"].encode()).hexdigest()))
+spec("crypto", "hmac", "HMAC-SHA256.", [("key", "secret", "Key"), ("text", "message", "Message")],
+     lambda p: _ok(result=__import__("hmac").new(p["key"].encode(), p["text"].encode(), hashlib.sha256).hexdigest()))
+spec("crypto", "uuid", "Generate UUID.", [("version", 4, "UUID version 1/4")],
+     lambda p: _ok(uuid=str(uuid.uuid4() if int(p["version"]) == 4 else uuid.uuid1())))
+spec("crypto", "uuid_many", "Generate many UUIDs.", [("count", 5, "Count")],
+     lambda p: _ok(uuids=[str(uuid.uuid4()) for _ in range(int(p["count"]))]))
+spec("crypto", "rand_int", "Random integer in [lo, hi].", [("lo", 1, "Low"), ("hi", 100, "High"), ("seed", 1, "Seed")],
+     lambda p: _ok(result=random.Random(int(p["seed"])).randint(int(p["lo"]), int(p["hi"]))))
+spec("crypto", "rand_float", "Random float in [0,1).", [("seed", 1, "Seed")],
+     lambda p: _ok(result=random.Random(int(p["seed"])).random()))
+spec("crypto", "rand_bytes", "Random hex bytes.", [("n", 16, "Bytes"), ("seed", 1, "Seed")],
+     lambda p: _ok(result=random.Random(int(p["seed"])).randbytes(int(p["n"])).hex()))
+spec("crypto", "rand_choice", "Random choice from list.", [("values", "a,b,c", "Comma-separated"), ("seed", 1, "Seed")],
+     lambda p: _ok(result=random.Random(int(p["seed"])).choice(p["values"].split(","))))
+spec("crypto", "rand_password", "Random password.", [("length", 16, "Length"), ("seed", 1, "Seed")],
+     lambda p: _ok(password="".join(random.Random(int(p["seed"])).choice(string.ascii_letters + string.digits + "!@#$%^&*") for _ in range(int(p["length"])))))
+spec("crypto", "xor", "XOR bytes with key.", [("text", "hello", "Plaintext"), ("key", "k", "Key")],
+     lambda p: _ok(result="".join(chr(ord(c) ^ ord(p["key"][i % len(p["key"])])) for i, c in enumerate(p["text"]))))
+spec("crypto", "caesar", "Caesar cipher shift.", [("text", "hello", "Plaintext"), ("shift", 3, "Shift")],
+     lambda p: _ok(result="".join(chr((ord(c) - 97 + int(p["shift"])) % 26 + 97) if "a" <= c <= "z" else chr((ord(c) - 65 + int(p["shift"])) % 26 + 65) if "A" <= c <= "Z" else c for c in p["text"])))
+spec("crypto", "crc32", "CRC32 checksum.", [("text", "hello", "Input")],
+     lambda p: _ok(result=zlib.crc32(p["text"].encode())))
+spec("crypto", "entropy", "Estimate Shannon entropy (bits/char).", [("text", "aaaaaaaa", "Input")],
+     lambda p: _ok(bits_per_char=_entropy(p["text"])))
+spec("crypto", "token", "URL-safe random token.", [("bytes", 32, "Bytes"), ("seed", 1, "Seed")],
+     lambda p: _ok(token=__import__("base64").urlsafe_b64encode(random.Random(int(p["seed"])).randbytes(int(p["bytes"]))).rstrip(b"=").decode()))
+
+
+def _entropy(text: str) -> float:
+    if not text:
+        return 0.0
+    import collections
+
+    cnt = collections.Counter(text)
+    total = len(text)
+    return -sum((c / total) * math.log2(c / total) for c in cnt.values())
+
+
+# ===========================================================================
+# ML helpers group
+# ===========================================================================
+spec("ml", "accuracy", "Classification accuracy.", [("y_true", "0,1,1,0", "True labels"), ("y_pred", "0,1,0,0", "Pred labels")],
+     lambda p: _ok(accuracy=(lambda a, b: sum(x == y for x, y in zip(a, b)) / len(a))(_ints(p["y_true"]), _ints(p["y_pred"]))))
+spec("ml", "mse", "Mean squared error.", [("y_true", "1,2,3", "True"), ("y_pred", "1.5,2,3.5", "Pred")],
+     lambda p: _ok(mse=statistics.mean((a - b) ** 2 for a, b in zip(_floats(p["y_true"]), _floats(p["y_pred"])))))
+spec("ml", "mae", "Mean absolute error.", [("y_true", "1,2,3", "True"), ("y_pred", "1.5,2,3.5", "Pred")],
+     lambda p: _ok(mae=statistics.mean(abs(a - b) for a, b in zip(_floats(p["y_true"]), _floats(p["y_pred"])))))
+spec("ml", "rmse", "Root mean squared error.", [("y_true", "1,2,3", "True"), ("y_pred", "1.5,2,3.5", "Pred")],
+     lambda p: _ok(rmse=math.sqrt(statistics.mean((a - b) ** 2 for a, b in zip(_floats(p["y_true"]), _floats(p["y_pred"]))))))
+spec("ml", "r2", "R-squared score.", [("y_true", "1,2,3,4", "True"), ("y_pred", "1.1,2.1,2.9,4.1", "Pred")],
+     lambda p: _ok(r2=_r2(_floats(p["y_true"]), _floats(p["y_pred"]))))
+spec("ml", "confusion", "Confusion matrix counts.", [("y_true", "0,0,1,1", "True"), ("y_pred", "0,1,1,1", "Pred")],
+     lambda p: _ok(matrix=_confusion(_ints(p["y_true"]), _ints(p["y_pred"]))))
+spec("ml", "precision", "Precision (macro).", [("y_true", "0,0,1,1", "True"), ("y_pred", "0,1,1,1", "Pred")],
+     lambda p: _ok(precision=_precision_recall_f1(_ints(p["y_true"]), _ints(p["y_pred"]))["precision"]))
+spec("ml", "recall", "Recall (macro).", [("y_true", "0,0,1,1", "True"), ("y_pred", "0,1,1,1", "Pred")],
+     lambda p: _ok(recall=_precision_recall_f1(_ints(p["y_true"]), _ints(p["y_pred"]))["recall"]))
+spec("ml", "f1", "F1 score (macro).", [("y_true", "0,0,1,1", "True"), ("y_pred", "0,1,1,1", "Pred")],
+     lambda p: _ok(f1=_precision_recall_f1(_ints(p["y_true"]), _ints(p["y_pred"]))["f1"]))
+spec("ml", "normalize", "Min-max normalize list.", [("values", "1,2,3,4,5", "Numbers")],
+     lambda p: _ok(normalized=_minmax(_floats(p["values"]))))
+spec("ml", "standardize", "Z-score standardize list.", [("values", "1,2,3,4,5", "Numbers")],
+     lambda p: _ok(standardized=_zscore(_floats(p["values"]))))
+spec("ml", "onehot", "One-hot encode labels.", [("labels", "a,b,a,c", "Comma-separated")],
+     lambda p: _ok(onehot=_onehot(p["labels"].split(","))))
+spec("ml", "label_encode", "Encode labels to ints.", [("labels", "a,b,a,c", "Comma-separated")],
+     lambda p: _ok(encoded=_label_encode(p["labels"].split(","))))
+spec("ml", "correlation", "Pearson correlation.", [("x", "1,2,3,4,5", "X values"), ("y", "2,4,6,8,10", "Y values")],
+     lambda p: _ok(r=_corr(_floats(p["x"]), _floats(p["y"]))))
+spec("ml", "dot", "Dot product.", [("a", "1,2,3", "Vector a"), ("b", "4,5,6", "Vector b")],
+     lambda p: _ok(result=sum(x * y for x, y in zip(_floats(p["a"]), _floats(p["b"])))))
+spec("ml", "norm", "L2 norm of vector.", [("v", "3,4", "Vector")],
+     lambda p: _ok(norm=math.sqrt(sum(x * x for x in _floats(p["v"])))))
+spec("ml", "cosine", "Cosine similarity.", [("a", "1,0", "Vector a"), ("b", "1,0", "Vector b")],
+     lambda p: _ok(similarity=_cosine(_floats(p["a"]), _floats(p["b"]))))
+spec("ml", "euclidean", "Euclidean distance.", [("a", "0,0", "Point a"), ("b", "3,4", "Point b")],
+     lambda p: _ok(distance=math.sqrt(sum((x - y) ** 2 for x, y in zip(_floats(p["a"]), _floats(p["b"]))))))
+spec("ml", "manhattan", "Manhattan distance.", [("a", "0,0", "Point a"), ("b", "3,4", "Point b")],
+     lambda p: _ok(distance=sum(abs(x - y) for x, y in zip(_floats(p["a"]), _floats(p["b"])))))
+spec("ml", "softmax", "Softmax of scores.", [("scores", "1,2,3", "Logits")],
+     lambda p: _ok(probs=_softmax(_floats(p["scores"]))))
+spec("ml", "sigmoid", "Sigmoid of value.", [("x", 0.0, "Value")], lambda p: _ok(result=1.0 / (1.0 + math.exp(-p["x"]))))
+spec("ml", "shuffle_data", "Shuffle aligned lists.", [("x", "1,2,3,4", "X"), ("y", "a,b,c,d", "Y"), ("seed", 1, "Seed")],
+     lambda p: _ok(shuffled=_shuffle_aligned(p["x"].split(","), p["y"].split(","), int(p["seed"]))))
+spec("ml", "split_ratio", "Split count into train/test.", [("n", 100, "Total"), ("ratio", 0.8, "Train ratio")],
+     lambda p: _ok(train=int(p["n"] * p["ratio"]), test=int(p["n"]) - int(p["n"] * p["ratio"])))
+spec("ml", "bins", "Histogram bins of values.", [("values", "1,1,2,3,3,3", "Numbers"), ("bins", 3, "Bins")],
+     lambda p: _ok(hist=_hist(_floats(p["values"]), int(p["bins"]))))
+spec("ml", "entropy", "Entropy of label distribution.", [("labels", "a,a,b", "Labels")],
+     lambda p: _ok(entropy=_entropy(p["labels"].replace(",", ""))))
+
+
+def _r2(y_true: List[float], y_pred: List[float]) -> float:
+    mean_y = statistics.mean(y_true)
+    ss_res = sum((a - b) ** 2 for a, b in zip(y_true, y_pred))
+    ss_tot = sum((a - mean_y) ** 2 for a in y_true)
+    return 1.0 - ss_res / ss_tot if ss_tot else 0.0
+
+
+def _confusion(y_true: List[int], y_pred: List[int]) -> Dict[str, int]:
+    labels = sorted(set(y_true + y_pred))
+    mat = {str(a): {str(b): 0 for b in labels} for a in labels}
+    for t, p in zip(y_true, y_pred):
+        mat[str(t)][str(p)] = mat[str(t)].get(str(p), 0) + 1
+    return mat
+
+
+def _precision_recall_f1(y_true: List[int], y_pred: List[int]) -> Dict[str, float]:
+    labels = sorted(set(y_true + y_pred))
+    precs, recs = [], []
+    for lab in labels:
+        tp = sum(1 for t, p in zip(y_true, y_pred) if t == lab and p == lab)
+        fp = sum(1 for t, p in zip(y_true, y_pred) if t != lab and p == lab)
+        fn = sum(1 for t, p in zip(y_true, y_pred) if t == lab and p != lab)
+        precs.append(tp / (tp + fp) if tp + fp else 0.0)
+        recs.append(tp / (tp + fn) if tp + fn else 0.0)
+    precision = statistics.mean(precs)
+    recall = statistics.mean(recs)
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return {"precision": precision, "recall": recall, "f1": f1}
+
+
+def _minmax(vals: List[float]) -> List[float]:
+    lo, hi = min(vals), max(vals)
+    if lo == hi:
+        return [0.0] * len(vals)
+    return [(x - lo) / (hi - lo) for x in vals]
+
+
+def _zscore(vals: List[float]) -> List[float]:
+    mean = statistics.mean(vals)
+    sd = statistics.stdev(vals) if len(vals) > 1 else 1.0
+    return [(x - mean) / sd for x in vals]
+
+
+def _onehot(labels: List[str]) -> Dict[str, Any]:
+    uniq = sorted(set(labels))
+    idx = {u: i for i, u in enumerate(uniq)}
+    rows = [[1 if idx[x] == i else 0 for i in range(len(uniq))] for x in labels]
+    return {"labels": uniq, "rows": rows}
+
+
+def _label_encode(labels: List[str]) -> Dict[str, Any]:
+    uniq = sorted(set(labels))
+    mapping = {u: i for i, u in enumerate(uniq)}
+    return {"mapping": mapping, "encoded": [mapping[x] for x in labels]}
+
+
+def _corr(x: List[float], y: List[float]) -> float:
+    mx, my = statistics.mean(x), statistics.mean(y)
+    num = sum((a - mx) * (b - my) for a, b in zip(x, y))
+    den = math.sqrt(sum((a - mx) ** 2 for a in x) * sum((b - my) ** 2 for b in y))
+    return num / den if den else 0.0
+
+
+def _cosine(a: List[float], b: List[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a))
+    nb = math.sqrt(sum(y * y for y in b))
+    return dot / (na * nb) if na and nb else 0.0
+
+
+def _softmax(scores: List[float]) -> List[float]:
+    m = max(scores)
+    exps = [math.exp(s - m) for s in scores]
+    total = sum(exps)
+    return [e / total for e in exps]
+
+
+def _shuffle_aligned(x: List[str], y: List[str], seed: int) -> Dict[str, Any]:
+    rng = random.Random(seed)
+    pairs = list(zip(x, y))
+    rng.shuffle(pairs)
+    return {"x": [a for a, _ in pairs], "y": [b for _, b in pairs]}
+
+
+def _hist(vals: List[float], bins: int) -> Dict[str, Any]:
+    lo, hi = min(vals), max(vals)
+    if lo == hi:
+        return {str(lo): len(vals)}
+    width = (hi - lo) / bins
+    out = {}
+    for i in range(bins):
+        start = lo + i * width
+        end = lo + (i + 1) * width if i < bins - 1 else hi + 1e-9
+        label = f"[{start:.2f},{end:.2f})"
+        out[label] = sum(1 for v in vals if start <= v < end)
+    return out
