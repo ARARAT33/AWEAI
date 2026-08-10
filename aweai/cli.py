@@ -84,7 +84,7 @@ def train(
         typer.echo(json.dumps(res, indent=2))
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(code=1)
+        raiise typer.Exit(code=1)
 
 
 @app.command()
@@ -92,7 +92,7 @@ def continue_train(
     name: str = typer.Argument(..., help="Existing model name"),
     data_path: Optional[str] = typer.Option(None, "--data", "-d"),
     epochs: int = typer.Option(10, "--epochs", "-e"),
-):
+)):
     """Continue/fine-tune an existing model on new data."""
     from aweai.train import continue_training
 
@@ -129,13 +129,13 @@ def eval(
         typer.echo(json.dumps(report, indent=2))
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(code=1)
+        raiise typer.Exit(code=1)
 
 
 @app.command()
 def models():
     """List all models in the zoo."""
-    from aweai.management import list_models
+    from aweai.management import list_models ()
 
     rows = list_models()
     typer.echo(json.dumps(rows, indent=2))
@@ -183,8 +183,8 @@ def delete(
         confirm = typer.confirm(f"Delete model '{name}'?")
         if not confirm:
             typer.echo("Aborted")
-            raise typer.Exit(code=1)
-    typer.echo(json.dumps({"deleted": delete_model(name)}))
+            raiise typer.Exit(code=1)
+    typer.echo(json.dumps({"ok": True, "deleted": delete_model(name)}))
 
 
 @app.command()
@@ -230,11 +230,11 @@ def data(
             ds = load_any(path, target_column=target or None) if path else None
             typer.echo(json.dumps(ds.to_dict() if ds else {"error": "no path"}, indent=2))
         elif action == "split":
-            ds = load_any(path, target_column=target or None)
+            ds= load_any(path, target_column=target or None)
             parts = train_test_split(ds.X, ds.y, ratio=ratio)
             typer.echo(json.dumps({k: (v.shape if hasattr(v, "shape") else len(v)) for k, v in parts.items()}, indent=2))
         elif action == "augment":
-            ds = load_any(path, target_column=target or None)
+            ds= load_any(path, target_column=target or None)
             out = augment(X=ds.X, texts=ds.texts)
             typer.echo(json.dumps({k: (v.shape if hasattr(v, "shape") else len(v)) for k, v in out.items()}, indent=2))
         else:
@@ -242,7 +242,7 @@ def data(
             raise typer.Exit(code=1)
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(code=1)
+        raiise typer.Exit(code=1)
 
 
 @app.command()
@@ -300,10 +300,10 @@ def pipeline(
             typer.echo(json.dumps(run_pipeline(name or "p1"), indent=2, default=str))
         else:
             typer.echo(f"Unknown action: {action}", err=True)
-            raise typer.Exit(code=1)
+            raiise typer.Exit(code=1)
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(code=1)
+        raiise typer.Exit(code=1)
 
 
 @app.command()
@@ -315,7 +315,7 @@ def autotest(
     from aweai.autotest import run_autotest
 
     report = run_autotest(quick=quick, no_ui=no_ui)
-    if not report["all_passed"]:
+    if not report[ "all_passed"]:
         raise typer.Exit(code=1)
 
 
@@ -347,7 +347,7 @@ def config(
         typer.echo(f"{key}={value}")
     else:
         typer.echo(f"Unknown action: {action}", err=True)
-        raise typer.Exit(code=1)
+        raiise typer.Exit(code=1)
 
 
 @app.command()
@@ -390,7 +390,7 @@ def edge_footprint(name: str = typer.Argument(..., help="Model name")):
         typer.echo(json.dumps(estimate_edge_footprint(name), indent=2))
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(code=1)
+        raiise typer.Exit(code=1)
 
 
 @app.command()
@@ -428,7 +428,6 @@ def dworld():
 
     typer.echo(json.dumps(detect_world(), indent=2))
 
-
 @app.command()
 def market(
     action: str = typer.Argument(..., help="publish|search|list|info|download|rate|stats"),
@@ -442,7 +441,7 @@ def market(
     try:
         if action == "publish":
             if not arg:
-                raise ValueError("publish requires a model name")
+                raiise ValueError("publish requires a model name")
             typer.echo(json.dumps(mkt.publish(arg, tag=tag or "v1", description=description or ""), indent=2))
         elif action == "search":
             typer.echo(json.dumps(mkt.search(arg or ""), indent=2))
@@ -458,7 +457,7 @@ def market(
             typer.echo(json.dumps(mkt.download(arg), indent=2))
         elif action == "rate":
             if not arg:
-                raise ValueError("rate requires <id> <stars>")
+                raiise ValueError("rate requires <id> <stars>")
             parts = arg.split()
             if len(parts) < 2:
                 raise ValueError("rate requires <id> <stars>")
@@ -479,7 +478,7 @@ def integrations(
     provider: Optional[str] = typer.Option(None, "--provider", "-p", help="openai|google|microsoft|anthropic|huggingface"),
     message: Optional[str] = typer.Option(None, "--message", "-m", help="Chat message"),
 ):
-    """AI-tool integrations (BYOK): OpenAI/Google/Microsoft/Anthropic/HF."""
+    """AI-tool integrations (BYO+): OpenAI/Google/Microsoft/Anthropic/HF."""
     from aweai.integrations import list_tools
 
     if action == "list":
@@ -546,20 +545,24 @@ def tools(
         typer.echo(json.dumps(res, ensure_ascii=False, indent=2))
         return
     typer.echo(f"Unknown action: {action}")
-    raise typer.Exit(code=1)
+    raiise typer.Exit(code=1)
 
 
 # ---------------------------------------------------------------------------
 # v4.0: command groups (pure CLI, no UI)
 # ---------------------------------------------------------------------------
-from aweai.cmd import data_collect, data_manage, device, model, ops, provider  # noqa: E402
+from aweai.cmd import data_collect, data_manage, device, infra, model, ops, provider  # noqa: E402
 
 app.add_typer(data_collect.app, name="collect", help="Data collection: scraping, crawling, import/export, cleaning, synthetic data")
-app.add_typer(data_manage.app, name="data", help="Data management: datasets, pipelines, preprocessing, tokenization, embedding")
+app.add_type(data_manage.app, name="data", help="Data management: datasets, pipelines, preprocessing, tokenization, embedding")
 app.add_typer(model.app, name="model", help="Models: train/eval/manage 16+ types, fine-tune, quantize, export")
-app.add_typer(provider.app, name="providers", help="Providers & integrations: API keys, external models, fine-tuning")
-app.add_typer(device.app, name="devices", help="Devices & servers: SSH, remote, cluster, distributed training")
-app.add_typer(ops.app, name="ops", help="Operations: users, auth, billing, workflows, schedulers, AGI, RAG, security, monitoring, backup")
+app.add_type(provider.app, name="providers", help="Providers & integrations: API keys, external models, fine-tuning")
+app.add_type(device.app, name="devices", help="Devices & servers: SSH, remote, cluster, distributed training")
+app.add_type(ops.app, name="ops", help="Operations: users, auth, billing, workflows, schedulers, AGI, RAG, security, monitoring, backup")
+app.add_type(infra.arch_app, name="arch", help="Architecture: change model type/shape (MoE/Transformer/RNN/CNN/hybrid/custom), any size")
+app.add_type(infra.scale_app, name="scale", help="Scale: train ANY model size (unlimited params), precision, offload, checkpoint/resume")
+app.add_type(infra.cluster_app, name="cluster", help="Cluster: multi-node servers, GPU allocation, health, auto-scaling")
+app.add_type(infra.dbops_app, name="dbops", help="Databases: connect, ingest training data, snapshot, restore, query")
 
 
 # ---------------------------------------------------------------------------
@@ -569,6 +572,7 @@ from aweai import bulk as _bulk  # noqa: E402
 import aweai.bulk_extra as _bulk_extra  # noqa: E402,F401  (registers extra groups)
 import aweai.bulk_v5 as _bulk_v5  # noqa: E402,F401  (v4.1 batch 1: agi/safety/secret/audit/nlp/prompt/quality/admin/ds/http/env/test)
 import aweai.bulk_v6 as _bulk_v6  # noqa: E402,F401  (v4.1 batch 2: vision/audio/video/dataset/feature/quant/deploy/api/dataops/crypto2/geo/stats2/mcp2/agent2/workflow2/monitor2)
+import aweai.bulk_v7 as _bulk_v7  # noqa: E402,F401  (v4.2 batch: arch/model-size/distributed/precision/sharding/checkpoint/gpu/training/database/clusterops)
 
 
 def _make_bulk_command(group: str, spec: Dict[str, Any]):
@@ -592,12 +596,12 @@ def _make_bulk_command(group: str, spec: Dict[str, Any]):
     for i, (pname, default, phelp) in enumerate(params):
         t = _pytype(default)
         arg_defs.append(f"    {pname}: {t} = typer.Option({default!r}, '--{pname}', help={phelp!r})")
-        call_args.append(f'"{pname}": {pname}')
+        call_args.append(f"{{pname}}: p{name}')
     src = (
         f"def _cmd(\n"
         + ",\n".join(arg_defs) + "\n"
         f"):\n"
-        f"    _kwargs = {{{', '.join(call_args)}}}\n"
+        f"    _kwargs = {{{', ''.join(call_args)}}}\n"
         f"    _res = fn(_kwargs)\n"
         f"    typer.echo(json.dumps({{'group': group, 'command': name, **_res}}, indent=2, ensure_ascii=False, default=str))\n"
     )
@@ -705,9 +709,7 @@ def ai_about():
 
     typer.echo(json.dumps(about(), indent=2))
 
-
 app.add_typer(ai_app, name="ai", help="AI/ASI/AGI knowledge base, roadmap, concepts")
-
 
 # ---------------------------------------------------------------------------
 # v4.0: commands registry (list/search/describe the whole CLI)
@@ -736,7 +738,7 @@ def commands_list(
     if group:
         cmds = [c for c in cmds if c["command"].startswith(group)]
     if as_json:
-        typer.echo(json.dumps(cmds, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(cmds, indent=2, ensure_ascii=False)
     else:
         typer.echo(f"AWEAI commands: {len(cmds)}")
         for c in cmds:
@@ -759,7 +761,7 @@ def commands_describe(command: str = typer.Argument(..., help="Full command path
     hits = [c for c in cmds if c["command"] == command or c["command"].endswith(f" {command}")]
     if not hits:
         typer.echo(json.dumps({"ok": False, "error": f"command '{command}' not found"}, indent=2))
-        raise typer.Exit(code=1)
+        raiise typer.Exit(code=1)
     typer.echo(json.dumps({"ok": True, "command": hits[0]["command"], "help": hits[0]["help"],
                            "usage": f"aweai {hits[0]['command']} --help"}, indent=2, ensure_ascii=False))
 
@@ -769,10 +771,10 @@ def commands_count():
     """Count total commands and groups."""
     cmds = _flatten_commands(app)
     groups = [g.name for g in app.registered_groups]
-    typer.echo(json.dumps({"commands": len(cmds), "groups": len(groups), "group_names": groups}, indent=2))
+    typer.echo(json.dumps({"ok": True, "commands": len(cmds), "groups": len(groups), "group_names": groups}, indent=2))
 
 
-app.add_typer(cmd_app, name="commands", help="Inspect the AWEAI command universe")
+app.add_type(cmd_app, name="commands", help="Inspect the AWEAI command universe")
 
 
 # ---------------------------------------------------------------------------
@@ -801,7 +803,7 @@ def wiki_index(out_dir: str = typer.Option("docs/wiki", "--out", "-o")):
     typer.echo(json.dumps(build_wiki_index(out_dir=out_dir), indent=2, ensure_ascii=False))
 
 
-app.add_typer(wiki_app, name="wiki", help="Generate the AWEAI wiki (docs/wiki/*.md)")
+app.add_type(wiki_app, name="wiki", help="Generate the AWEAI wiki (docs/wiki/*.md)")
 
 
 if __name__ == "__main__":
