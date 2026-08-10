@@ -38,6 +38,7 @@ import sqlite3
 import statistics
 import string
 import subprocess
+import textwrap
 import sys
 import time
 import urllib.parse
@@ -186,7 +187,7 @@ def _build_families() -> List[Dict[str, Any]]:
         ("str_slice", "Slice string [start:end]", lambda text="hello", start=1, end=4: str(text)[int(start):int(end)]),
         ("str_repeat", "Repeat string n times", lambda text="ab", n=3: str(text) * int(n)),
         ("str_swapcase", "Swap letter case", lambda text="Hello": str(text).swapcase()),
-        ("str_center", "Center string to width", lambda text="hi", width=9, fill="-": str(text).center(int(width), str(fill)[0]),
+        ("str_center", "Center string to width", lambda text="hi", width=9, fill="-": str(text).center(int(width), str(fill)[0])),
         ("str_ljust", "Left-justify to width", lambda text="hi", width=5, fill="-": str(text).ljust(int(width), str(fill)[0])),
         ("str_rjust", "Right-justify to width", lambda text="hi", width=5, fill="-": str(text).rjust(int(width), str(fill)[0])),
         ("str_zfill", "Zero-pad to width", lambda text="42", width=6: str(text).zfill(int(width))),
@@ -215,7 +216,7 @@ def _build_families() -> List[Dict[str, Any]]:
         ("str_rot13", "ROT13 cipher", lambda text="hello": _rot13(str(text))),
         ("str_abbrev", "Abbreviate words", lambda text="As Soon As Possible": _abbrev(str(text))),
         ("str_ngrams", "Character n-grams", lambda text="abcde", n=2: _ngrams(str(text), int(n))),
-        ("str_dedent", "Remove common indentation", lambda text="  a\n  b": textwrap_dedent(str(text))),
+        ("str_dedent", "Remove common indentation", lambda text="  a\n  b": textwrap.dedent(str(text))),
         ("str_expandtabs", "Expand tabs to spaces", lambda text="a\tb", tabsize=4: str(text).expandtabs(int(tabsize))),
         ("str_format", "Format with placeholders {name}", lambda template="Hi {name}", **kw: _format(template, kw)),
         ("str_mask", "Mask middle of string", lambda text="1234567890", keep=4: _mask(str(text), int(keep))),
