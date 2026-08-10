@@ -1,12 +1,17 @@
-#!/usr/bin/env python3
-"""AWEAI command-line interface — AI Model Factory.
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+"""AWEAI command-line interface — the universal AI/ASI/AGI engineering CLI.
 
 Usage:
     aweai --help
-    aweai autotest
     aweai train --type mlp --name m1 --data data.csv
-    aweai serve
-    ...
+    aweai data-collect synthetic --rows 100
+    aweai model quantize m1 --fmt int8
+    aweai ai explain transformer
+    aweai commands list
+    aweai wiki build
+    aweai autotest
+
+The CLI is pure terminal (Typer): no web UI, no GUI, no server.
 """
 
 from __future__ import annotations
@@ -19,9 +24,12 @@ import typer
 
 from aweai import __version__
 
-app = typer.Typer(add_completion=False, help="AWEAI — AI Model Factory (create/train/tune/manage AI models from scratch, no built-in AI, no Hugging Face)")
+app = typer.Typer(add_completion=False, help="AWEAI — universal CLI for AI/ASI/AGI engineering (pure terminal, no UI)")
 
 
+# ---------------------------------------------------------------------------
+# Core commands (model factory + system)
+# ---------------------------------------------------------------------------
 @app.command()
 def version():
     """Print AWEAI version."""
@@ -300,38 +308,15 @@ def pipeline(
 
 @app.command()
 def autotest(
-    quick: bool = typer.Option(False, "--quick", help="Skip smoke-train/RAG/i18n/UI"),
-    no_ui: bool = typer.Option(False, "--no-ui", help="Skip UI check"),
+    quick: bool = typer.Option(False, "--quick", help="Skip smoke-train/RAG/i18n"),
+    no_ui: bool = typer.Option(False, "--no-ui", help="(accepted for compatibility; no UI exists)"),
 ):
-    """Run the full system autotest (deps, imports, smoke-train all model types, RAG, actions, i18n, UI, CLI)."""
+    """Run the full system autotest (deps, imports, smoke-train all model types, RAG, actions, i18n, CLI)."""
     from aweai.autotest import run_autotest
 
     report = run_autotest(quick=quick, no_ui=no_ui)
     if not report["all_passed"]:
         raise typer.Exit(code=1)
-
-
-@app.command()
-def anywhere(
-    port: int = typer.Option(8888, "--port", "-p", help="Port the UI runs on"),
-    tunnel: bool = typer.Option(True, "--tunnel/--no-tunnel", help="Try to open a public tunnel (cloudflared/ngrok/localtunnel/serveo)"),
-):
-    """Print a universal deployment report: environment, local/LAN/cloud URLs, QR code."""
-    from aweai.anywhere import anywhere_report, print_report
-
-    print_report(anywhere_report(port=port, with_tunnel=tunnel))
-
-
-@app.command()
-def serve(
-    port: int = typer.Option(8888, "--port", "-p", help="Preferred port (auto +1 if busy)"),
-    host: str = typer.Option("127.0.0.1", "--host", help="Bind host"),
-    no_open: bool = typer.Option(False, "--no-open", help="Do not open browser"),
-):
-    """Launch the browser UI on smart port 8888 (+1)."""
-    from aweai.ui import serve as serve_ui
-
-    serve_ui(port=port, host=host, open_browser=not no_open)
 
 
 @app.command()
@@ -365,9 +350,6 @@ def config(
         raise typer.Exit(code=1)
 
 
-# ---------------------------------------------------------------------------
-# v2.2 quantization & edge export
-# ---------------------------------------------------------------------------
 @app.command()
 def quantize(
     name: str = typer.Argument(..., help="Model name"),
@@ -411,9 +393,6 @@ def edge_footprint(name: str = typer.Argument(..., help="Model name")):
         raise typer.Exit(code=1)
 
 
-# ---------------------------------------------------------------------------
-# v3.0 distributed training & marketplace
-# ---------------------------------------------------------------------------
 @app.command()
 def dtrain(
     model_type: str = typer.Argument(..., help="Model type"),
@@ -494,9 +473,6 @@ def market(
         raise typer.Exit(code=1)
 
 
-# ---------------------------------------------------------------------------
-# v3.0 integrations
-# ---------------------------------------------------------------------------
 @app.command()
 def integrations(
     action: str = typer.Argument("list", help="list|chat"),
@@ -518,55 +494,6 @@ def integrations(
     else:
         typer.echo(f"Unknown action: {action}", err=True)
         raise typer.Exit(code=1)
-
-
-# ---------------------------------------------------------------------------
-# v3.0 megamenus & terminal
-# ---------------------------------------------------------------------------
-@app.command()
-def allc(
-    category: Optional[str] = typer.Option(None, "--category", "-c", help="Filter by category"),
-    search: Optional[str] = typer.Option(None, "--search", "-s", help="Search text"),
-    count: int = typer.Option(200, "--count", help="Max lines to render"),
-    as_json: bool = typer.Option(False, "--json", help="Output raw JSON"),
-    huge: bool = typer.Option(False, "--huge", help="Build the 100,000+ entry catalog"),
-):
-    """Print ALL commands & instructions (10,000+ / 100,000+ with --huge)."""
-    if huge:
-        from aweai.menus import build_catalog_v31, catalog_stats, render_catalog, search_catalog
-        items = build_catalog_v31(min_count=100000)
-    else:
-        from aweai.menus import build_catalog, catalog_stats, render_catalog, search_catalog
-        items = build_catalog(min_count=10000)
-    if category or search:
-        items = search_catalog(items, query=search or "", category=category or "")
-    if as_json:
-        typer.echo(json.dumps(items))
-    else:
-        stats = catalog_stats(items)
-        typer.echo(f"AWEAI instruction catalog: {stats['total']} entries, {stats['categories']} categories")
-        typer.echo(render_catalog(items, max_lines=count))
-
-
-@app.command()
-def autoallc(
-    category: Optional[str] = typer.Option(None, "--category", "-c", help="Filter by category"),
-    search: Optional[str] = typer.Option(None, "--search", "-s", help="Search text"),
-    count: int = typer.Option(200, "--count", help="Max lines to render"),
-    as_json: bool = typer.Option(False, "--json", help="Output raw JSON"),
-):
-    """Print ALL automations (10,000+)."""
-    from aweai.menus import build_automations, catalog_stats, render_catalog, search_catalog
-
-    items = build_automations(min_count=10000)
-    if category or search:
-        items = search_catalog(items, query=search or "", category=category or "")
-    if as_json:
-        typer.echo(json.dumps(items))
-    else:
-        stats = catalog_stats(items)
-        typer.echo(f"AWEAI automation catalog: {stats['total']} entries, {stats['categories']} categories")
-        typer.echo(render_catalog(items, max_lines=count))
 
 
 @app.command()
@@ -622,12 +549,259 @@ def tools(
     raise typer.Exit(code=1)
 
 
-@app.command()
-def terminal():
-    """Launch the in-app terminal (full REPL with all tools)."""
-    from aweai.terminal import repl
+# ---------------------------------------------------------------------------
+# v4.0: command groups (pure CLI, no UI)
+# ---------------------------------------------------------------------------
+from aweai.cmd import data_collect, data_manage, device, model, ops, provider  # noqa: E402
 
-    repl()
+app.add_typer(data_collect.app, name="collect", help="Data collection: scraping, crawling, import/export, cleaning, synthetic data")
+app.add_typer(data_manage.app, name="data", help="Data management: datasets, pipelines, preprocessing, tokenization, embedding")
+app.add_typer(model.app, name="model", help="Models: train/eval/manage 16+ types, fine-tune, quantize, export")
+app.add_typer(provider.app, name="providers", help="Providers & integrations: API keys, external models, fine-tuning")
+app.add_typer(device.app, name="devices", help="Devices & servers: SSH, remote, cluster, distributed training")
+app.add_typer(ops.app, name="ops", help="Operations: users, auth, billing, workflows, schedulers, AGI, RAG, security, monitoring, backup")
+
+
+# ---------------------------------------------------------------------------
+# v4.0: bulk command groups (declarative commands from aweai.bulk)
+# ---------------------------------------------------------------------------
+from aweai import bulk as _bulk  # noqa: E402
+import aweai.bulk_extra as _bulk_extra  # noqa: E402,F401  (registers extra groups)
+import aweai.bulk_v5 as _bulk_v5  # noqa: E402,F401  (v4.1 batch 1: agi/safety/secret/audit/nlp/prompt/quality/admin/ds/http/env/test)
+import aweai.bulk_v6 as _bulk_v6  # noqa: E402,F401  (v4.1 batch 2: vision/audio/video/dataset/feature/quant/deploy/api/dataops/crypto2/geo/stats2/mcp2/agent2/workflow2/monitor2)
+
+
+def _make_bulk_command(group: str, spec: Dict[str, Any]):
+    """Build a Typer command function with explicit options from a spec."""
+    name = spec["name"]
+    help_text = spec["help"]
+    params = spec["params"]
+    fn = spec["fn"]
+
+    def _pytype(default: Any) -> str:
+        if isinstance(default, bool):
+            return "bool"
+        if isinstance(default, int):
+            return "int"
+        if isinstance(default, float):
+            return "float"
+        return "str"
+
+    arg_defs = []
+    call_args = []
+    for i, (pname, default, phelp) in enumerate(params):
+        t = _pytype(default)
+        arg_defs.append(f"    {pname}: {t} = typer.Option({default!r}, '--{pname}', help={phelp!r})")
+        call_args.append(f'"{pname}": {pname}')
+    src = (
+        f"def _cmd(\n"
+        + ",\n".join(arg_defs) + "\n"
+        f"):\n"
+        f"    _kwargs = {{{', '.join(call_args)}}}\n"
+        f"    _res = fn(_kwargs)\n"
+        f"    typer.echo(json.dumps({{'group': group, 'command': name, **_res}}, indent=2, ensure_ascii=False, default=str))\n"
+    )
+    ns: Dict[str, Any] = {"typer": typer, "json": json, "fn": fn,
+                          "group": group, "name": name}
+    exec(compile(src, f"<bulk:{group}:{name}>", "exec"), ns)
+    cmd = ns["_cmd"]
+    cmd.__doc__ = help_text
+    return cmd
+
+
+_bulk_apps: Dict[str, typer.Typer] = {}
+for _g in _bulk.groups():
+    _sub = typer.Typer(help=f"{_g} utilities (bulk command group)")
+    for _spec in _bulk.specs_for(_g):
+        _sub.command(name=_spec["name"], help=_spec["help"])(_make_bulk_command(_g, _spec))
+    _bulk_apps[_g] = _sub
+    app.add_typer(_sub, name=_g, help=f"{_g} utilities")
+
+
+# ---------------------------------------------------------------------------
+# v4.0: AI / ASI / AGI knowledge
+# ---------------------------------------------------------------------------
+ai_app = typer.Typer(help="AI/ASI/AGI knowledge base, roadmap, concepts")
+
+
+@ai_app.command("explain")
+def ai_explain(term: str = typer.Argument(..., help="Concept, e.g. transformer/rag/alignment")):
+    """Explain an AI/ASI/AGI concept from the knowledge base."""
+    from aweai.ai import get_concept, search_concepts
+
+    entry = get_concept(term)
+    if entry is None:
+        found = search_concepts(term, limit=5)
+        typer.echo(json.dumps({"ok": False, "error": f"concept '{term}' not found",
+                               "suggestions": found}, indent=2))
+        raise typer.Exit(code=1)
+    typer.echo(json.dumps({"ok": True, "name": term.lower().replace(" ", "_"),
+                           "category": entry["category"], "summary": entry["summary"],
+                           "detail": entry["detail"]}, indent=2, ensure_ascii=False))
+
+
+@ai_app.command("search")
+def ai_search(query: str = typer.Argument(..., help="Search text"), category: Optional[str] = typer.Option(None, "--category", "-c")):
+    """Search the AI knowledge base."""
+    from aweai.ai import search_concepts
+
+    typer.echo(json.dumps(search_concepts(query, category=category), indent=2, ensure_ascii=False))
+
+
+@ai_app.command("list")
+def ai_list(category: Optional[str] = typer.Option(None, "--category", "-c")):
+    """List knowledge-base concepts."""
+    from aweai.ai import CONCEPTS, categories
+
+    typer.echo(json.dumps({"concepts": [{"name": k, "category": v["category"], "summary": v["summary"]}
+                                        for k, v in CONCEPTS.items()
+                                        if not category or v["category"] == category]}, indent=2, ensure_ascii=False))
+
+
+@ai_app.command("categories")
+def ai_categories():
+    """List knowledge categories."""
+    from aweai.ai import categories
+
+    typer.echo(json.dumps(categories(), indent=2))
+
+
+@ai_app.command("timeline")
+def ai_timeline():
+    """Show AI history timeline."""
+    from aweai.ai import TIMELINE
+
+    typer.echo(json.dumps(TIMELINE, indent=2, ensure_ascii=False))
+
+
+@ai_app.command("roadmap")
+def ai_roadmap():
+    """Show AGI/ASI roadmap phases."""
+    from aweai.ai import ROADMAP
+
+    typer.echo(json.dumps(ROADMAP, indent=2, ensure_ascii=False))
+
+
+@ai_app.command("levels")
+def ai_levels():
+    """Show AGI capability levels."""
+    from aweai.ai import AGI_LEVELS
+
+    typer.echo(json.dumps(AGI_LEVELS, indent=2, ensure_ascii=False))
+
+
+@ai_app.command("self-improve")
+def ai_self_improve():
+    """Show recursive self-improvement hooks."""
+    from aweai.ai import SELF_IMPROVEMENT_HOOKS
+
+    typer.echo(json.dumps(SELF_IMPROVEMENT_HOOKS, indent=2, ensure_ascii=False))
+
+
+@ai_app.command("about")
+def ai_about():
+    """Knowledge base statistics."""
+    from aweai.ai import about
+
+    typer.echo(json.dumps(about(), indent=2))
+
+
+app.add_typer(ai_app, name="ai", help="AI/ASI/AGI knowledge base, roadmap, concepts")
+
+
+# ---------------------------------------------------------------------------
+# v4.0: commands registry (list/search/describe the whole CLI)
+# ---------------------------------------------------------------------------
+cmd_app = typer.Typer(help="Inspect the AWEAI command universe")
+
+
+def _flatten_commands(typer_app: typer.Typer, prefix: str = "") -> List[Dict[str, str]]:
+    out: List[Dict[str, str]] = []
+    for c in typer_app.registered_commands:
+        name = c.name or c.callback.__name__
+        out.append({"command": f"{prefix}{name}".strip(), "help": (c.help or c.callback.__doc__ or "").strip()})
+    for g in typer_app.registered_groups:
+        info = g.typer_instance
+        out.extend(_flatten_commands(info, prefix=f"{prefix}{g.name} "))
+    return out
+
+
+@cmd_app.command("list")
+def commands_list(
+    group: Optional[str] = typer.Option(None, "--group", "-g", help="Filter by group"),
+    as_json: bool = typer.Option(False, "--json", help="Raw JSON"),
+):
+    """List every command in the AWEAI CLI (hundreds)."""
+    cmds = _flatten_commands(app)
+    if group:
+        cmds = [c for c in cmds if c["command"].startswith(group)]
+    if as_json:
+        typer.echo(json.dumps(cmds, indent=2, ensure_ascii=False))
+    else:
+        typer.echo(f"AWEAI commands: {len(cmds)}")
+        for c in cmds:
+            typer.echo(f"  aweai {c['command']:<38} {c['help'][:60]}")
+
+
+@cmd_app.command("search")
+def commands_search(query: str = typer.Argument(..., help="Search text")):
+    """Search commands by keyword."""
+    cmds = _flatten_commands(app)
+    q = query.lower()
+    hits = [c for c in cmds if q in c["command"].lower() or q in c["help"].lower()]
+    typer.echo(json.dumps({"query": query, "matches": hits}, indent=2, ensure_ascii=False))
+
+
+@cmd_app.command("describe")
+def commands_describe(command: str = typer.Argument(..., help="Full command path, e.g. 'math add' or 'model train'")):
+    """Describe a single command."""
+    cmds = _flatten_commands(app)
+    hits = [c for c in cmds if c["command"] == command or c["command"].endswith(f" {command}")]
+    if not hits:
+        typer.echo(json.dumps({"ok": False, "error": f"command '{command}' not found"}, indent=2))
+        raise typer.Exit(code=1)
+    typer.echo(json.dumps({"ok": True, "command": hits[0]["command"], "help": hits[0]["help"],
+                           "usage": f"aweai {hits[0]['command']} --help"}, indent=2, ensure_ascii=False))
+
+
+@cmd_app.command("count")
+def commands_count():
+    """Count total commands and groups."""
+    cmds = _flatten_commands(app)
+    groups = [g.name for g in app.registered_groups]
+    typer.echo(json.dumps({"commands": len(cmds), "groups": len(groups), "group_names": groups}, indent=2))
+
+
+app.add_typer(cmd_app, name="commands", help="Inspect the AWEAI command universe")
+
+
+# ---------------------------------------------------------------------------
+# v4.0: wiki generator (docs/wiki/*.md)
+# ---------------------------------------------------------------------------
+wiki_app = typer.Typer(help="Generate the AWEAI wiki (docs/wiki/*.md)")
+
+
+@wiki_app.command("build")
+def wiki_build(
+    out_dir: str = typer.Option("docs/wiki", "--out", "-o", help="Output directory"),
+    max_specs: int = typer.Option(500, "--max-specs", help="Max bulk specs per page"),
+):
+    """Generate Markdown wiki pages for every command group."""
+    from aweai.wiki import build_wiki
+
+    report = build_wiki(out_dir=out_dir, max_specs=max_specs)
+    typer.echo(json.dumps(report, indent=2, ensure_ascii=False))
+
+
+@wiki_app.command("index")
+def wiki_index(out_dir: str = typer.Option("docs/wiki", "--out", "-o")):
+    """Generate the wiki home/index page."""
+    from aweai.wiki import build_wiki_index
+
+    typer.echo(json.dumps(build_wiki_index(out_dir=out_dir), indent=2, ensure_ascii=False))
+
+
+app.add_typer(wiki_app, name="wiki", help="Generate the AWEAI wiki (docs/wiki/*.md)")
 
 
 if __name__ == "__main__":
