@@ -1,4 +1,5 @@
 """Core unit tests for AWEAI."""
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 import os
 import sys
@@ -16,7 +17,7 @@ from aweai.utils import chunk_text, cosine_similarity, tokenize, safe_filename
 def test_version():
     from aweai import __version__
 
-    assert __version__ == "3.0.0"
+    assert __version__ == "4.0.0"
 
 
 def test_i18n_has_12_languages():

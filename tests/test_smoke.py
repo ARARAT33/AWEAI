@@ -1,4 +1,5 @@
 """Smoke tests: every model type can train and predict."""
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 import numpy as np
 import pytest
@@ -10,7 +11,7 @@ from aweai.models import list_model_types
 def test_version():
     from aweai import __version__
 
-    assert __version__ == "3.0.0"
+    assert __version__ == "4.0.0"
 
 
 def test_model_types_present():
@@ -42,7 +43,7 @@ def test_linear_train():
 
 
 def test_kmeans_train():
-    X = np.array([[0.0, 0.0], [0.1, 0.1], [5.0, 5.0], [5.1, 5.1]])
+    X = np.array([[0.0, 0.0], [0.0, 0.1], [5.0, 5.0], [5.1, 5.1]])
     m = train("kmeans", "test_kmeans", X=X, params={"k": 2, "epochs": 3})
     assert isinstance(m, dict)
     assert m.get("model_type") == "kmeans"

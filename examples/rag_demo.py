@@ -1,3 +1,4 @@
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 #!/usr/bin/env python
 """Example: RAG — index documents and ask.
 
@@ -19,7 +20,7 @@ def main() -> None:
     doc = Path(tempfile.mkdtemp(prefix="aweai_rag_demo_")) / "about.txt"
     doc.write_text(
         "AWEAI is a universal AI toolbox. It supports local LLMs, model creation, "
-        "fine-tuning with LoRA, RAG, agents, automation and a 12-language browser UI.\n"
+        "fine-tuning with LoRA, RAG, agents, automation and a 12-language CLI.\n"
         "Armenia is a country in the South Caucasus. Its capital is Yerevan.\n",
         encoding="utf-8",
     )
