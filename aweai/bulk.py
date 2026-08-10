@@ -344,3 +344,94 @@ spec("string", "anagram", "Sort letters (anagram key).", [("text", "listen", "In
      lambda p: _ok(result="".join(sorted(p["text"]))))
 spec("string", "shuffle", "Shuffle characters.", [("text", "abcdef", "Input text"), ("seed", 1, "Random seed")],
      lambda p: _ok(result=(lambda L: (random.Random(int(p["seed"])).shuffle(L), "".join(L))[1])(list(p["text"]))))
+
+
+# ===========================================================================
+# JSON / data group
+# ===========================================================================
+spec("json", "validate", "Validate JSON string.", [("text", '{"a":1}', "JSON text")],
+     lambda p: _json_validate(p["text"]))
+spec("json", "parse", "Parse JSON to pretty dict.", [("text", '{"a":1,"b":[1,2]}', "JSON text")],
+     lambda p: _ok(result=json.loads(p["text"])))
+spec("json", "stringify", "Serialize object to JSON.", [("text", '{"a":1}', "JSON text"), ("indent", 2, "Indent")],
+     lambda p: _ok(result=json.dumps(json.loads(p["text"]), indent=int(p["indent"]), ensure_ascii=False)))
+spec("json", "pretty", "Pretty-print JSON.", [("text", '{"a":1,"b":2}', "JSON text"), ("indent", 2, "Indent")],
+     lambda p: _ok(result=json.dumps(json.loads(p["text"]), indent=int(p["indent"]), ensure_ascii=False)))
+spec("json", "minify", "Minify JSON.", [("text", '{ "a" : 1 }', "JSON text")],
+     lambda p: _ok(result=json.dumps(json.loads(p["text"]), separators=(",", ":"), ensure_ascii=False)))
+spec("json", "keys", "Top-level keys of JSON object.", [("text", '{"a":1,"b":2}', "JSON text")],
+     lambda p: _ok(result=list(json.loads(p["text"]).keys())))
+spec("json", "values", "Top-level values of JSON object.", [("text", '{"a":1,"b":2}', "JSON text")],
+     lambda p: _ok(result=list(json.loads(p["text"]).values())))
+spec("json", "merge", "Merge two JSON objects.", [("a", '{"x":1}', "First JSON"), ("b", '{"y":2}', "Second JSON")],
+     lambda p: _ok(result={**json.loads(p["a"]), **json.loads(p["b"])}))
+spec("json", "get", "Get dotted path from JSON.", [("text", '{"a":{"b":42}}', "JSON text"), ("path", "a.b", "Dotted path")],
+     lambda p: _ok(result=_json_get(json.loads(p["text"]), p["path"])))
+spec("json", "set", "Set dotted path in JSON.", [("text", '{"a":{"b":1}}', "JSON text"), ("path", "a.c", "Dotted path"), ("value", "hello", "Value")],
+     lambda p: _ok(result=_json_set(json.loads(p["text"]), p["path"], p["value"])))
+spec("json", "type", "Type of JSON value.", [("text", "42", "JSON text")],
+     lambda p: _ok(result=type(json.loads(p["text"])).__name__))
+spec("json", "length", "Length of JSON array/object.", [("text", "[1,2,3]", "JSON text")],
+     lambda p: _ok(result=len(json.loads(p["text"]))))
+spec("json", "flatten", "Flatten nested JSON to dotted keys.", [("text", '{"a":{"b":1},"c":2}', "JSON text")],
+     lambda p: _ok(result=_json_flatten(json.loads(p["text"]))))
+spec("json", "sort_keys", "Sort JSON keys alphabetically.", [("text", '{"b":2,"a":1}', "JSON text")],
+     lambda p: _ok(result=json.dumps(json.loads(p["text"]), sort_keys=True, indent=2, ensure_ascii=False)))
+spec("json", "unique", "Unique values of JSON array.", [("text", "[1,2,2,3]", "JSON array")],
+     lambda p: _ok(result=list(dict.fromkeys(json.loads(p["text"])))))
+spec("json", "sort", "Sort JSON array of numbers.", [("text", "[3,1,2]", "JSON array"), ("reverse", False, "Descending")],
+     lambda p: _ok(result=sorted(json.loads(p["text"]), reverse=bool(p["reverse"]))))
+
+
+def _json_get(obj: Any, path: str) -> Any:
+    cur = obj
+    for part in path.split("."):
+        if isinstance(cur, dict) and part in cur:
+            cur = cur[part]
+        elif isinstance(cur, list) and part.isdigit() and int(part) < len(cur):
+            cur = cur[int(part)]
+        else:
+            return None
+    return cur
+
+
+def _json_validate(text: str) -> Dict[str, Any]:
+    try:
+        json.loads(text)
+        return _ok(valid=True)
+    except Exception as e:
+        return _ok(valid=False, error=str(e))
+
+
+def _json_set(obj: Any, path: str, value: Any) -> Any:
+    parts = path.split(".")
+    cur = obj
+    for part in parts[:-1]:
+        nxt = cur.get(part) if isinstance(cur, dict) else None
+        if not isinstance(nxt, (dict, list)):
+            nxt = {}
+            cur[part] = nxt
+        cur = nxt
+    cur[parts[-1]] = value
+    return obj
+
+
+def _json_flatten(obj: Any, prefix: str = "") -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            key = f"{prefix}.{k}" if prefix else k
+            if isinstance(v, (dict, list)):
+                out.update(_json_flatten(v, key))
+            else:
+                out[key] = v
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            key = f"{prefix}[{i}]" if prefix else f"[{i}]"
+            if isinstance(v, (dict, list)):
+                out.update(_json_flatten(v, key))
+            else:
+                out[key] = v
+    else:
+        out[prefix] = obj
+    return out
