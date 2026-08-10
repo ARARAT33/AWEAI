@@ -45,14 +45,14 @@ jobs:
         with:
           python-version: "3.11"
 
-      # We install ONLY the core deps (numpy, typer, UI). Heavy optional
+      # We install ONLY the core deps (numpy, typer). Heavy optional
       # backends (torch/onnx/sklearn) stay out of the binary so it stays
       # well below the 2 GB Release asset limit; they remain available
-      # when installed from pip (pip install aweai[all]).
+      # when installed from pip (pip install aweai[all]). AWEAI is CLI-only.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[ui]" pyinstaller
+          python -m pip install -e ".[all]" pyinstaller
 
       - name: Build binary with PyInstaller
         run: |
@@ -90,9 +90,9 @@ jobs:
               '  <key>CFBundleIdentifier</key>' \
               '  <string>org.aweai.aweai</string>' \
               '  <key>CFBundleVersion</key>' \
-              '  <string>3.0.0</string>' \
+              '  <string>4.0.0</string>' \
               '  <key>CFBundleShortVersionString</key>' \
-              '  <string>3.0.0</string>' \
+              '  <string>4.0.0</string>' \
               '  <key>CFBundleExecutable</key>' \
               '  <string>aweai</string>' \
               '  <key>CFBundlePackageType</key>' \
@@ -141,7 +141,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[ui]" pyinstaller
+          python -m pip install -e ".[all]" pyinstaller
 
       - name: Build binary
         run: pyinstaller --clean --noconfirm aweai.spec
@@ -207,69 +207,6 @@ jobs:
             AWEAI-*.AppImage
             aweai-*.AppImage
           fail_on_unmatched_files: false
-          generate_release_notes: false
-          overwrite_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  web-build:
-    name: Web static build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Assemble static web bundle
-        run: |
-          set -euxo pipefail
-          rm -rf dist-web
-          mkdir -p dist-web
-          # Copy the complete SPA (UI static assets).
-          python - <<'PY'
-          import pathlib, shutil
-          src = pathlib.Path("aweai/ui/static")
-          dst = pathlib.Path("dist-web")
-          for f in src.iterdir():
-              if f.is_file():
-                  shutil.copy2(f, dst / f.name)
-          print("copied:", sorted(p.name for p in dst.iterdir()))
-          PY
-          cat > dist-web/README.txt <<'EOF'
-          AWEAI web static build.
-
-          This bundle contains the complete AWEAI browser UI
-          (index.html, app.js, style.css).
-
-          Two ways to use it:
-
-          1) Full experience (recommended): install AWEAI and start the server
-             python -m pip install -e ".[ui]"
-             aweai serve --port 8888
-             # open http://localhost:8888
-
-          2) Static-only preview (UI shell; API features need the server):
-             python -m http.server 8888 --directory dist-web
-             # open http://localhost:8888
-          EOF
-          tar -czf aweai-web-static.tar.gz dist-web
-          ls -la aweai-web-static.tar.gz
-
-      - name: Determine release tag
-        id: tag
-        run: |
-          TAG="${{ github.event.inputs.tag }}"
-          if [ -z "$TAG" ]; then
-            TAG="${GITHUB_REF_NAME}"
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Upload web build to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          files: aweai-web-static.tar.gz
-          fail_on_unmatched_files: true
           generate_release_notes: false
           overwrite_files: true
         env:
