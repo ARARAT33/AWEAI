@@ -11,10 +11,11 @@ Tools are declared with a simple decorator that registers:
 
 The registry is used by:
 * the CLI  (``aweai tool <name> --param value``)
-* the UI   (``/api/tools`` and ``/api/tools/run``)
+* the CLI  (``aweai tools list`` and ``aweai tools run``)
 * the menus (allc/autoallc catalogs, so new tools appear in the
   10,000+ command space automatically)
 """
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 from __future__ import annotations
 

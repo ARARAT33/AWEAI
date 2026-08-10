@@ -2,6 +2,7 @@
 
 Each tool has a unique purpose and works with the standard library.
 """
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 from __future__ import annotations
 
@@ -78,7 +79,7 @@ def metric_clear() -> Dict[str, Any]:
 
 
 @tool("health_check", "monitoring", "Run a health check on a URL and report latency/status")
-def health_check(url: str = "http://127.0.0.1:8888/api/health", timeout: int = 10) -> Dict[str, Any]:
+def health_check(url: str = "http://127.0.0.1:8000/health", timeout: int = 10) -> Dict[str, Any]:
     import urllib.request
 
     start = time.time()

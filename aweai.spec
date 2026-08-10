@@ -1,6 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 # Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
-
 """PyInstaller spec for AWEAI v4.0 — builds a single-file CLI binary.
 
 Usage:

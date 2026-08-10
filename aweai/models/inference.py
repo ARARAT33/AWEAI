@@ -8,6 +8,7 @@ Two backends:
 
 The LLM class also supports API-based generation through aweai.models.apis.
 """
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 from __future__ import annotations
 
@@ -33,13 +34,13 @@ class TinyBrain:
 
     def generate(self, prompt: str, max_tokens: int = 128, **kwargs) -> str:
         p = prompt.strip().lower()
-        if any(w in p for w in ("hello", "hi", "բարև", "բարի", "привет", "你好", "hola")):
-            return "Hello! AWEAI is ready. Ask me anything or open the UI with `aweai serve`."
+        if any(w in p for w in ("hello", "hi", "\u0562\u0561\u0580\u0587", "\u0562\u0561\u0580\u056b", "\u043f\u0440\u0438\u0432\u0435\u0442", "\u4f60\u597d", "hola")):
+            return "Hello! AWEAI is ready. Use `aweai commands list` to see all CLI commands."
         if "name" in p:
-            return "I am AWEAI — your universal AI toolbox."
+            return "I am AWEAI \u2014 your universal AI toolbox."
         if "?" in prompt:
             base = prompt.strip().rstrip("?")[-160:]
-            return f"Good question: {base}… (install `aweai[ml]` for a smarter model)"
+            return f"Good question: {base}\u2026 (install `aweai[ml]` for a smarter model)"
         if len(prompt.strip()) > 10:
             return f"I understood your message: {prompt.strip()[:200]} (fallback mode)"
         return self.responses[0]
