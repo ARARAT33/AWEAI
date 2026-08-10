@@ -1,5 +1,43 @@
 # Changelog
 
+## v4.0.0 — 2026-08-10 — CLI-only universal command universe
+
+**Breaking: UI/Web/GUI removed**
+- Deleted `aweai/ui/`, `aweai/anywhere.py`, `aweai/terminal/`, `aweai/menus/`.
+- Removed `aweai serve` and `aweai anywhere`; no FastAPI/uvicorn, no static files.
+- AWEAI is now pure **CLI (Typer)**.
+
+**Massive CLI expansion**
+- New command groups: `collect`, `data`, `model`, `providers`, `devices`, `ops`.
+- New `ai` group: AI/ASI/AGI knowledge base (119 concepts, timeline, roadmap, AGI levels, self-improvement hooks).
+- New `commands` group: list/search/describe/count the entire command universe.
+- New `wiki` group: `aweai wiki build` generates `docs/wiki/*.md`.
+- New bulk engine (`aweai.bulk`): 329 declarative commands in 18 groups
+  (math, string, json, file, net, time, crypto, ml, text, image, audio,
+  video, sys, db, cloud, llm, rl, neuro, knowledge).
+- Total CLI surface: **467 commands / 28 groups** (was 33 commands).
+
+**Data & AGI tooling**
+- `collect` — scrape, crawl, RSS, import/export CSV/JSON, dedupe, sample,
+  clean, augment-text, synthetic data, stats.
+- `data` — inspect, split, merge, filter, map, normalize, onehot, tokenize,
+  embed, similarity, declarative pipeline runner.
+- `model` — train/types/list/info/eval/predict/continue/fine-tune/transfer/
+  tune/quantize/export/export-edge/footprint/import/delete/compare/recommend/
+  distributed/world.
+- `providers` — list, set-key/unset-key, chat, complete, models, fine-tune, check.
+- `devices` — detect, ssh, ssh-add/list/remove, cluster-status, distributed,
+  orchestrate, lan, benchmark.
+- `ops` — user-add/list/remove, role-set, auth, permissions, billing-add/
+  balance, token-issue, workflow-add/list/run/remove, scheduler-list, cron,
+  agent-run, agi-status, memory-add/get/list/clear, reason, self-improve,
+  rag-index/search/ask, vector-store, security-scan, hash-file, monitor,
+  backup, backup-list.
+
+**Quality**
+- 33 unit tests green; compileall clean; autotest 3/3 (deps, imports, CLI).
+- CI updated to CLI-only; no-UI enforced; No-HuggingFace guard kept.
+
 ## v3.0.0 — 2026-08-08 — Next-level factory
 
 **Vision (v2.1)**

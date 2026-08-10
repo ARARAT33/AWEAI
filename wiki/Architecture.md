@@ -21,7 +21,6 @@ AWEAI/
 │   ├── autotest/            # self-check suite
 │   ├── marketplace/         # local-first model registry
 │   ├── integrations/        # BYOK adapters (OpenAI/Gemini/Azure/Claude/HF)
-│   ├── ui/                  # web UI + REST API + in-app terminal
 │   │   ├── api.py           # FastAPI/HTTP endpoints
 │   │   ├── static/          # index.html, app.js, style.css (huge menu SPA)
 │   │   └── server.py        # uvicorn launcher
@@ -38,4 +37,4 @@ AWEAI/
 - **Auditable**: everything is plain Python; `aweai autotest` verifies the whole factory.
 - **Portable**: same code runs on desktop, Raspberry Pi and web.
 - **Slim releases**: desktop binaries bundle only core deps (numpy + UI); torch/onnx stay optional runtime extras to keep assets under the 2 GB Release limit.
-- **Huge menu system**: the UI sidebar is built combinatorially (groups × sub-actions × variants), producing 100,000+ navigable pages backed by the REST API.
+- **CLI-only**: every feature is exposed through Typer command groups (no web UI, no REST server).

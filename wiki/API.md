@@ -21,7 +21,7 @@ list_model_types()       # ["mlp", "linear", "logistic", "kmeans", "ngram",
                          #  "segmentation_net", ...]
 ```
 
-## REST API (from `aweai serve`)
+## CLI API (from `aweai` commands)
 
 | Method | Path | Description |
 |--------|------|-------------|

@@ -3,7 +3,7 @@
 ## v2.1 — foundations
 - Model factory core: MLP, linear, logistic, KMeans, n-gram
 - CLI training / evaluation / model zoo
-- Basic browser UI + REST API
+- CLI foundation (Typer) + model factory
 
 ## v2.2 — scale & automation
 - RNN / LSTM / GRU / CNN / Transformer

@@ -19,10 +19,10 @@ aweai market publish|search|list|info|download|rate|stats ...
 aweai integrations list|chat --provider P --message M
 aweai allc [--category C] [--search Q] [--count N] [--json] [--huge]
 aweai autoallc [--category C] [--search Q] [--count N] [--json]
-aweai terminal
+aweai commands list
 aweai data load/split/augment | rag index/ask | actions "..." | pipeline ...
 aweai autotest [--quick] [--no-ui]
-aweai serve [--port N] [--host H]
+aweai wiki build
 ```
 
 ## The 10,000+ / 100,000+ command catalog
@@ -49,7 +49,7 @@ aweai autoallc --category rag      # all RAG automations
 | Edge export | `aweai export-edge NAME --fmt tflite` |
 | Distributed training | `aweai dtrain TYPE --name NAME --workers 4` |
 | Marketplace | `aweai market publish/search/download/rate` |
-| In-app terminal | `aweai terminal` |
+| Command registry | `aweai commands list` |
 | Integrations | `aweai integrations chat --provider openai --message hi` |
 | Full audit | `aweai autotest` |
 

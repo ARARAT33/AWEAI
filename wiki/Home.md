@@ -1,39 +1,39 @@
-# AWEAI — AI Model Factory
+# AWEAI — Universal CLI for AI/ASI/AGI Engineering
 
-**AWEAI** is an AI model factory: it creates, trains, tunes, evaluates, exports and manages AI models **from scratch** — with **no built-in AI** and **no Hugging Face dependencies**. Everything from the model zoo to the tokenizer to RAG embeddings is implemented in plain Python + numpy, so it runs on modest hardware (CPU, Raspberry Pi) and is fully auditable.
+> **Copyright (c) 2026 ARARAT33 — based on AWEAI. All rights reserved.**
+> Pure **terminal** (CLI-only): no web UI, no GUI, no server.
 
-## Highlights
+AWEAI is an everything-in-one CLI for creating, training, tuning and
+managing AI models from scratch — plus hundreds of commands covering data,
+providers, devices, operations, AGI orchestration, RAG, security and an
+AI/ASI/AGI knowledge base.
 
-- **16 from-scratch architectures**: MLP, linear, logistic, KMeans, n-gram LM, RNN, LSTM, GRU, CNN, mini-Transformer, time-series Transformer, VisionCNN, ObjectDetector, SegmentationNet, GAN, autoencoder.
-- **Megamenus**: `aweai allc` prints **10,000+ commands & instructions**; `aweai autoallc` prints **10,000+ automations**.
-- **In-app terminal**: `aweai terminal` launches a full REPL with every CLI tool available; the browser UI has a terminal drawer (`Ctrl+``).
-- **Browser UI**: `aweai serve` → http://localhost:8888 with a huge responsive menu system (22 groups × sub-actions × variants = 100,000+ navigable pages/menus), training, terminal, marketplace, debuggers, libraries, tests, autotest.
-- **Self-check**: `aweai autotest` verifies every module, model type, action, UI endpoint, export format, i18n language, CLI command and workflow.
-- **Distributed training**, **quantization** (fp16/int8/uint8/int4), **edge export** (ONNX/TFLite/TorchScript), **marketplace**, **RAG**, **automation**, **REST API**, **BYOK integrations** (OpenAI/Gemini/Azure/Claude/HF).
+- **Model factory** — train 16+ model architectures from zero (numpy/torch/sklearn).
+- **Data engineering** — scrape, crawl, import/export, clean, augment, synthesize.
+- **Providers** — OpenAI / Google / Microsoft / Anthropic / HF adapters (BYOK).
+- **Devices** — SSH, remote hosts, cluster, distributed training, orchestration.
+- **Operations** — users, roles, auth, billing, workflows, schedulers, cron, agents.
+- **AGI tooling** — orchestration hooks, memory, reasoning, self-improvement (RSI).
+- **RAG** — retrieval-augmented generation (index, search, ask).
+- **AI knowledge base** — concepts, timeline, roadmap, AGI levels.
+- **Bulk commands** — 300+ declarative utilities (18 groups).
+- **Command registry** — `aweai commands list/search/describe/count`.
+- **Wiki generator** — `aweai wiki build` generates `docs/wiki/*.md`.
+- **Autotest** — one-command full-system self-check.
 
 ## Quick start
 
 ```bash
-pip install -e .
-aweai autotest            # one-command system check
-aweai serve               # browser UI at http://localhost:8888
+aweai version
+aweai hardware
+aweai types
+aweai train --type mlp --name m1 --data data.csv --target label
+aweai models
+aweai ai explain transformer
+aweai commands count
+aweai wiki build
 ```
 
-```python
-from aweai.train import train
-res = train("mlp", "my_model", X=[[0,0],[1,1]], y=[0,1], params={"epochs": 10})
-print(res)
-```
-
-## Wiki pages
-
-- [[CLI Commands]] — every command and the 10,000+ command catalog
-- [[UI Guide]] — the browser interface and in-app terminal
-- [[Build Instructions]] — EXE / Linux / macOS / AppImage / web builds
-- [[Architecture]] — package layout and design
-- [[Roadmap]] — v2.1 / v2.2 / v3.0 / future
-- [[API]] — Python API reference
-
-## Releases
-
-All prebuilt artifacts are attached to [GitHub Releases](https://github.com/ARARAT33/AWEAI/releases): Windows EXE, Linux binary, macOS app (arm64 + x86_64), AppImage, web static.
+See [CLI-Commands](CLI-Commands.md), [API](API.md),
+[Architecture](Architecture.md), [Roadmap](Roadmap.md),
+[Build-Instructions](Build-Instructions.md).

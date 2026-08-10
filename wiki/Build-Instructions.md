@@ -35,7 +35,8 @@ The workflow downloads `linuxdeploy-x86_64.AppImage`, extracts it (FUSE-less), a
 ## Web static
 
 ```bash
-mkdir -p dist-web && cp -r aweai/ui/static/* dist-web/
+# AWEAI is CLI-only (no web bundle)
+pyinstaller --clean --noconfirm aweai.spec
 tar -czf aweai-web-static.tar.gz dist-web
 ```
 
@@ -46,5 +47,5 @@ Uploaded to the Release as `aweai-web-static.tar.gz`.
 ```bash
 pip install -e ".[ui]"
 aweai autotest
-aweai serve
+aweai commands count
 ```
