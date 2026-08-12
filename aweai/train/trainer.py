@@ -76,6 +76,8 @@ def train(
     # Auto-infer dimensions from data for models that need them.
     if model_type in ("mlp", "autoencoder", "gan", "cnn", "vision_cnn", "rnn", "lstm", "gru", "object_detector", "segmentation"):
         params.setdefault("input_dim", X.shape[1] if X.ndim == 2 else 1)
+    if model_type in ("decision_tree", "random_forest", "naive_bayes", "knn", "svm", "gradient_boosting", "dbscan", "hierarchical"):
+        params.setdefault("input_dim", X.shape[1] if X.ndim == 2 else 1)
     if model_type in ("cnn", "vision_cnn"):
         n = X.shape[1]
         h = int(round(n ** 0.5))
@@ -97,6 +99,9 @@ def train(
         params.setdefault("grid", 4)
         params.setdefault("num_anchors", 2)
         params.setdefault("num_classes", int(np.unique(y).size) if y is not None else 1)
+    if model_type in ("gradient_boosting",) and y is not None:
+        uniq = np.unique(y)
+        params.setdefault("objective", "regression" if y.dtype.kind == "f" else "auto")
     if model_type in ("kmeans",):
         params.setdefault("k", min(3, max(2, int(np.unique(y).size) if y is not None else 3)))
     if model_type in ("transformer",):

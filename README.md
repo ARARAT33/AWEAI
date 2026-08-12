@@ -19,8 +19,10 @@ No server.** Every feature is reachable from the command line (Typer).
 AWEAI is an **everything-in-one CLI** for anyone building, training or
 managing AI/AGI systems from scratch:
 
-- **Model factory** — train 16+ model architectures from zero on a light
-  stack (`numpy` / optional `torch` / optional `scikit-learn`).
+- **Model factory** — train 24+ model architectures from zero on a light
+  stack (`numpy` / optional `torch` / optional `scikit-learn`), including
+  resource-frugal models (trees, boosting, SVM, KNN, Naive Bayes) that run on
+  very little RAM.
 - **Data engineering** — scrape, crawl, import/export, clean, augment,
   synthesize, split, tokenize, embed, pipelines.
 - **Providers** — OpenAI / Google / Microsoft / Anthropic / Hugging Face
@@ -62,7 +64,7 @@ python -m aweai version
 ```bash
 aweai version                # v4.0.0
 aweai hardware               # detect CPU/RAM/GPU
-aweai types                  # list 16+ model types
+aweai types                  # list 24+ model types
 
 # Train a model from scratch (synthetic XOR by default)
 aweai train --type mlp --name m1 --data data.csv --target label
@@ -102,7 +104,7 @@ aweai wiki build             # generates docs/wiki/*.md
 | --- | --- |
 | `collect` | Data collection: scraping, crawling, import/export, cleaning, synthetic data |
 | `data` | Data management: datasets, pipelines, preprocessing, tokenization, embedding |
-| `model` | Models: train/eval/manage 16+ types, fine-tune, transfer, quantize, export |
+| `model` | Models: train/eval/manage 24+ types, fine-tune, transfer, quantize, export |
 | `providers` | API keys, external model calling, external fine-tuning (BYOK) |
 | `devices` | SSH, remote hosts, cluster, distributed training, orchestration |
 | `ops` | Users, roles, permissions, auth, billing, workflows, schedulers, cron, agents, AGI, RAG, security, monitoring, backup |
@@ -118,21 +120,26 @@ Run `aweai commands list` to see every command, or `aweai commands describe <cmd
 | Type | Task |
 | --- | --- |
 | `mlp` | classification / regression |
+| `linear`, `logistic` | classical regression / classification |
 | `cnn` | image classification (1D/2D) |
 | `rnn`, `lstm`, `gru` | sequence / text |
 | `transformer` | mini-Transformer (text) |
-| `tft` | time-series transformer |
+| `ts_transformer` | time-series transformer |
 | `ngram` | language model |
 | `gan` | generative |
 | `autoencoder` | representation / anomaly |
-| `vae` | generative latent |
-| `diffusion` | generative (simple) |
 | `vision_cnn` | image (vision) |
-| `object_detection` | detection |
+| `object_detector` | detection |
 | `segmentation` | segmentation |
-| `clustering` | unsupervised |
-| `linear`, `logistic` | classical |
-| `time_series` | forecasting |
+| `decision_tree` | classification / regression (low-resource) |
+| `random_forest` | classification / regression (ensemble) |
+| `naive_bayes` | classification (tiny footprint) |
+| `knn` | classification / regression (lazy, no training) |
+| `svm` | classification (linear, SGD) |
+| `gradient_boosting` | classification / regression (boosted trees) |
+| `kmeans` | clustering |
+| `dbscan` | density-based clustering (finds noise) |
+| `hierarchical` | agglomerative clustering |
 
 ## No-HuggingFace policy
 

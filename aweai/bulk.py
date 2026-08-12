@@ -732,6 +732,50 @@ def _entropy(text: str) -> float:
     return -sum((c / total) * math.log2(c / total) for c in cnt.values())
 
 
+def _gini_impurity(labels: List[str]) -> float:
+    if not labels:
+        return 0.0
+    import collections
+
+    cnt = collections.Counter(labels)
+    total = len(labels)
+    return 1.0 - sum((c / total) ** 2 for c in cnt.values())
+
+
+def _mutual_info(x: List[str], y: List[str]) -> float:
+    """Mutual information between two discrete sequences (same length)."""
+    import collections
+
+    n = min(len(x), len(y))
+    if n == 0:
+        return 0.0
+    x = x[:n]
+    y = y[:n]
+    cx = collections.Counter(x)
+    cy = collections.Counter(y)
+    cxy = collections.Counter(zip(x, y))
+    mi = 0.0
+    for (a, b), c in cxy.items():
+        pxy = c / n
+        px = cx[a] / n
+        py = cy[b] / n
+        if px > 0 and py > 0:
+            mi += pxy * math.log2(pxy / (px * py))
+    return mi
+
+
+def _information_gain(parent: List[str], left: List[str], right: List[str]) -> float:
+    """Information gain (Gini) of a binary split."""
+    if not parent:
+        return 0.0
+    pl = _gini_impurity(parent)
+    total = len(left) + len(right)
+    if total == 0:
+        return 0.0
+    weighted = (len(left) / total) * _gini_impurity(left) + (len(right) / total) * _gini_impurity(right)
+    return pl - weighted
+
+
 # ===========================================================================
 # ML helpers group
 # ===========================================================================
@@ -784,6 +828,17 @@ spec("ml", "bins", "Histogram bins of values.", [("values", "1,1,2,3,3,3", "Numb
      lambda p: _ok(hist=_hist(_floats(p["values"]), int(p["bins"]))))
 spec("ml", "entropy", "Entropy of label distribution.", [("labels", "a,a,b", "Labels")],
      lambda p: _ok(entropy=_entropy(p["labels"].replace(",", ""))))
+spec("ml", "gini", "Gini impurity of labels.", [("labels", "a,a,b,b,b", "Labels")],
+     lambda p: _ok(gini=_gini_impurity(p["labels"].replace(",", ""))))
+spec("ml", "mutual-info", "Mutual information between two label lists.",
+     [("x", "a,a,b,b", "First sequence (comma-sep)"), ("y", "c,d,c,d", "Second sequence (comma-sep)")],
+     lambda p: _ok(mutual_info=_mutual_info(p["x"].split(","), p["y"].split(","))))
+spec("ml", "information-gain", "Gini information gain of a binary split.",
+     [("parent", "a,a,b,b", "Parent labels"), ("left", "a,b", "Left split"), ("right", "a,b", "Right split")],
+     lambda p: _ok(gain=_information_gain(p["parent"].split(","), p["left"].split(","), p["right"].split(","))))
+spec("ml", "euclidean3d", "Euclidean distance in 3D (or N-D).",
+     [("a", "0,0,0", "Point a"), ("b", "1,2,2", "Point b")],
+     lambda p: _ok(dist=round(float(math.sqrt(sum((a - b) ** 2 for a, b in zip(_floats(p["a"]), _floats(p["b"]))))), 6)))
 
 
 def _r2(y_true: List[float], y_pred: List[float]) -> float:

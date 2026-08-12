@@ -654,6 +654,21 @@ CONCEPTS: Dict[str, Dict[str, str]] = {
         "summary": "Partition data into k clusters by nearest centroid.",
         "detail": "Lloyd's algorithm (assign -> update). Sensitive to init; use k-means++ and elbow plot."
     },
+    "dbscan": {
+        "category": "classical",
+        "summary": "Density-based clustering: groups dense regions, marks noise.",
+        "detail": "No need to pre-specify k. Finds arbitrarily-shaped clusters; points in low-density areas are labeled noise (-1)."
+    },
+    "hierarchical_clustering": {
+        "category": "classical",
+        "summary": "Builds a tree of clusters (dendrogram) and cuts it at k.",
+        "detail": "Agglomerative (bottom-up) with single/complete/average/Ward linkage. No k needed upfront; inspect the dendrogram to choose cut height."
+    },
+    "agglomerative_clustering": {
+        "category": "classical",
+        "summary": "Bottom-up hierarchical clustering (alias of hierarchical_clustering).",
+        "detail": "Merges nearest clusters iteratively until k clusters remain; linkage determines inter-cluster distance."
+    },
     "svm": {
         "category": "classical",
         "summary": "Support Vector Machine: maximum-margin classifier with kernels.",

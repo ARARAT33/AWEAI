@@ -65,19 +65,35 @@ def _dequantize(payload: Dict[str, Any], dtype=np.float32) -> np.ndarray:
     return (q - zp) * scale
 
 
-def _state_to_numpy(state: Dict[str, Any]) -> Dict[str, np.ndarray]:
-    out: Dict[str, np.ndarray] = {}
-    for k, v in state.items():
-        if isinstance(v, list):
-            if v and isinstance(v[0], list):
-                out[k] = [np.asarray(x, dtype=float) for x in v]
-            else:
-                out[k] = np.asarray(v, dtype=float)
-        elif isinstance(v, dict):
-            out[k] = _state_to_numpy(v)
-        else:
-            out[k] = np.asarray(v, dtype=float)
-    return out
+def _is_quantized(v: Any) -> bool:
+    return isinstance(v, dict) and "q" in v and "scale" in v
+
+
+def _is_numeric_scalar(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _quantize_value(v: Any, fn) -> Any:
+    """Recursively quantize float weights, leaving ints/strings/structure intact."""
+    if _is_quantized(v):
+        return v
+    if isinstance(v, dict):
+        return {k: _quantize_value(val, fn) for k, val in v.items()}
+    if isinstance(v, list):
+        if not v:
+            return []
+        if all(isinstance(x, float) for x in v):
+            return _quantize_array(np.asarray(v, dtype=np.float32), fn)
+        if all(isinstance(x, int) and not isinstance(x, bool) for x in v):
+            return list(v)
+        return [_quantize_value(x, fn) for x in v]
+    if isinstance(v, np.ndarray):
+        if v.dtype.kind in ("f", "c"):
+            return _quantize_array(v.astype(np.float32), fn)
+        return v.tolist()
+    if isinstance(v, float):
+        return _quantize_array(np.asarray([v], dtype=np.float32), fn)
+    return v
 
 
 def _quantize_state(state: Dict[str, Any], fmt: str) -> Dict[str, Any]:
@@ -88,39 +104,26 @@ def _quantize_state(state: Dict[str, Any], fmt: str) -> Dict[str, Any]:
         "uint8": _quantize_uint8,
         "int4": _quantize_int4,
     }[fmt]
-    out: Dict[str, Any] = {}
-    for k, v in state.items():
-        if isinstance(v, list):
-            if v and isinstance(v[0], list):
-                out[k] = [_quantize_array(x, fn) for x in v]
-            else:
-                out[k] = _quantize_array(np.asarray(v, dtype=float), fn)
-        elif isinstance(v, dict):
-            out[k] = _quantize_state(v, fmt)
-        else:
-            out[k] = _quantize_array(np.asarray(v, dtype=float), fn)
-    return out
+    return {k: _quantize_value(val, fn) for k, val in state.items()}
 
 
 def _quantize_array(arr: np.ndarray, fn) -> Dict[str, Any]:
     return fn(arr)
 
 
+def _dequantize_value(v: Any) -> Any:
+    """Recursively dequantize a state tree back to plain numerics."""
+    if _is_quantized(v):
+        return _dequantize(v).tolist()
+    if isinstance(v, dict):
+        return {k: _dequantize_value(val) for k, val in v.items()}
+    if isinstance(v, list):
+        return [_dequantize_value(x) for x in v]
+    return v
+
+
 def _dequantize_state(qstate: Dict[str, Any]) -> Dict[str, Any]:
-    out: Dict[str, Any] = {}
-    for k, v in qstate.items():
-        if isinstance(v, dict) and "q" in v:
-            out[k] = _dequantize(v)
-        elif isinstance(v, list):
-            if v and isinstance(v[0], dict) and "q" in v[0]:
-                out[k] = [_dequantize(x) for x in v]
-            else:
-                out[k] = v
-        elif isinstance(v, dict):
-            out[k] = _dequantize_state(v)
-        else:
-            out[k] = v
-    return out
+    return {k: _dequantize_value(val) for k, val in qstate.items()}
 
 
 def quantize_model(
@@ -177,13 +180,24 @@ def quantize_model(
 def _evaluate_quantized(model: BaseModel, qstate: Dict[str, Any], X_eval, y_eval) -> Dict[str, Any]:
     try:
         orig = _dequantize_state(qstate)
-        # Compare mean absolute weight error introduced by quantization
-        errs = []
-        for k, v in orig.items():
-            if isinstance(v, (list, tuple)):
-                for i, sub in enumerate(v):
-                    if isinstance(sub, np.ndarray):
-                        errs.append(float(np.mean(np.abs(sub - _dequantize(qstate[k][i])))))
+        errs: List[float] = []
+
+        def _walk(o: Any, q: Any) -> None:
+            if _is_quantized(q) and not _is_quantized(o):
+                # original leaf was a single scalar wrapped as an array
+                a = np.asarray(_dequantize(q), dtype=float)
+                b = np.asarray(o, dtype=float)
+                if a.shape == b.shape and a.size:
+                    errs.append(float(np.mean(np.abs(a - b))))
+            elif isinstance(o, dict) and isinstance(q, dict):
+                for k in o:
+                    if k in q:
+                        _walk(o[k], q[k])
+            elif isinstance(o, list) and isinstance(q, list):
+                for a, b in zip(o, q):
+                    _walk(a, b)
+
+        _walk(orig, qstate)
         if not errs:
             errs = [0.0]
         return {

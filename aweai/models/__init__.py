@@ -5,7 +5,9 @@ for export). Available types:
 
     mlp, linear, logistic, kmeans, ngram, autoencoder, gan,
     rnn, lstm, gru, ts_transformer, cnn, vision_cnn,
-    object_detector, segmentation, transformer
+    object_detector, segmentation, transformer,
+    decision_tree, random_forest, naive_bayes, knn, svm,
+    gradient_boosting, dbscan, hierarchical
 """
 
 from .registry import (

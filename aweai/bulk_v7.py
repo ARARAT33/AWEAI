@@ -275,7 +275,7 @@ spec("distributed", "tp-comm", "Tensor-parallel communication volume per layer."
      lambda p: _ok(comm_bytes=int(p["dim"]) * int(p["seq"]) * 2 * 2 * int(p["tp"]),
                    comm_mb=round(int(p["dim"]) * int(p["seq"]) * 2 * 2 * int(p["tp"]) / 1e6, 2)))
 spec("distributed", "dp-vs-tp", "Which parallel strategy for a world.",
-     [("world", 64, "World size"), ("params", "70B", "Params"), ("gpu_gb", 80, "GPU GB"],
+     [("world", 64, "World size"), ("params", "70B", "Params"), ("gpu_gb", 80, "GPU GB")],
      lambda p: _dp_vs_tp(p))
 spec("distributed", "ring-time", "All-reduce Ring time estimate.",
      [("size_mb", 1024, "Payload MB"), ("bandwidth_gbps", 400, "Link Gbps"), ("nodes", 8, "Nodes")],
@@ -558,7 +558,7 @@ spec("training", "warmup-lr", "Linear warmup LR.",
      lambda p: _ok(lr=round(float(p["base"]) * min(1.0, int(p["step"]) / max(int(p["warmup"]), 1)), 8)))
 spec("training", "batch-tokens", "Tokens in a batch.",
      [("batch", 1024, "Batch"), ("seq", 2048, "Seq")],
-     lambda p: _ok(tokens=int(p["batch"]) * int(p["seq"]))))
+     lambda p: _ok(tokens=int(p["batch"]) * int(p["seq"])))
 
 def _lr_schedule(p: Dict[str, Any]) -> Dict[str, Any]:
     step = int(p["step"]); total = max(int(p["total"]), 1); warmup = int(p["warmup"])

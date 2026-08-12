@@ -108,22 +108,75 @@ PROFILES: Dict[str, Dict[str, Dict]] = {
         "desktop": {"epochs": 80, "batch_size": 128, "lr": 0.02},
         "gpu": {"epochs": 100, "batch_size": 256, "lr": 0.01},
     },
+    # Tree/linear models are light: scale depth/estimators with resources.
+    "decision_tree": {
+        "edge": {"max_depth": 6, "min_samples_split": 4},
+        "laptop": {"max_depth": 10, "min_samples_split": 4},
+        "desktop": {"max_depth": 16, "min_samples_split": 2},
+        "gpu": {"max_depth": 24, "min_samples_split": 2},
+    },
+    "random_forest": {
+        "edge": {"n_estimators": 5, "max_depth": 8},
+        "laptop": {"n_estimators": 15, "max_depth": 12},
+        "desktop": {"n_estimators": 40, "max_depth": 16},
+        "gpu": {"n_estimators": 120, "max_depth": 24},
+    },
+    "gradient_boosting": {
+        "edge": {"n_estimators": 8, "max_depth": 1, "lr": 0.1},
+        "laptop": {"n_estimators": 20, "max_depth": 2, "lr": 0.1},
+        "desktop": {"n_estimators": 60, "max_depth": 3, "lr": 0.05},
+        "gpu": {"n_estimators": 200, "max_depth": 4, "lr": 0.03},
+    },
+    "naive_bayes": {
+        "edge": {"distribution": "gaussian"},
+        "laptop": {"distribution": "gaussian"},
+        "desktop": {"distribution": "gaussian"},
+        "gpu": {"distribution": "gaussian"},
+    },
+    "knn": {
+        "edge": {"k": 5},
+        "laptop": {"k": 7},
+        "desktop": {"k": 11},
+        "gpu": {"k": 15},
+    },
+    "svm": {
+        "edge": {"C": 1.0, "lr": 0.05, "epochs": 40},
+        "laptop": {"C": 1.0, "lr": 0.01, "epochs": 80},
+        "desktop": {"C": 1.0, "lr": 0.005, "epochs": 150},
+        "gpu": {"C": 1.0, "lr": 0.003, "epochs": 300},
+    },
+    "dbscan": {
+        "edge": {"eps": 0.5, "min_samples": 3},
+        "laptop": {"eps": 0.5, "min_samples": 5},
+        "desktop": {"eps": 0.5, "min_samples": 5},
+        "gpu": {"eps": 0.5, "min_samples": 5},
+    },
+    "hierarchical": {
+        "edge": {"n_clusters": 3, "linkage": "complete"},
+        "laptop": {"n_clusters": 5, "linkage": "ward"},
+        "desktop": {"n_clusters": 8, "linkage": "ward"},
+        "gpu": {"n_clusters": 12, "linkage": "ward"},
+    },
 }
 
 # Which model types are appropriate for which task kind.
 TASK_TYPES: Dict[str, List[str]] = {
-    "classification": ["mlp", "logistic", "cnn", "vision_cnn", "rnn", "lstm", "gru", "transformer", "ts_transformer"],
-    "regression": ["linear", "mlp", "ts_transformer"],
-    "clustering": ["kmeans", "autoencoder"],
+    "classification": ["mlp", "logistic", "linear", "decision_tree", "random_forest",
+                       "svm", "gradient_boosting", "knn", "naive_bayes",
+                       "cnn", "vision_cnn", "rnn", "lstm", "gru", "transformer", "ts_transformer"],
+    "regression": ["linear", "mlp", "ts_transformer", "decision_tree", "random_forest",
+                   "gradient_boosting", "svm"],
+    "clustering": ["kmeans", "dbscan", "hierarchical", "autoencoder"],
     "text": ["ngram", "rnn", "lstm", "gru", "transformer"],
     "vision": ["vision_cnn", "cnn", "object_detector", "segmentation", "mlp"],
     "time_series": ["lstm", "gru", "ts_transformer", "rnn", "linear"],
     "generative": ["gan", "autoencoder", "ngram"],
-    "anomaly": ["autoencoder", "kmeans"],
+    "anomaly": ["autoencoder", "kmeans", "dbscan"],
     "embedding": ["autoencoder"],
     "object_detection": ["object_detector"],
     "segmentation": ["segmentation"],
     "forecasting": ["ts_transformer", "gru", "lstm"],
+    "anomaly_detection": ["autoencoder", "kmeans", "dbscan"],
 }
 
 TIER_ORDER = ["edge", "laptop", "desktop", "gpu"]

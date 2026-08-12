@@ -80,7 +80,8 @@ def _smoke_train() -> Dict[str, Any]:
     texts = ["the quick brown fox jumps over the lazy dog", "hello world from the model factory", "numpy from scratch no hugging face"]
     results = {}
     failed = []
-    for mtype in ("mlp", "linear", "logistic", "kmeans", "ngram", "autoencoder", "gan", "rnn", "lstm", "cnn", "transformer", "vision_cnn", "object_detector", "segmentation", "gru", "ts_transformer"):
+    for mtype in ("mlp", "linear", "logistic", "kmeans", "ngram", "autoencoder", "gan", "rnn", "lstm", "cnn", "transformer", "vision_cnn", "object_detector", "segmentation", "gru", "ts_transformer",
+                  "decision_tree", "random_forest", "naive_bayes", "knn", "svm", "gradient_boosting", "dbscan", "hierarchical"):
         try:
             if mtype == "ngram":
                 from aweai.models.registry import create_model
@@ -173,6 +174,24 @@ def _smoke_train() -> Dict[str, Any]:
                 m = create_model(mtype, input_dim=1, d_model=4, nhead=2, layers=1, output_dim=1)
                 m.fit(seq, epochs=2)
                 m.predict(seq)
+            elif mtype in ("decision_tree", "random_forest", "naive_bayes", "knn", "svm", "gradient_boosting"):
+                from aweai.models.registry import create_model
+
+                m = create_model(mtype, input_dim=4, n_estimators=3, max_depth=2, epochs=2)
+                m.fit(X, y=y)
+                m.predict(X[:4])
+            elif mtype == "dbscan":
+                from aweai.models.registry import create_model
+
+                m = create_model(mtype, input_dim=4, eps=1.0, min_samples=2)
+                m.fit(X)
+                m.predict(X[:4])
+            elif mtype == "hierarchical":
+                from aweai.models.registry import create_model
+
+                m = create_model(mtype, input_dim=4, n_clusters=3)
+                m.fit(X)
+                m.fit_predict(X[:4])
             results[mtype] = "ok"
         except Exception as e:
             failed.append(f"{mtype}: {e}")
@@ -324,3 +343,8 @@ def run_autotest(quick: bool = False, no_ui: bool = False, verbose: bool = True)
             mark = "✓" if r["ok"] else "✗"
             print(f"  {mark} {r['step']}: {r.get('detail', '')}")
     return report
+
+
+def run_all(quick: bool = False, no_ui: bool = False, silent: bool = False, verbose: bool = True) -> Dict[str, Any]:
+    """Alias for :func:`run_autotest` (kept for backwards-compatible callers/tests)."""
+    return run_autotest(quick=quick, no_ui=no_ui, verbose=verbose and not silent)

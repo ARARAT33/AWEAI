@@ -13,7 +13,7 @@ import typer
 
 from aweai.cmd.common import err, jdump, ok
 
-app = typer.Typer(help="Models: create/train/evaluate/manage 16+ types, fine-tune, quantize, export")
+app = typer.Typer(help="Models: create/train/evaluate/manage 24+ types, fine-tune, quantize, export")
 
 
 def _try_train_model(model_type: str, name: str, data_path: Optional[str], target: Optional[str],
@@ -50,7 +50,7 @@ def train(
 
 @app.command("types")
 def types():
-    """List all available model types (16+)."""
+    """List all available model types (24+)."""
     try:
         from aweai.models.registry import MODEL_TYPES
 
