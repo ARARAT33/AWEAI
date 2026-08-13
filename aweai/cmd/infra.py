@@ -87,7 +87,7 @@ def arch_create(
     heads: int = typer.Option(32, "--heads", help="Attention heads"),
     kv_heads: Optional[int] = typer.Option(None, "--kv-heads", help="KV heads for GQA/MQA"),
     vocab: int = typer.Option(50257, "--vocab", help="Vocabulary size"),
-    experts: int = tr¥år.Option(8, "--experts", help="Number of experts (MoE)"),
+    experts: int = typer.Option(8, "--experts", help="Number of experts (MoE)"),
     moe_layers: Optional[int] = typer.Option(None, "--moe-layers", help="Layers that use MoE (default: all)"),
     routing: str = typer.Option("top2", "--routing", help=f"MoE routing: {', '.join(_ROUTING)}"),
     activation: str = typer.Option("gelu", "--activation", help="Activation: gelu|relu|swish|silu|mish"),
