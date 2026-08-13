@@ -554,15 +554,15 @@ def tools(
 from aweai.cmd import data_collect, data_manage, device, infra, model, ops, provider  # noqa: E402
 
 app.add_typer(data_collect.app, name="collect", help="Data collection: scraping, crawling, import/export, cleaning, synthetic data")
-app.add_type(data_manage.app, name="data", help="Data management: datasets, pipelines, preprocessing, tokenization, embedding")
+app.add_typer(data_manage.app, name="data", help="Data management: datasets, pipelines, preprocessing, tokenization, embedding")
 app.add_typer(model.app, name="model", help="Models: train/eval/manage 16+ types, fine-tune, quantize, export")
-app.add_type(provider.app, name="providers", help="Providers & integrations: API keys, external models, fine-tuning")
-app.add_type(device.app, name="devices", help="Devices & servers: SSH, remote, cluster, distributed training")
-app.add_type(ops.app, name="ops", help="Operations: users, auth, billing, workflows, schedulers, AGI, RAG, security, monitoring, backup")
-app.add_type(infra.arch_app, name="arch", help="Architecture: change model type/shape (MoE/Transformer/RNN/CNN/hybrid/custom), any size")
-app.add_type(infra.scale_app, name="scale", help="Scale: train ANY model size (unlimited params), precision, offload, checkpoint/resume")
-app.add_type(infra.cluster_app, name="cluster", help="Cluster: multi-node servers, GPU allocation, health, auto-scaling")
-app.add_type(infra.dbops_app, name="dbops", help="Databases: connect, ingest training data, snapshot, restore, query")
+app.add_typer(provider.app, name="providers", help="Providers & integrations: API keys, external models, fine-tuning")
+app.add_typer(device.app, name="devices", help="Devices & servers: SSH, remote, cluster, distributed training")
+app.add_typer(ops.app, name="ops", help="Operations: users, auth, billing, workflows, schedulers, AGI, RAG, security, monitoring, backup")
+app.add_typer(infra.arch_app, name="arch", help="Architecture: change model type/shape (MoE/Transformer/RNN/CNN/hybrid/custom), any size")
+app.add_typer(infra.scale_app, name="scale", help="Scale: train ANY model size (unlimited params), precision, offload, checkpoint/resume")
+app.add_typer(infra.cluster_app, name="cluster", help="Cluster: multi-node servers, GPU allocation, health, auto-scaling")
+app.add_typer(infra.dbops_app, name="dbops", help="Databases: connect, ingest training data, snapshot, restore, query")
 
 
 # ---------------------------------------------------------------------------
@@ -595,8 +595,9 @@ def _make_bulk_command(group: str, spec: Dict[str, Any]):
     call_args = []
     for pname, default, phelp in params:
         t = _pytype(default)
-        arg_defs.append("    %s: %s = typer.Option(%r, '--%s', help=%r)" % (pname, t, default, pname, phelp))
-        call_args.append("'%s': %s" % (pname, pname))
+        safe_name = pname.replace("-", "_").replace(" ", "_")
+        arg_defs.append("    %s: %s = typer.Option(%r, '--%s', help=%r)" % (safe_name, t, default, pname, phelp))
+        call_args.append("%r: %s" % (pname, safe_name))
     kwargs_str = ", ".join(call_args)
     src = (
         "def _cmd(\n"
@@ -775,7 +776,7 @@ def commands_count():
     typer.echo(json.dumps({"ok": True, "commands": len(cmds), "groups": len(groups), "group_names": groups}, indent=2))
 
 
-app.add_type(cmd_app, name="commands", help="Inspect the AWEAI command universe")
+app.add_typer(cmd_app, name="commands", help="Inspect the AWEAI command universe")
 
 
 # ---------------------------------------------------------------------------
@@ -804,7 +805,7 @@ def wiki_index(out_dir: str = typer.Option("docs/wiki", "--out", "-o")):
     typer.echo(json.dumps(build_wiki_index(out_dir=out_dir), indent=2, ensure_ascii=False))
 
 
-app.add_type(wiki_app, name="wiki", help="Generate the AWEAI wiki (docs/wiki/*.md)")
+app.add_typer(wiki_app, name="wiki", help="Generate the AWEAI wiki (docs/wiki/*.md)")
 
 
 if __name__ == "__main__":
