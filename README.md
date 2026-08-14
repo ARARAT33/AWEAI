@@ -19,26 +19,76 @@ No server.** Every feature is reachable from the command line (Typer).
 AWEAI is an **everything-in-one CLI** for anyone building, training or
 managing AI/AGI systems from scratch:
 
-- **Model factory** — train 16+ model architectures from zero on a light
-  stack (`numpy` / optional `torch` / optional `scikit-learn`).
-- **Data engineering** — scrape, crawl, import/export, clean, augment,
-  synthesize, split, tokenize, embed, pipelines.
-- **Providers** — OpenAI / Google / Microsoft / Anthropic / Hugging Face
-  adapters (bring your own key).
-- **Devices & servers** — SSH, remote hosts, cluster, distributed training,
-  orchestration, hardware detection.
-- **Operations** — users, roles, permissions, auth, billing, workflows,
-  schedulers, cron, agents.
-- **AGI tooling** — orchestration hooks, memory, reasoning,
-  self-improvement (RSI) scaffolding.
+- **Model factory** — train 16+ model architectures from zero on a light stack (`numpy` / optional `torch` / optional `scikit-learn`).
+- **Data engineering** — scrape, crawl, import/export, clean, augment, synthesize, split, tokenize, embed, pipelines.
+- **Providers** — normalized adapters and routing for major AI ecosystems (bring your own key).
+- **Universal AI Ecosystem Gateway** — one AWEAI control plane for provider discovery, capability routing, policy, audit and adapter contracts.
+- **Devices & servers** — SSH, remote hosts, cluster, distributed training, orchestration, hardware detection.
+- **Operations** — users, roles, permissions, auth, billing, workflows, schedulers, cron, agents.
+- **AGI tooling** — orchestration hooks, memory, reasoning, self-improvement (RSI) scaffolding.
 - **RAG** — retrieval-augmented generation: index, search, ask.
 - **AI knowledge base** — concepts, timeline, roadmap, AGI levels.
-- **Bulk commands** — 300+ declarative utilities (math, string, json, file,
-  net, time, crypto, ml, text, image, audio, video, db, cloud, llm, rl,
-  neuro, knowledge).
+- **Bulk commands** — 300+ declarative utilities (math, string, json, file, net, time, crypto, ml, text, image, audio, video, db, cloud, llm, rl, neuro, knowledge).
 - **Command registry** — `aweai commands list/search/describe/count`.
 - **Wiki generator** — `aweai wiki build` generates `docs/wiki/*.md`.
 - **Autotest** — one-command full-system self-check.
+
+---
+
+## Universal AI Ecosystem Gateway
+
+AWEAI now provides a normalized ecosystem layer covering providers such as
+OpenAI, Anthropic, Google Gemini, Microsoft Azure AI, Meta, xAI, Mistral,
+Cohere, DeepSeek, Qwen, Zhipu, Moonshot, MiniMax, Groq, Together, Fireworks,
+Perplexity, OpenRouter, Hugging Face, Replicate, Stability AI, ElevenLabs,
+AssemblyAI, Ollama and LM Studio.
+
+The important design rule is **AWEAI is the control plane, not a promise that
+all vendors expose identical APIs**. Vendor-specific credentials and adapters
+remain implementation details. Unsupported capabilities are reported instead
+of being falsely advertised as executable.
+
+The ecosystem tools expose normalized surfaces for:
+
+- chat, reasoning, code and vision
+- embeddings, reranking, search and OCR
+- image, audio, speech, transcription and video
+- realtime, moderation, files and batch jobs
+- fine-tuning, training, datasets and model discovery
+- agents, evaluation, monitoring and routing
+- local models through Ollama/LM Studio
+
+### AWEAI-only execution policy
+
+AWEAI can enforce a policy where applications use the **AWEAI gateway as their
+single AI-tool/control-plane interface**, while provider APIs are hidden behind
+adapters. Secrets are never stored in the registry and are never returned by
+the catalog.
+
+```bash
+# Universal provider catalog
+aweai tools list --category ecosystem
+
+# Inspect one ecosystem tool
+aweai tools describe --name ecosystem_route
+
+# Find the best configured provider for a capability
+aweai tools run --name ecosystem_route --params '{"capability":"reasoning"}'
+
+# Enforce AWEAI-only routing
+aweai tools run --name ecosystem_policy --params '{"action":"enforce"}'
+
+# Audit coverage and credentials
+aweai tools run --name ecosystem_audit
+
+# Inspect the universal adapter contract
+aweai tools run --name ecosystem_contract
+```
+
+This is an **AWEAI-native gateway/registry**, not an assertion that every AI
+company can magically be controlled without its official API, credentials or
+terms. Providers become executable only when a compatible adapter and
+credential/endpoint are actually available.
 
 ---
 
@@ -64,36 +114,30 @@ aweai version                # v4.0.0
 aweai hardware               # detect CPU/RAM/GPU
 aweai types                  # list 16+ model types
 
-# Train a model from scratch (synthetic XOR by default)
 aweai train --type mlp --name m1 --data data.csv --target label
 aweai train --type ngram --name lm1 --text corpus.txt --params '{"n": 3}'
 
-# Manage the zoo
-aweai models                 # list all models
-aweai model info m1          # metadata + metrics
+aweai models
+aweai model info m1
 aweai eval m1 --data test.csv --target label
 aweai export m1 --fmt json
 aweai quantize m1 --fmt int8
 aweai export-edge m1 --fmt onnx
 
-# Data
 aweai collect synthetic --kind jsonl --rows 100 --out data/synth.jsonl
 aweai data split data/synth.jsonl --ratio 0.8
 aweai data tokenize corpus.txt --method word
 aweai data embed corpus.txt --dim 64 --out vecs.jsonl
 
-# AI knowledge
 aweai ai explain transformer
 aweai ai timeline
 aweai ai roadmap
 
-# Command universe
-aweai commands count         # hundreds of commands
+aweai commands count
 aweai commands search rag
 aweai commands describe math add
 
-# Wiki
-aweai wiki build             # generates docs/wiki/*.md
+aweai wiki build
 ```
 
 ## Command groups
@@ -109,6 +153,7 @@ aweai wiki build             # generates docs/wiki/*.md
 | `ai` | AI/ASI/AGI knowledge base (concepts, timeline, roadmap, levels, self-improve) |
 | `commands` | Inspect the command universe (list/search/describe/count) |
 | `wiki` | Generate the Markdown wiki |
+| `tools` | Universal registered tool registry, including the ecosystem gateway |
 | `math` … `knowledge` | 300+ bulk utility commands (18 groups) |
 
 Run `aweai commands list` to see every command, or `aweai commands describe <cmd>`.
@@ -147,15 +192,15 @@ AWEAI is **CLI-only**. There is no web UI, no GUI, no server and no
 ## Autotest
 
 ```bash
-aweai autotest          # full system self-check
-aweai autotest --quick  # skip heavy smoke-trains
+aweai autotest
+aweai autotest --quick
 ```
 
 ## Docs & Wiki
 
 - `docs/` — user guide, API, architecture, changelog
-- `docs/wiki/` — generated by `aweai wiki build` (hundreds of command pages)
-- `wiki/` — GitHub-wiki source pages (auto-published to the repo wiki)
+- `docs/wiki/` — generated by `aweai wiki build`
+- `wiki/` — GitHub-wiki source pages
 
 ## License & attribution
 
