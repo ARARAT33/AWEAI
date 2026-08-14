@@ -37,7 +37,7 @@ from aweai.cmd.common import data_dir, err, jdump, ok, write_json, read_json
 # ---------------------------------------------------------------------------
 # ARCH â€” model architecture manipulation
 # ---------------------------------------------------------------------------
-arch_app = typer.Typer(help="Architecture: change model type/shape (MoE/Transformer/RNN/CNN/hybrid/custom"))
+arch_app = typer.Typer(help="Architecture: change model type/shape (MoE/Transformer/RNN/CNN/hybrid/custom)")
 
 _ARCH_TYPES = [
     "moe", "transformer", "rnn", "lstm", "gru", "cnn", "mlp", "linear",
@@ -87,7 +87,7 @@ def arch_create(
     heads: int = typer.Option(32, "--heads", help="Attention heads"),
     kv_heads: Optional[int] = typer.Option(None, "--kv-heads", help="KV heads for GQA/MQA"),
     vocab: int = typer.Option(50257, "--vocab", help="Vocabulary size"),
-    experts: int = tr¥år.Option(8, "--experts", help="Number of experts (MoE)"),
+    experts: int = typer.Option(8, "--experts", help="Number of experts (MoE)"),
     moe_layers: Optional[int] = typer.Option(None, "--moe-layers", help="Layers that use MoE (default: all)"),
     routing: str = typer.Option("top2", "--routing", help=f"MoE routing: {', '.join(_ROUTING)}"),
     activation: str = typer.Option("gelu", "--activation", help="Activation: gelu|relu|swish|silu|mish"),
@@ -313,7 +313,7 @@ def scale_config(
         raise typer.Exit(code=1)
     if zero_stage not in (0, 1, 2, 3):
         typer.echo(jdump(err("zero stage must be 0/1/2/3")))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
     parsed_params = _parse_size(params)
     if parsed_params < 1 or layers < 1 or dim < 1:
         typer.echo(jdump(err("params/layers/dim must be >= 1")))
@@ -338,6 +338,7 @@ def scale_config(
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
     typer.echo(jdump(ok(name=name, path=str(p), config=cfg)))
+
 
 @scale_app.command("list")
 def scale_list():
@@ -476,7 +477,7 @@ def scale_train(
     cfg = read_json(str(_scale_spec_file(run)), None)
     if cfg is None:
         typer.echo(jdump(err(f"config '{run}' not found")))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
     plan = {
         "run": run, "model_type": cfg["model_type"], "params": cfg["params"],
         "params_str": f"{cfg['params']/1e9:.2f}B",
@@ -488,13 +489,13 @@ def scale_train(
         "launch_cmd": (
             f"aweai scale train {run} --resume-step {resume_step} "
             f"(world={cfg['world_size']}, {cfg['precision']}, zero={cfg['zero_stage']}, "
-            f"/offload={cfg['offload']})"
+            f"offload={cfg['offload']})"
         ),
     }
     if dry_run:
         typer.echo(jdump(ok(dry_run=True, plan=plan)))
         return
-    typer.echo(jdump(ok(launched=True, plan=plan))))
+    typer.echo(jdump(ok(launched=True, plan=plan)))
 
 
 @scale_app.command("precisions")
@@ -544,19 +545,24 @@ def scale_param_count(
 # ---------------------------------------------------------------------------
 cluster_app = typer.Typer(help="Cluster: multi-node servers, GPU allocation, health, auto-scaling")
 
+
 def _cluster_file() -> Path:
     return data_dir() / "cluster.json"
 
+
 def _load_cluster() -> Dict[str, Any]:
     return read_json(str(_cluster_file()), {"nodes": {}, "gpus": {}, "updated_at": None})
+
 
 def _save_cluster(data: Dict[str, Any]) -> None:
     data["updated_at"] = time.time()
     _cluster_file().parent.mkdir(parents=True, exist_ok=True)
     _cluster_file().write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
+
 def _node_key(name: str) -> str:
     return name.strip().lower().replace(" ", "-")
+
 
 @cluster_app.command("add")
 def cluster_add(
@@ -579,7 +585,7 @@ def cluster_add(
     key = _node_key(name)
     if key in data["nodes"]:
         typer.echo(jdump(err(f"node '{name}' already exists")))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
     node = {"name": name, "host": host, "port": port, "user": user, "gpus": gpus,
             "gpu_type": gpu_type, "ram_gb": ram_gb, "cpus": cpus, "role": role,
             "tags": [t.strip() for t in tags.split(",") if t.strip()],
@@ -588,11 +594,13 @@ def cluster_add(
     _save_cluster(data)
     typer.echo(jdump(ok(node=node, total_nodes=len(data["nodes"]))))
 
+
 @cluster_app.command("list")
 def cluster_list():
     """List cluster nodes."""
     data = _load_cluster()
     typer.echo(jdump(ok(nodes=data["nodes"], count=len(data["nodes"]))))
+
 
 @cluster_app.command("remove")
 def cluster_remove(name: str = typer.Argument(..., help="Node name")):
@@ -601,10 +609,11 @@ def cluster_remove(name: str = typer.Argument(..., help="Node name")):
     key = _node_key(name)
     if key not in data["nodes"]:
         typer.echo(jdump(err(f"node '{name}' not found")))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
     removed = data["nodes"].pop(key)
     _save_cluster(data)
     typer.echo(jdump(ok(removed=removed, total_nodes=len(data["nodes"]))))
+
 
 @cluster_app.command("alloc-gpus")
 def cluster_alloc(
@@ -614,7 +623,7 @@ def cluster_alloc(
 ):
     """Allocate GPUs on a node for a training job."""
     data = _load_cluster()
-     key = _node_key(name)
+    key = _node_key(name)
     if key not in data["nodes"]:
         typer.echo(jdump(err(f"node '{name}' not found")))
         raise typer.Exit(code=1)
@@ -642,14 +651,14 @@ def cluster_free(
     key = _node_key(name)
     if key not in data["nodes"]:
         typer.echo(jdump(err(f"node '{name}' not found")))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
     node = data["nodes"][key]
     if count < 1 or count > node["allocated_gpus"]:
         typer.echo(jdump(err(f"invalid free count {count} (allocated={node['allocated_gpus']})")))
         raise typer.Exit(code=1)
     node["allocated_gpus"] -= count
     if job:
-        node["jobs"] = [j for j in node.get("setdefault("jobs", []))" if j.get("job") != job]
+        node["jobs"] = [j for j in node.get("jobs", []) if j.get("job") != job]
     _save_cluster(data)
     typer.echo(jdump(ok(node=name, allocated=node["allocated_gpus"], total=node["gpus"])))
 
@@ -693,7 +702,7 @@ def cluster_health(
 def cluster_scale(
     count: int = typer.Argument(..., help="Target number of nodes"),
     template: str = typer.Option("", "--template", "-t", help="Node name to clone"),
-    host_prefix: str = typer.Option("node", "--predix", help="Host prefix for auto-generated names"),
+    host_prefix: str = typer.Option("node", "--prefix", help="Host prefix for auto-generated names"),
 ):
     """Auto-scale cluster to a target node count (clones template)."""
     data = _load_cluster()
@@ -728,13 +737,13 @@ def cluster_scale(
             new["added_at"] = time.time()
         else:
             new = {"name": cand, "host": "localhost", "port": 22, "user": "root", "gpus": 0,
-                  "gpu_type": "auto", "ram_gb": 0, "cpus": 0, "role": "worker",
-                  "tags": [], "status": "auto-scaled", "allocated_gpus": 0, "added_at": time.time()}
+                   "gpu_type": "auto", "ram_gb": 0, "cpus": 0, "role": "worker",
+                   "tags": [], "status": "auto-scaled", "allocated_gpus": 0, "added_at": time.time()}
         data["nodes"][_node_key(cand)] = new
         added.append(cand)
         i += 1
     _save_cluster(data)
-    typer.echo(jdump(ok(action="scaled_up", before=current, after=len(data["nodes"])), added=added)))
+    typer.echo(jdump(ok(action="scaled_up", before=current, after=len(data["nodes"]), added=added)))
 
 
 @cluster_app.command("backup")
@@ -776,11 +785,13 @@ def cluster_summary():
 # ---------------------------------------------------------------------------
 dbops_app = typer.Typer(help="Databases: connect, ingest training data, snapshot, restore, query")
 
+
 def _safe_ident(ident: str) -> str:
     import re
-    if re.fullmatch(r"[a-z][0-9a-z]+\"]), ident) is None:
+    if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", ident) is None:
         raise typer.BadParameter(f"invalid identifier '{ident}'")
     return ident
+
 
 def _connect(db: str) -> sqlite3.Connection:
     p = Path(db).expanduser()
@@ -788,6 +799,7 @@ def _connect(db: str) -> sqlite3.Connection:
     conn = sqlite3.connect(str(p))
     conn.row_factory = sqlite3.Row
     return conn
+
 
 @dbops_app.command("connect")
 def dbops_connect(
@@ -805,6 +817,7 @@ def dbops_connect(
         typer.echo(jdump(err(str(e))))
         raise typer.Exit(code=1)
 
+
 @dbops_app.command("tables")
 def dbops_tables(db: str = typer.Argument(..., help="Database path")):
     """List tables in the database."""
@@ -816,7 +829,8 @@ def dbops_tables(db: str = typer.Argument(..., help="Database path")):
         typer.echo(jdump(ok(db=db, tables=tables)))
     except Exception as e:
         typer.echo(jdump(err(str(e))))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
+
 
 @dbops_app.command("create-table")
 def dbops_create_table(
@@ -935,7 +949,7 @@ def dbops_count(
         typer.echo(jdump(ok(db=db, table=table, rows=n)))
     except Exception as e:
         typer.echo(jdump(err(str(e))))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
 
 
 @dbops_app.command("snapshot")
@@ -973,7 +987,7 @@ def dbops_restore(
         typer.echo(jdump(ok(restored=db, from_snapshot=snapshot)))
     except Exception as e:
         typer.echo(jdump(err(str(e))))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
 
 
 @dbops_app.command("vacuum")
@@ -991,7 +1005,7 @@ def dbops_vacuum(
                             saved_bytes=before - after)))
     except Exception as e:
         typer.echo(jdump(err(str(e))))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
 
 
 @dbops_app.command("schema")
@@ -1008,7 +1022,7 @@ def dbops_schema(
         typer.echo(jdump(ok(db=db, table=table, columns=rows)))
     except Exception as e:
         typer.echo(jdump(err(str(e))))
-        raiise typer.Exit(code=1)
+        raise typer.Exit(code=1)
 
 
 @dbops_app.command("export")
@@ -1017,7 +1031,7 @@ def dbops_export(
     table: str = typer.Argument(..., help="Table name"),
     out: str = typer.Option("export.jsonl", "--out", "-o", help="Output path (.jsonl/.csv)"),
 ):
-    """Export a table to JSONL/CSV for training."""
+    """Export a table to JSONL or CSV for training."""
     try:
         _safe_ident(table)
         conn = _connect(db)
