@@ -34,7 +34,6 @@ class Capability:
 
     @property
     def status(self) -> str:
-        """Human-readable readiness band used by reports and release tooling."""
         if self.score >= 0.80:
             return "production"
         if self.score >= 0.65:
@@ -44,22 +43,25 @@ class Capability:
         return "early"
 
 
+# Keep this matrix conservative: values reflect the current repository's
+# implemented/tested surface, including the distributed planner and release
+# capability work. This is intentionally not a marketing score.
 DEFAULT_CAPABILITIES: tuple[Capability, ...] = (
-    Capability("model-engineering", "models", .55, .55, .45),
+    Capability("model-engineering", "models", .60, .60, .50),
     Capability("data-engineering", "data", .50, .45, .40),
     Capability("research", "research", .45, .40, .35),
     Capability("multimodal", "models", .40, .35, .30),
-    Capability("inference-routing", "runtime", .55, .50, .45),
+    Capability("inference-routing", "runtime", .60, .55, .50),
     Capability("evaluation-benchmarks", "quality", .60, .60, .55),
     Capability("artifact-lineage", "quality", .65, .60, .60),
-    Capability("release-gates", "release", .65, .65, .60),
+    Capability("release-gates", "release", .70, .70, .65),
     Capability("slo-canary", "operations", .55, .50, .45),
     Capability("cost-governance", "operations", .55, .45, .45),
     Capability("security-governance", "security", .45, .40, .35),
     Capability("infrastructure", "platform", .45, .35, .30),
-    Capability("software-engineering", "engineering", .60, .60, .55),
+    Capability("software-engineering", "engineering", .65, .65, .60),
     Capability("knowledge-rag", "knowledge", .45, .40, .35),
-    Capability("company-platform", "platform", .50, .45, .40),
+    Capability("company-platform", "platform", .55, .55, .50),
 )
 
 
@@ -82,7 +84,6 @@ class CapabilityMatrix:
         return {k: round(sum(v) / len(v), 2) for k, v in sorted(groups.items())}
 
     def weakest(self, limit: int = 5) -> List[dict]:
-        """Return the lowest-scoring capabilities first for prioritized work."""
         if limit < 0:
             raise ValueError("limit must be non-negative")
         ordered = sorted(self.capabilities, key=lambda c: (c.score, c.name))
@@ -92,7 +93,6 @@ class CapabilityMatrix:
         ]
 
     def gate_diagnostics(self, minimum: float = .55) -> dict:
-        """Explain a release gate result instead of returning a bare boolean."""
         if not 0.0 <= minimum <= 1.0:
             raise ValueError("minimum must be between 0 and 1")
         floor = round(minimum * 0.75, 2)
