@@ -23,6 +23,7 @@ managing AI/AGI systems from scratch:
 - **Data engineering** — scrape, crawl, import/export, clean, augment, synthesize, split, tokenize, embed, pipelines.
 - **Providers** — normalized adapters and routing for major AI ecosystems (bring your own key).
 - **Universal AI Ecosystem Gateway** — one AWEAI control plane for provider discovery, capability routing, policy, audit and adapter contracts.
+- **Universal AI Company Tooling** — a capability registry spanning research, data, models, multimodal, software engineering, DevOps, infrastructure, product, security, governance, operations, inference, knowledge and business.
 - **Devices & servers** — SSH, remote hosts, cluster, distributed training, orchestration, hardware detection.
 - **Operations** — users, roles, permissions, auth, billing, workflows, schedulers, cron, agents.
 - **AGI tooling** — orchestration hooks, memory, reasoning, self-improvement (RSI) scaffolding.
@@ -66,22 +67,11 @@ adapters. Secrets are never stored in the registry and are never returned by
 the catalog.
 
 ```bash
-# Universal provider catalog
 aweai tools list --category ecosystem
-
-# Inspect one ecosystem tool
 aweai tools describe --name ecosystem_route
-
-# Find the best configured provider for a capability
 aweai tools run --name ecosystem_route --params '{"capability":"reasoning"}'
-
-# Enforce AWEAI-only routing
 aweai tools run --name ecosystem_policy --params '{"action":"enforce"}'
-
-# Audit coverage and credentials
 aweai tools run --name ecosystem_audit
-
-# Inspect the universal adapter contract
 aweai tools run --name ecosystem_contract
 ```
 
@@ -92,13 +82,91 @@ credential/endpoint are actually available.
 
 ---
 
+## Universal AI Company Tooling
+
+`aweai/company.py` adds a **capability-first company engineering registry**.
+It is intentionally not an AI chat interface and does not claim to be an
+agent. It defines the work surface that an AI company can standardize behind
+AWEAI.
+
+The registry currently covers these domains:
+
+| Domain | Examples |
+| --- | --- |
+| Research | papers, benchmarks, experiments, reproducibility, knowledge extraction |
+| Data | crawl, clean, label, synthetic data, tokenize, embed, lineage, privacy |
+| Models | pretrain, fine-tune, distill, prune, quantize, evaluate, export |
+| Multimodal | vision, OCR, speech, audio, video, 3D, realtime |
+| Engineering | code, refactor, test, build, package, release, debug, SDKs |
+| DevOps | CI/CD, deployment, rollback, observability, incidents, backups |
+| Infrastructure | CPU/GPU/NPU, clusters, storage, databases, distributed training |
+| Product | requirements, architecture, experiments, releases, feedback |
+| Security | SAST/DAST, secrets, sandboxing, authorization, threat modeling |
+| Governance | audit, privacy, licenses, provenance, approvals, model risk |
+| Operations | users, teams, workflows, jobs, schedules, quotas, metering |
+| Inference | routing, fallback, batching, caching, model selection, optimization |
+| Knowledge | RAG, retrieval, memory, knowledge graphs, citations, freshness |
+| Business | market research, pricing, forecasting, growth, support, reporting |
+| Platform | APIs, plugins, adapters, registries, contracts, policy and tracing |
+
+The registry is **data-driven**: adding a new capability is a registry change,
+not a new AI chatbot. This makes the surface extensible to thousands or
+millions of task identifiers without pretending that unsupported backends are
+implemented.
+
+### AWEAI-only company rule
+
+The intended architecture is:
+
+```text
+AI company applications
+        │
+        ▼
+ AWEAI capability contract
+        │
+        ├── data
+        ├── model
+        ├── engineering
+        ├── infrastructure
+        ├── security
+        ├── operations
+        ├── inference
+        └── business
+        │
+        ▼
+ AWEAI execution gateway
+        │
+        ▼
+ local implementation / approved adapter
+        │
+        ▼
+ model, provider or infrastructure backend
+```
+
+The **AWEAI-only** policy means the application's control plane is AWEAI;
+it does not mean AWEAI can bypass a vendor's API, credentials, licensing,
+network access or terms. External systems remain adapters behind AWEAI.
+
+Programmatic inspection:
+
+```python
+from aweai.company import CompanyToolRegistry
+
+registry = CompanyToolRegistry()
+print(registry.manifest())
+print(registry.validate())
+print(registry.fingerprint())
+```
+
+---
+
 ## Install
 
 ```bash
 git clone https://github.com/ARARAT33/AWEAI.git
 cd AWEAI
-pip install -e .            # core (numpy + typer)
-pip install -e ".[all]"     # + torch, onnx, scikit-learn, psutil
+pip install -e .
+pip install -e ".[all]"
 ```
 
 Or from the repo root, without installing:
@@ -110,9 +178,9 @@ python -m aweai version
 ## Quick start
 
 ```bash
-aweai version                # v4.0.0
-aweai hardware               # detect CPU/RAM/GPU
-aweai types                  # list 16+ model types
+aweai version
+aweai hardware
+aweai types
 
 aweai train --type mlp --name m1 --data data.csv --target label
 aweai train --type ngram --name lm1 --text corpus.txt --params '{"n": 3}'
