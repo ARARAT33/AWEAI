@@ -12,17 +12,14 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
 from aweai.cmd.common import APP_DIR
 
-REGISTRY_VERSION = "1.0"
+REGISTRY_VERSION = "1.1"
 
-# The categories cover the practical lifecycle of an AI company.  They are
-# capability names rather than claims that every backend supports every item.
 CAPABILITY_CATALOG: Dict[str, List[str]] = {
     "research": [
         "literature_search", "paper_ingest", "citation_graph", "benchmark_discovery",
@@ -113,7 +110,7 @@ CAPABILITY_CATALOG: Dict[str, List[str]] = {
 
 
 def all_capabilities() -> List[str]:
-    """Return normalized ``category.capability`` names."""
+    """Return normalized ``category.capability`` names in stable order."""
     return [f"{category}.{name}" for category, names in CAPABILITY_CATALOG.items() for name in names]
 
 
@@ -128,6 +125,8 @@ class Capability:
 
 class AWEAIOnlyPolicy:
     """Local policy object preventing direct vendor execution in this layer."""
+
+    ALLOWED_PATHS = frozenset({"aweai", "aweai.gateway", "aweai.adapter"})
 
     def __init__(self, enabled: bool = True) -> None:
         self.enabled = enabled
@@ -145,15 +144,16 @@ class AWEAIOnlyPolicy:
         return self.path
 
     def assert_execution_path(self, path: str) -> None:
-        if self.enabled and path not in {"aweai", "aweai.gateway", "aweai.adapter"}:
+        if self.enabled and path not in self.ALLOWED_PATHS:
             raise PermissionError("AWEAI-only policy blocks direct tool execution")
 
 
 class CompanyToolRegistry:
-    """Discover and validate the complete AWEAI company capability surface."""
+    """Discover, search and validate the complete AWEAI company capability surface."""
 
     def __init__(self) -> None:
         self.policy = AWEAIOnlyPolicy(True)
+        self._index: Optional[Dict[str, Capability]] = None
 
     def capabilities(self, category: Optional[str] = None) -> List[Capability]:
         rows: List[Capability] = []
@@ -163,6 +163,49 @@ class CompanyToolRegistry:
             rows.extend(Capability(name=f"{cat}.{n}", category=cat) for n in names)
         return rows
 
+    def _build_index(self) -> Dict[str, Capability]:
+        return {row.name: row for row in self.capabilities()}
+
+    @property
+    def index(self) -> Dict[str, Capability]:
+        """Return a cached capability lookup index."""
+        if self._index is None:
+            self._index = self._build_index()
+        return self._index
+
+    def get(self, capability: str) -> Optional[Capability]:
+        """Resolve an exact ``category.capability`` identifier."""
+        return self.index.get(capability.strip().lower())
+
+    def search(self, query: str, category: Optional[str] = None, limit: int = 25) -> List[Capability]:
+        """Search capability IDs by case-insensitive substring."""
+        q = query.strip().lower()
+        if not q:
+            return []
+        rows = [row for row in self.capabilities(category) if q in row.name.lower()]
+        return rows[: max(0, limit)]
+
+    def category_stats(self) -> Dict[str, int]:
+        """Return capability counts per company-engineering domain."""
+        return {category: len(names) for category, names in CAPABILITY_CATALOG.items()}
+
+    def execution_plan(self, capability: str, *, adapter: Optional[str] = None) -> dict:
+        """Build a safe, non-executing routing plan for a capability."""
+        row = self.get(capability)
+        if row is None:
+            return {"ok": False, "error": f"unknown capability: {capability}"}
+        self.policy.assert_execution_path("aweai.adapter" if adapter else "aweai")
+        return {
+            "ok": True,
+            "capability": row.name,
+            "control_plane": "AWEAI",
+            "execution_path": "aweai.adapter" if adapter else "aweai",
+            "adapter": adapter,
+            "requires_external_adapter": bool(adapter),
+            "executable_here": row.executable and not bool(adapter),
+            "dry_run": True,
+        }
+
     def manifest(self) -> dict:
         rows = self.capabilities()
         return {
@@ -171,6 +214,7 @@ class CompanyToolRegistry:
             "mode": "aweai_only",
             "categories": len(CAPABILITY_CATALOG),
             "capabilities": len(rows),
+            "category_stats": self.category_stats(),
             "capability_ids": [r.name for r in rows],
             "execution": {
                 "control_plane": "AWEAI",
@@ -187,12 +231,16 @@ class CompanyToolRegistry:
     def validate(self) -> dict:
         rows = self.capabilities()
         names = [r.name for r in rows]
-        duplicates = sorted({n for n in names if names.count(n) > 1})
+        duplicate_set = sorted({n for n in names if names.count(n) > 1})
+        malformed = sorted(n for n in names if n.count(".") != 1 or n.split(".")[0] not in CAPABILITY_CATALOG)
+        empty_categories = sorted(c for c, values in CAPABILITY_CATALOG.items() if not values)
         return {
-            "ok": not duplicates and bool(rows),
+            "ok": not duplicate_set and not malformed and not empty_categories and bool(rows),
             "capabilities": len(rows),
             "categories": len(CAPABILITY_CATALOG),
-            "duplicates": duplicates,
+            "duplicates": duplicate_set,
+            "malformed": malformed,
+            "empty_categories": empty_categories,
             "fingerprint": self.fingerprint(),
             "policy": {"mode": "aweai_only", "direct_vendor_tools": False},
         }
