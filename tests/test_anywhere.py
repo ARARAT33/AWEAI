@@ -1,4 +1,4 @@
-"""Tests for the AWEAI CLI command universe (v4.0, CLI-only)."""
+"""Tests for the AWEAI CLI command universe (v4.1, CLI-only)."""
 # Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 import json
@@ -18,7 +18,7 @@ def _run(args):
 def test_cli_version():
     res = _run(["version"])
     assert res.exit_code == 0
-    assert "4.0.0" in res.output
+    assert "4.1.0" in res.output
 
 
 def test_cli_help_has_no_ui():
@@ -35,7 +35,7 @@ def test_cli_help_has_no_ui():
 def test_no_ui_modules_importable():
     import sys
     for mod in ("aweai.ui", "aweai.anywhere", "aweai.terminal", "aweai.menus"):
-        assert mod not in sys.modules or True  # simply must not crash
+        assert mod not in sys.modules or True
 
 
 def test_commands_count():
