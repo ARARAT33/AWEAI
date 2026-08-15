@@ -12,11 +12,19 @@ class MiniTransformer(BaseModel):
         self.vocab_size=int(vocab_size); self.d_model=int(d_model); self.nhead=int(nhead); self.layers=int(layers); self.num_classes=int(num_classes)
         rng=np.random.default_rng(11); self.embed=rng.normal(0,.1,(self.vocab_size,self.d_model)); self.pos=rng.normal(0,.1,(64,self.d_model)); self.head=rng.normal(0,.1,(self.d_model,self.num_classes))
     def _forward(self,x):
-        h=self.embed[np.asarray(x,dtype=int)]+self.pos[:x.shape[1]][None,:,:]; return h.mean(axis=1)@self.head
+        x=np.asarray(x,dtype=int)
+        if x.ndim==1: x=x[None,:]
+        if x.ndim != 2: raise ValueError('Transformer input must be a 1D or 2D token array')
+        if x.shape[1] > len(self.pos): x=x[:,:len(self.pos)]
+        h=self.embed[x]+self.pos[:x.shape[1]][None,:,:]
+        return h.mean(axis=1)@self.head
+    def forward(self,x):
+        """Public forward API returning raw class logits."""
+        return self._forward(x)
     def fit(self,X,y=None,epochs=1,lr=.005,**kw):
         X=np.asarray(X,int); y=np.asarray(y,int); self.trained=True; self.metrics['samples']=len(X); self.metrics['classes']=len(np.unique(y)) if len(y) else 0; return self
-    def predict(self,X): return np.argmax(softmax(self._forward(np.asarray(X,int)),axis=-1),axis=1)
-    def predict_proba(self,X): return softmax(self._forward(np.asarray(X,int)),axis=-1)
+    def predict(self,X): return np.argmax(softmax(self.forward(X),axis=-1),axis=1)
+    def predict_proba(self,X): return softmax(self.forward(X),axis=-1)
     def state_dict(self)->Dict[str,Any]: return {'embed':self.embed.tolist(),'pos':self.pos.tolist(),'head':self.head.tolist()}
     def load_state(self,s): self.embed=np.asarray(s['embed']); self.pos=np.asarray(s['pos']); self.head=np.asarray(s.get('head',self.head)); self.trained=True
 
