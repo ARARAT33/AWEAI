@@ -18,9 +18,30 @@ class Capability:
     tests: float
     production: float
 
+    def __post_init__(self) -> None:
+        for field in ("implementation", "tests", "production"):
+            value = getattr(self, field)
+            if not 0.0 <= value <= 1.0:
+                raise ValueError(f"{field} must be between 0 and 1: {value!r}")
+        if not self.name.strip():
+            raise ValueError("capability name must not be empty")
+        if not self.domain.strip():
+            raise ValueError("capability domain must not be empty")
+
     @property
     def score(self) -> float:
         return round((self.implementation + self.tests + self.production) / 3.0, 2)
+
+    @property
+    def status(self) -> str:
+        """Human-readable readiness band used by reports and release tooling."""
+        if self.score >= 0.80:
+            return "production"
+        if self.score >= 0.65:
+            return "readying"
+        if self.score >= 0.50:
+            return "developing"
+        return "early"
 
 
 DEFAULT_CAPABILITIES: tuple[Capability, ...] = (
@@ -60,13 +81,43 @@ class CapabilityMatrix:
             groups.setdefault(capability.domain, []).append(capability.score)
         return {k: round(sum(v) / len(v), 2) for k, v in sorted(groups.items())}
 
+    def weakest(self, limit: int = 5) -> List[dict]:
+        """Return the lowest-scoring capabilities first for prioritized work."""
+        if limit < 0:
+            raise ValueError("limit must be non-negative")
+        ordered = sorted(self.capabilities, key=lambda c: (c.score, c.name))
+        return [
+            {"name": c.name, "domain": c.domain, "score": c.score, "status": c.status}
+            for c in ordered[:limit]
+        ]
+
+    def gate_diagnostics(self, minimum: float = .55) -> dict:
+        """Explain a release gate result instead of returning a bare boolean."""
+        if not 0.0 <= minimum <= 1.0:
+            raise ValueError("minimum must be between 0 and 1")
+        floor = round(minimum * 0.75, 2)
+        below_floor = [c.name for c in self.capabilities if c.score < floor]
+        return {
+            "minimum": minimum,
+            "capability_floor": floor,
+            "overall": self.score,
+            "overall_pass": self.score >= minimum,
+            "below_floor": below_floor,
+            "passed": self.score >= minimum and not below_floor,
+        }
+
     def report(self) -> dict:
         return {
             "overall": self.score,
             "overall_percent": round(self.score * 100, 1),
-            "capabilities": [asdict(c) | {"score": c.score} for c in self.capabilities],
+            "status": "production" if self.score >= .80 else "readying" if self.score >= .65 else "developing" if self.score >= .50 else "early",
+            "capabilities": [
+                asdict(c) | {"score": c.score, "status": c.status}
+                for c in self.capabilities
+            ],
             "domains": self.domains(),
+            "weakest": self.weakest(),
         }
 
     def gate(self, minimum: float = .55) -> bool:
-        return self.score >= minimum and all(c.score >= minimum * .75 for c in self.capabilities)
+        return self.gate_diagnostics(minimum)["passed"]
