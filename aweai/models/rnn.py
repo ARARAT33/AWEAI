@@ -32,14 +32,16 @@ class RNN(BaseModel):
         """Compatibility single-sample training API."""
         return self.fit(np.asarray(x,float)[None,:], np.asarray([target]), epochs=1, lr=lr)
     def predict(self,X):
+        """Return scalar predictions for scalar-output models and arrays otherwise."""
         arr=np.asarray(X,float)
         if arr.ndim==1: arr=arr[None,:]
         out=[]
         for x in arr:
             x=x.reshape(-1,self.input_dim) if x.ndim==1 else x; h=np.zeros(self.hidden)
             for t in range(len(x)): h=np.tanh(x[t]@self.Wxh+h@self.Whh+self.bh)
-            out.append((h@self.Why+self.by).ravel())
-        return np.array(out)
+            value=(h@self.Why+self.by).ravel()
+            out.append(float(value[0]) if self.output_dim == 1 else value)
+        return out[0] if len(out) == 1 and self.output_dim == 1 else np.asarray(out)
     def state_dict(self): return {'Wxh':self.Wxh.tolist(),'Whh':self.Whh.tolist(),'bh':self.bh.tolist(),'Why':self.Why.tolist(),'by':self.by.tolist()}
     def load_state(self,s):
         self.Wxh=np.asarray(s['Wxh']); self.Whh=np.asarray(s['Whh']); self.bh=np.asarray(s['bh']); self.Why=np.asarray(s['Why']); self.by=np.asarray(s['by']); self.trained=True
