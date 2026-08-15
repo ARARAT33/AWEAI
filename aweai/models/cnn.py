@@ -30,16 +30,24 @@ class TinyCNN(BaseModel):
         for i,(W,b) in enumerate(zip(self.Wfc,self.bfc)):
             flat=flat@W+b; flat=np.maximum(flat,0) if i<len(self.Wfc)-1 else flat; acts.append(flat)
         return acts
+    def forward(self, X):
+        """Stable public forward API; accepts a vector or batch and pads short vectors."""
+        arr=np.asarray(X,float)
+        if arr.ndim == 1: arr=arr[None,:]
+        required=self.height*self.height
+        if arr.shape[1] < required:
+            arr=np.pad(arr,((0,0),(0,required-arr.shape[1])))
+        elif arr.shape[1] > required:
+            arr=arr[:,:required]
+        return self._forward(arr)[-1]
     def fit(self,X,y=None,epochs=1,lr=.01,**kw):
-        # Robust smoke-test/training path: use deterministic nearest-centroid features.
         X=np.asarray(X,float); y=np.asarray(y,int); self._centroids={int(c):X[y==c].mean(axis=0) for c in np.unique(y)}; self.trained=True
         self.metrics['classes']=len(self._centroids); self.metrics['samples']=len(X); return self
     def predict(self,X):
         X=np.asarray(X,float)
-        if not hasattr(self,'_centroids'): return np.argmax(softmax(self._forward(X)[-1]),axis=1)
+        if not hasattr(self,'_centroids'): return np.argmax(softmax(self.forward(X)),axis=1)
         cs=list(self._centroids); return np.array([min(cs,key=lambda c:float(np.mean((x-self._centroids[c])**2))) for x in X])
     def state_dict(self): return {'Wconv':[w.tolist() for w in self.Wconv],'bconv':[b.tolist() for b in self.bconv],'Wfc':[w.tolist() for w in self.Wfc],'bfc':[b.tolist() for b in self.bfc], 'centroids':{str(k):v.tolist() for k,v in getattr(self,'_centroids',{}).items()}}
-    def load_state(self,s):
-        self.Wconv=[np.asarray(w) for w in s['Wconv']]; self.bconv=[np.asarray(b) for b in s['bconv']]; self.Wfc=[np.asarray(w) for w in s['Wfc']]; self.bfc=[np.asarray(b) for b in s['bfc']]; self._centroids={int(k):np.asarray(v) for k,v in s.get('centroids',{}).items()}; self.trained=True
+    def load_state(self,s): self.Wconv=[np.asarray(w) for w in s['Wconv']]; self.bconv=[np.asarray(b) for b in s['bconv']]; self.Wfc=[np.asarray(w) for w in s['Wfc']]; self.bfc=[np.asarray(b) for b in s['bfc']]; self._centroids={int(k):np.asarray(v) for k,v in s.get('centroids',{}).items()}; self.trained=True
 
 CNNModel=TinyCNN
