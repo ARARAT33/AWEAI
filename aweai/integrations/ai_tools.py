@@ -77,6 +77,146 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
         "default_model": "gpt2",
         "auth": "Bearer",
     },
+    "deepseek": {
+        "name": "DeepSeek",
+        "env_key": "DEEPSEEK_API_KEY",
+        "url": "https://api.deepseek.com/chat/completions",
+        "default_model": "deepseek-chat",
+        "auth": "Bearer",
+    },
+    "qwen": {
+        "name": "Alibaba Qwen",
+        "env_key": "DASHSCOPE_API_KEY",
+        "url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        "default_model": "qwen-max",
+        "auth": "Bearer",
+    },
+    "zhipu": {
+        "name": "Zhipu AI",
+        "env_key": "ZHIPUAI_API_KEY",
+        "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+        "default_model": "glm-4",
+        "auth": "Bearer",
+    },
+    "moonshot": {
+        "name": "Moonshot AI",
+        "env_key": "MOONSHOT_API_KEY",
+        "url": "https://api.moonshot.cn/v1/chat/completions",
+        "default_model": "moonshot-v1-8k",
+        "auth": "Bearer",
+    },
+    "groq": {
+        "name": "Groq",
+        "env_key": "GROQ_API_KEY",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "default_model": "llama-3.3-70b-versatile",
+        "auth": "Bearer",
+    },
+    "together": {
+        "name": "Together AI",
+        "env_key": "TOGETHER_API_KEY",
+        "url": "https://api.together.xyz/v1/chat/completions",
+        "default_model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        "auth": "Bearer",
+    },
+    "fireworks": {
+        "name": "Fireworks AI",
+        "env_key": "FIREWORKS_API_KEY",
+        "url": "https://api.fireworks.ai/inference/v1/chat/completions",
+        "default_model": "accounts/fireworks/models/llama-v3p1-8b-instruct",
+        "auth": "Bearer",
+    },
+    "perplexity": {
+        "name": "Perplexity",
+        "env_key": "PERPLEXITY_API_KEY",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "default_model": "sonar",
+        "auth": "Bearer",
+    },
+    "openrouter": {
+        "name": "OpenRouter",
+        "env_key": "OPENROUTER_API_KEY",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "default_model": "auto",
+        "auth": "Bearer",
+    },
+    "xai": {
+        "name": "xAI",
+        "env_key": "XAI_API_KEY",
+        "url": "https://api.x.ai/v1/chat/completions",
+        "default_model": "grok-beta",
+        "auth": "Bearer",
+    },
+    "mistral": {
+        "name": "Mistral AI",
+        "env_key": "MISTRAL_API_KEY",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "default_model": "mistral-small-latest",
+        "auth": "Bearer",
+    },
+    "cohere": {
+        "name": "Cohere",
+        "env_key": "COHERE_API_KEY",
+        "url": "https://api.cohere.com/v2/chat",
+        "default_model": "command-r-plus",
+        "auth": "Bearer",
+    },
+    "ollama": {
+        "name": "Ollama",
+        "env_key": "OLLAMA_HOST",
+        "url": "http://localhost:11434/api/chat",
+        "default_model": "llama3",
+        "auth": "none",
+    },
+    "lmstudio": {
+        "name": "LM Studio",
+        "env_key": "LMSTUDIO_HOST",
+        "url": "http://localhost:1234/v1/chat/completions",
+        "default_model": "local-model",
+        "auth": "none",
+    },
+    "meta": {
+        "name": "Meta AI",
+        "env_key": "META_API_KEY",
+        "url": "https://api.meta.ai/v1/chat/completions",
+        "default_model": "llama-3.1",
+        "auth": "Bearer",
+    },
+    "minimax": {
+        "name": "MiniMax",
+        "env_key": "MINIMAX_API_KEY",
+        "url": "https://api.minimax.chat/v1/text/chatcompletion_v2",
+        "default_model": "abab6.5g-chat",
+        "auth": "Bearer",
+    },
+    "replicate": {
+        "name": "Replicate",
+        "env_key": "REPLICATE_API_TOKEN",
+        "url": "https://api.replicate.com/v1/predictions",
+        "default_model": "meta/llama-2-70b-chat",
+        "auth": "Token",
+    },
+    "stability": {
+        "name": "Stability AI",
+        "env_key": "STABILITY_API_KEY",
+        "url": "https://api.stability.ai/v1/generation",
+        "default_model": "stable-diffusion-v1-6",
+        "auth": "Bearer",
+    },
+    "elevenlabs": {
+        "name": "ElevenLabs",
+        "env_key": "ELEVENLABS_API_KEY",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech",
+        "default_model": "eleven_monolingual_v1",
+        "auth": "xi-api-key",
+    },
+    "assemblyai": {
+        "name": "AssemblyAI",
+        "env_key": "ASSEMBLYAI_API_KEY",
+        "url": "https://api.assemblyai.com/v2/transcript",
+        "default_model": "default",
+        "auth": "authorization",
+    },
 }
 
 
@@ -186,18 +326,77 @@ def _chat_huggingface(provider: str, message: str, model: Optional[str] = None) 
         return {"ok": False, "error": f"Bad response: {e}", "raw": data}
 
 
+def _chat_openai_compatible(provider: str, message: str, model: Optional[str] = None) -> Dict[str, Any]:
+    info = PROVIDERS[provider]
+    key = _get_key(info["env_key"])
+    if info["auth"] != "none" and not key:
+        return {"ok": False, "error": f"{info['name']} not configured. Set {info['env_key']}."}
+    model = model or info["default_model"]
+    headers = {}
+    if key and info["auth"] == "Bearer":
+        headers["Authorization"] = f"Bearer {key}"
+    elif key and info["auth"] == "Token":
+        headers["Authorization"] = f"Token {key}"
+    elif key and info["auth"] == "authorization":
+        headers["authorization"] = key
+    elif key and info["auth"] == "xi-api-key":
+        headers["xi-api-key"] = key
+    payload = {"model": model, "messages": [{"role": "user", "content": message}], "max_tokens": 500}
+    data = _post_json(info["url"], headers, payload)
+    try:
+        if "choices" in data and data["choices"]:
+            msg = data["choices"][0].get("message", {})
+            content = msg.get("content") or data["choices"][0].get("text", "")
+            return {"ok": True, "provider": provider, "model": model, "reply": content}
+        return {"ok": True, "provider": provider, "model": model, "reply": str(data)}
+    except Exception as e:
+        return {"ok": False, "error": f"Bad response: {e}", "raw": data}
+
+
+def _chat_cohere(provider: str, message: str, model: Optional[str] = None) -> Dict[str, Any]:
+    info = PROVIDERS[provider]
+    key = _get_key(info["env_key"])
+    if not key:
+        return {"ok": False, "error": f"{info['name']} not configured. Set {info['env_key']}."}
+    model = model or info["default_model"]
+    headers = {"Authorization": f"Bearer {key}"}
+    payload = {"model": model, "messages": [{"role": "user", "content": {"text": message}}]}
+    data = _post_json(info["url"], headers, payload)
+    try:
+        reply = data.get("message", {}).get("content", [{}])[0].get("text", str(data))
+        return {"ok": True, "provider": provider, "model": model, "reply": reply}
+    except Exception as e:
+        return {"ok": False, "error": f"Bad response: {e}", "raw": data}
+
+
+def _chat_ollama(provider: str, message: str, model: Optional[str] = None) -> Dict[str, Any]:
+    info = PROVIDERS[provider]
+    host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+    url = f"{host.rstrip('/')}/api/chat"
+    model = model or info["default_model"]
+    payload = {"model": model, "messages": [{"role": "user", "content": message}], "stream": False}
+    data = _post_json(url, {}, payload)
+    try:
+        return {"ok": True, "provider": provider, "model": model, "reply": data["message"]["content"]}
+    except Exception as e:
+        return {"ok": False, "error": f"Bad response: {e}", "raw": data}
+
+
 def chat(provider: str, message: str, model: Optional[str] = None) -> Dict[str, Any]:
     """Send a chat message to a provider (BYOK)."""
     provider = provider.lower()
     if provider not in PROVIDERS:
         return {"ok": False, "error": f"Unknown provider: {provider}. Known: {list(PROVIDERS.keys())}"}
-    fn = {
+    fn_map = {
         "openai": _chat_openai,
         "google": _chat_google,
         "microsoft": _chat_azure,
         "anthropic": _chat_anthropic,
         "huggingface": _chat_huggingface,
-    }[provider]
+        "cohere": _chat_cohere,
+        "ollama": _chat_ollama,
+    }
+    fn = fn_map.get(provider, _chat_openai_compatible)
     try:
         return fn(provider, message, model)
     except urllib.error.HTTPError as e:

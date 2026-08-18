@@ -48,19 +48,19 @@ class Capability:
 # capability work. This is intentionally not a marketing score.
 DEFAULT_CAPABILITIES: tuple[Capability, ...] = (
     Capability("model-engineering", "models", .60, .60, .50),
-    Capability("data-engineering", "data", .50, .45, .40),
-    Capability("research", "research", .45, .40, .35),
-    Capability("multimodal", "models", .40, .35, .30),
+    Capability("data-engineering", "data", .55, .50, .45),
+    Capability("research", "research", .50, .45, .45),
+    Capability("multimodal", "models", .50, .45, .45),
     Capability("inference-routing", "runtime", .60, .55, .50),
     Capability("evaluation-benchmarks", "quality", .60, .60, .55),
     Capability("artifact-lineage", "quality", .65, .60, .60),
     Capability("release-gates", "release", .70, .70, .65),
     Capability("slo-canary", "operations", .55, .50, .45),
     Capability("cost-governance", "operations", .55, .45, .45),
-    Capability("security-governance", "security", .45, .40, .35),
-    Capability("infrastructure", "platform", .45, .35, .30),
+    Capability("security-governance", "security", .50, .45, .45),
+    Capability("infrastructure", "platform", .50, .45, .45),
     Capability("software-engineering", "engineering", .65, .65, .60),
-    Capability("knowledge-rag", "knowledge", .45, .40, .35),
+    Capability("knowledge-rag", "knowledge", .50, .45, .45),
     Capability("company-platform", "platform", .55, .55, .50),
 )
 

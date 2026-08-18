@@ -20,3 +20,32 @@ def test_ecosystem_execute_dry_run():
     assert result["ok"] is True
     assert result["dry_run"] is True
     assert result["gateway"] == "AWEAI"
+
+
+def test_expanded_provider_chat_handling():
+    from aweai.integrations.ai_tools import chat, PROVIDERS
+
+    # Check that new providers are registered
+    assert "deepseek" in PROVIDERS
+    assert "qwen" in PROVIDERS
+    assert "zhipu" in PROVIDERS
+    assert "groq" in PROVIDERS
+    assert "xai" in PROVIDERS
+    assert "mistral" in PROVIDERS
+
+    # Test execution without API key returns graceful error message
+    res = chat("deepseek", "hello")
+    assert res["ok"] is False
+    assert "not configured" in res["error"] or "DeepSeek" in res["error"]
+
+    res_qwen = chat("qwen", "hello")
+    assert res_qwen["ok"] is False
+    assert "not configured" in res_qwen["error"] or "Qwen" in res_qwen["error"]
+
+
+def test_ecosystem_execute_routing_across_providers():
+    res = run_tool("ecosystem_execute", capability="chat", message="hello", provider="deepseek")["result"]
+    assert res["gateway"] == "AWEAI"
+    # When missing credentials, returns ok=False with missing key details
+    assert res["ok"] is False
+    assert "DeepSeek" in res["error"]
