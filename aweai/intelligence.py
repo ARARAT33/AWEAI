@@ -268,34 +268,12 @@ class AWEAIWorkloadPlanner:
             if not ready:
                 raise ValueError("cyclic workload graph")
             
-            # Load balancing: distribute tasks evenly across waves
-            wave_size = max(1, len(ready) // 3)  # Aim for ~3 waves per batch
-            if len(ready) > wave_size:
-                # Prioritize tasks with most dependents (critical path heuristic)
-                dependent_count = defaultdict(int)
-                for key, dep_set in deps.items():
-                    for dep in dep_set:
-                        dependent_count[dep] += 1
-                
-                ready_sorted = sorted(ready, key=lambda x: -dependent_count[x])
-                current_wave = ready_sorted[:wave_size]
-                
-                # Defer remaining to next iteration
-                deferred = set(ready_sorted[wave_size:])
-                for key in current_wave:
-                    deps.pop(key)
-                    scheduled.add(key)
-                for key, dep_set in deps.items():
-                    dep_set.difference_update(current_wave)
-                
-                waves.append(current_wave)
-            else:
-                waves.append(ready)
-                for key in ready:
-                    deps.pop(key)
-                    scheduled.add(key)
-                for value in deps.values():
-                    value.difference_update(ready)
+            waves.append(ready)
+            for key in ready:
+                deps.pop(key)
+                scheduled.add(key)
+            for value in deps.values():
+                value.difference_update(ready)
         
         return waves
     

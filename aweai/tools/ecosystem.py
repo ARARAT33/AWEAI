@@ -99,10 +99,8 @@ def ecosystem_execute(capability: str, message: str, provider: Optional[str] = N
     started=time.time()
     try:
         from aweai.integrations import chat
-        if selected in ("openai","google","microsoft","anthropic","huggingface"):
-            result=chat(selected,message,model=model)
-            result.update({"gateway":"AWEAI","capability":capability,"latency_ms":round((time.time()-started)*1000,1)})
-            return result
-        return {"ok":False,"gateway":"AWEAI","provider":selected,"error":"provider is registered but no executable native adapter is installed yet","hint":"install/implement the provider adapter; AWEAI will remain the only control-plane interface"}
+        result=chat(selected,message,model=model)
+        result.update({"gateway":"AWEAI","capability":capability,"latency_ms":round((time.time()-started)*1000,1)})
+        return result
     except Exception as e:
         return {"ok":False,"gateway":"AWEAI","provider":selected,"error":str(e),"latency_ms":round((time.time()-started)*1000,1)}
