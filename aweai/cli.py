@@ -574,6 +574,7 @@ import aweai.bulk_extra as _bulk_extra  # noqa: E402,F401  (registers extra grou
 import aweai.bulk_v5 as _bulk_v5  # noqa: E402,F401  (v4.1 batch 1: agi/safety/secret/audit/nlp/prompt/quality/admin/ds/http/env/test)
 import aweai.bulk_v6 as _bulk_v6  # noqa: E402,F401  (v4.1 batch 2: vision/audio/video/dataset/feature/quant/deploy/api/dataops/crypto2/geo/stats2/mcp2/agent2/workflow2/monitor2)
 import aweai.bulk_v7 as _bulk_v7  # noqa: E402,F401  (v4.2 batch: arch/model-size/distributed/precision/sharding/checkpoint/gpu/training/database/clusterops)
+import aweai.bulk_v8 as _bulk_v8  # noqa: E402,F401  (v5.0: nas/quantum/neuromorphic/federated/multimodal/cognitive/metalearn/optimizers/hyperparam/xai/robustness/continual/causal/symbolic/graph/geometric/energy/flow/world/embodied/social/ethics/safety/scaling/efficiency/deployment/monitoring/lifecycle)
 
 
 def _make_bulk_command(group: str, spec: Dict[str, Any]):
