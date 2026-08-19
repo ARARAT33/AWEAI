@@ -1,4 +1,5 @@
-"""AWEAI security tools — hashing, checksums, crypto, auditing, scanning.
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+"""AWEAI security tools — hashing, checksums, crypto, auditing, scanning, watermarking.
 
 Each tool has a unique purpose. All use only the Python standard library so
 they work in every environment (localhost, cloud, containers, offline).
@@ -19,6 +20,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from aweai.tools.registry import tool
+from aweai.watermark import (
+    embed_watermark,
+    extract_watermark,
+    get_watermark_status,
+    inspect_watermark,
+    verify_watermark,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +183,6 @@ def password_strength(password: str) -> Dict[str, Any]:
     for v in checks.values():
         if v:
             score += 20
-    # bonus for length
     score = min(100, score + max(0, (len(password) - 12) * 2))
     verdict = "weak" if score < 40 else "medium" if score < 70 else "strong"
     return {"score": score, "verdict": verdict, "checks": checks}
@@ -274,7 +281,7 @@ def scan_secrets(root: str = ".", max_files: int = 200) -> Dict[str, Any]:
             for m in re.finditer(pat, text):
                 snippet = text[max(0, m.start() - 30): m.end() + 30].replace("\n", " ")
                 findings.append({"file": str(p), "kind": kind, "snippet": snippet})
-                break  # one finding per file per kind
+                break
     return {"root": root, "findings": findings, "count": len(findings)}
 
 
@@ -284,7 +291,7 @@ def audit_file_perms(root: str = ".") -> Dict[str, Any]:
     for p in Path(root).rglob("*"):
         try:
             mode = p.stat().st_mode & 0o777
-            if mode & 0o002:  # world-writable
+            if mode & 0o002:
                 findings.append({"path": str(p), "mode": oct(mode)})
         except Exception:
             continue
@@ -428,6 +435,33 @@ def pbkdf2_hash(password: str, salt: str = "", iterations: int = 100_000) -> Dic
 @tool("secure_compare", "security", "Constant-time comparison of two strings")
 def secure_compare(a: str, b: str) -> Dict[str, Any]:
     return {"equal": hmac.compare_digest(a, b)}
+
+
+# ---------------------------------------------------------------------------
+# Watermarking tools
+# ---------------------------------------------------------------------------
+
+@tool("watermark_embed", "security", "Embed multi-layer visible/invisible steganographic watermark into text, dict, or file")
+def watermark_embed_tool(target: str, payload: str = "") -> Dict[str, Any]:
+    res = embed_watermark(target, payload=payload or None)
+    return {"result": res if isinstance(res, (dict, str)) else str(res)}
+
+
+@tool("watermark_verify", "security", "Verify watermark integrity and tamper detection in text, dict, or file")
+def watermark_verify_tool(target: str) -> Dict[str, Any]:
+    return verify_watermark(target)
+
+
+@tool("watermark_extract", "security", "Extract steganographic payload from text or JSON")
+def watermark_extract_tool(target: str) -> Dict[str, Any]:
+    return extract_watermark(target)
+
+
+@tool("watermark_inspect", "security", "Inspect watermark layers and status")
+def watermark_inspect_tool(target: str = "") -> Dict[str, Any]:
+    if target:
+        return inspect_watermark(target)
+    return get_watermark_status()
 
 
 __all__ = []

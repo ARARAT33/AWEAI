@@ -1,7 +1,8 @@
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 """Model zoo manager implementation.
 
 Each model lives in ~/.aweai/models/<name>/
-    model.json   — meta + state (BaseModel format)
+    model.json   — meta + state (BaseModel format) with multi-layer watermarking
     version.json — version counter
     exports/     — ONNX / TorchScript / raw / JSON exports
 """
@@ -21,6 +22,7 @@ from aweai.errors import ModelNotFoundError, ModelError
 from aweai.models.base import BaseModel
 from aweai.models.registry import create_model, get_model_type_info, list_model_types
 from aweai.utils import read_json, safe_filename, write_json
+from aweai.watermark import AWEAIWatermarkEngine, DEFAULT_WATERMARK_TEXT
 
 
 def _model_root() -> Path:
@@ -32,26 +34,38 @@ def get_model_path(name: str) -> Path:
 
 
 class ModelZooManager:
+    def __init__(self) -> None:
+        self.watermark_engine = AWEAIWatermarkEngine()
+
     def save(self, model: BaseModel, name: str, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         name = safe_filename(name)
         root = get_model_path(name)
         root.mkdir(parents=True, exist_ok=True)
         version = int(read_json(root / "version.json", {"v": 0}).get("v", 0)) + 1
         write_json(root / "version.json", {"v": version})
+
         payload = {"meta": model.to_dict(), "state": model.state_dict()}
         payload["meta"]["name"] = name
         payload["meta"]["version"] = version
         if meta:
             payload["meta"].update(meta)
+
+        # Multi-layer watermarking on payload
+        payload = self.watermark_engine.embed_dict(payload, payload=f"MODEL[{name}:v{version}]")
         write_json(root / "model.json", payload)
-        return {"name": name, "version": version, "model_type": model.model_type, "path": str(root)}
+        return {"name": name, "version": version, "model_type": model.model_type, "path": str(root), "watermarked": True}
 
     def load(self, name: str) -> Tuple[BaseModel, Dict[str, Any]]:
         root = get_model_path(name)
         payload = read_json(root / "model.json")
         if payload is None:
             raise ModelNotFoundError(f"Model '{name}' not found in zoo")
+
+        # Verify watermark
+        watermark_info = self.watermark_engine.verify_dict(payload)
         meta = payload.get("meta", {})
+        meta["_watermark_info"] = watermark_info
+
         model_type = meta.get("model_type")
         if not model_type:
             raise ModelError(f"Model '{name}' has no model_type")
@@ -78,6 +92,7 @@ class ModelZooManager:
                 "version": meta.get("version", 0),
                 "trained": meta.get("trained", False),
                 "metrics": meta.get("metrics", {}),
+                "watermark": payload.get("_watermark", DEFAULT_WATERMARK_TEXT),
                 "created_at": meta.get("created_at", ""),
                 "path": str(d),
             })

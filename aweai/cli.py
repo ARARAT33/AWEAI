@@ -7,6 +7,7 @@ Usage:
     aweai data-collect synthetic --rows 100
     aweai model quantize m1 --fmt int8
     aweai ai explain transformer
+    aweai watermark verify m1
     aweai commands list
     aweai wiki build
     aweai autotest
@@ -311,7 +312,7 @@ def autotest(
     quick: bool = typer.Option(False, "--quick", help="Skip smoke-train/RAG/i18n"),
     no_ui: bool = typer.Option(False, "--no-ui", help="(accepted for compatibility; no UI exists)"),
 ):
-    """Run the full system autotest (deps, imports, smoke-train all model types, RAG, actions, i18n, CLI)."""
+    """Run the full system autotest (deps, imports, smoke-train all model types, RAG, actions, i18n, CLI, watermark)."""
     from aweai.autotest import run_autotest
 
     report = run_autotest(quick=quick, no_ui=no_ui)
@@ -547,6 +548,84 @@ def tools(
         return
     typer.echo(f"Unknown action: {action}")
     raise typer.Exit(code=1)
+
+
+# ---------------------------------------------------------------------------
+# Watermark CLI Command Group
+# ---------------------------------------------------------------------------
+watermark_app = typer.Typer(help="Indelible visible and steganographic watermarking CLI")
+
+
+@watermark_app.command("embed")
+def watermark_embed_cmd(
+    target: str = typer.Argument(..., help="Text string, JSON file, model name, or file path"),
+    payload: Optional[str] = typer.Option(None, "--payload", "-p", help="Custom watermark payload text"),
+):
+    """Embed multi-layer visible and steganographic watermark into target."""
+    from aweai.watermark import embed_watermark
+
+    try:
+        res = embed_watermark(target, payload=payload)
+        typer.echo(json.dumps({"watermarked": True, "result": res if isinstance(res, (dict, str)) else str(res)}, indent=2, ensure_ascii=False))
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@watermark_app.command("verify")
+def watermark_verify_cmd(
+    target: str = typer.Argument(..., help="Text string, JSON file, model name, or file path"),
+):
+    """Verify watermark validity, HMAC signature, and detect tampering."""
+    from aweai.watermark import verify_watermark
+
+    try:
+        res = verify_watermark(target)
+        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@watermark_app.command("extract")
+def watermark_extract_cmd(
+    target: str = typer.Argument(..., help="Text string or JSON file"),
+):
+    """Extract steganographic zero-width unicode payload."""
+    from aweai.watermark import extract_watermark
+
+    try:
+        res = extract_watermark(target)
+        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@watermark_app.command("inspect")
+def watermark_inspect_cmd(
+    target: Optional[str] = typer.Argument(None, help="Optional text, file path or dict to inspect"),
+):
+    """Inspect watermark layers and target integrity."""
+    from aweai.watermark import get_watermark_status, inspect_watermark
+
+    try:
+        res = inspect_watermark(target) if target else get_watermark_status()
+        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@watermark_app.command("status")
+def watermark_status_cmd():
+    """Check watermark engine configuration and security parameters."""
+    from aweai.watermark import get_watermark_status
+
+    typer.echo(json.dumps(get_watermark_status(), indent=2))
+
+
+app.add_typer(watermark_app, name="watermark", help="Multi-layer indelible watermarking & steganography")
 
 
 # ---------------------------------------------------------------------------
