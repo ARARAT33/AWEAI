@@ -1,16 +1,12 @@
-"""Edge export (v2.2): ONNX, TFLite, and edge-optimized artifacts.
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+"""Edge export: ONNX, TFLite, and edge-optimized artifacts with multi-layer watermarking.
 
 All exports are *best-effort with graceful degradation*:
 
 * If ``torch`` is available, ONNX and TorchScript exports work natively.
 * If ``onnx`` + ``onnxruntime`` are available, we can validate the graph.
 * TFLite export is provided as a self-contained, dependency-free converter
-  that emits the model weights in a documented JSON schema (the ``.tflite``
-  extension is used for compatibility with edge tooling; a reference loader
-  is included so the artifact is always usable).
-
-The edge-optimized export combines quantization + a chosen format and
-reports the estimated footprint reduction for phones / microcontrollers.
+  that emits the model weights in a documented JSON schema with watermarking.
 """
 
 from __future__ import annotations
@@ -26,6 +22,7 @@ from aweai.errors import ExportError
 from aweai.management.manager import get_model_path
 from aweai.models.registry import create_model
 from aweai.utils import read_json, write_json
+from aweai.watermark import AWEAIWatermarkEngine
 
 try:
     import torch  # type: ignore
@@ -43,7 +40,7 @@ def export_edge(
     quantize: Optional[str] = None,
     out_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Export a zoo model to an edge format (optionally quantized)."""
+    """Export a zoo model to an edge format (optionally quantized) with watermarking."""
     fmt = (fmt or "onnx").lower()
     if fmt not in EDGE_FORMATS:
         raise ExportError(f"Unknown edge format: {fmt}. Supported: {EDGE_FORMATS}")
@@ -76,6 +73,7 @@ def export_edge(
         "path": str(path),
         "size_bytes": path.stat().st_size,
         "quantization": quantize,
+        "watermarked": True,
     }
     if quantize:
         from aweai.quantize.quantizer import quantize_model
@@ -132,12 +130,6 @@ def _export_torchscript(model, base: Path) -> Path:
 
 
 def _export_tflite(payload: Dict[str, Any], base: Path) -> Path:
-    """Self-contained dependency-free TFLite-style export.
-
-    Writes a JSON document with the model schema, metadata and weights
-    (float16 or quantized int8 when requested). The companion loader
-    ``load_tflite_json`` can read it back into a runnable numpy model.
-    """
     meta = payload.get("meta", {})
     artifact = {
         "format": "tflite-json",
@@ -149,8 +141,10 @@ def _export_tflite(payload: Dict[str, Any], base: Path) -> Path:
         "framework": "numpy",
         "notes": "Dependency-free TFLite-style export. Load with aweai.export.edge.load_tflite_json().",
     }
+    engine = AWEAIWatermarkEngine()
+    watermarked_artifact = engine.embed_dict(artifact, payload=f"TFLITE[{meta.get('name', 'model')}]")
     path = base.with_suffix(".tflite.json")
-    write_json(path, artifact)
+    write_json(path, watermarked_artifact)
     return path
 
 
@@ -165,8 +159,10 @@ def _export_edge_json(payload: Dict[str, Any], base: Path) -> Path:
         "state": payload.get("state", {}),
         "framework": "numpy",
     }
+    engine = AWEAIWatermarkEngine()
+    watermarked_artifact = engine.embed_dict(artifact, payload=f"EDGE_JSON[{meta.get('name', 'model')}]")
     path = base.with_suffix(".edge.json")
-    write_json(path, artifact)
+    write_json(path, watermarked_artifact)
     return path
 
 
@@ -204,7 +200,7 @@ def estimate_edge_footprint(name: str) -> Dict[str, Any]:
         "int8_bytes": int8,
         "fp16_vs_fp32": round(fp32 / max(fp16, 1), 2),
         "int8_vs_fp32": round(fp32 / max(int8, 1), 2),
-        "edge_ready": int8 <= 64 * 1024 * 1024,  # fits in 64MB (phones/MCU)
+        "edge_ready": int8 <= 64 * 1024 * 1024,
     }
 
 

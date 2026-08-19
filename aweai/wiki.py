@@ -1,5 +1,5 @@
 # Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
-"""AWEAI wiki generator.
+"""AWEAI wiki generator with multi-layer watermarking.
 
 Builds the full Markdown wiki under ``docs/wiki/`` — one page per command
 group plus a home page — covering every CLI command with description,
@@ -12,6 +12,8 @@ import datetime
 import json
 from pathlib import Path
 from typing import Any, Dict, List
+
+from aweai.watermark import AWEAIWatermarkEngine
 
 HEADER = """# AWEAI Wiki
 
@@ -35,7 +37,9 @@ def _group_page(group: str, commands: List[Dict[str, str]], max_specs: int) -> s
     for c in commands:
         lines.append(f"| `{c['command']}` | {c['help'][:90]} |")
     lines.append("")
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    engine = AWEAIWatermarkEngine()
+    return engine.embed_text(content, payload=f"WIKI_PAGE[{group}]")
 
 
 def _spec_page(group: str, specs: List[Dict[str, Any]], max_specs: int) -> str:
@@ -65,11 +69,13 @@ def _spec_page(group: str, specs: List[Dict[str, Any]], max_specs: int) -> str:
                 lines.append(f"aweai {group} {name} --{first[0]} {example_val}")
                 lines.append(f"```")
                 lines.append("")
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    engine = AWEAIWatermarkEngine()
+    return engine.embed_text(content, payload=f"WIKI_SPEC[{group}]")
 
 
 def build_wiki(out_dir: str = "docs/wiki", max_specs: int = 500) -> Dict[str, Any]:
-    """Generate wiki pages for all groups."""
+    """Generate watermarked wiki pages for all groups."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -103,14 +109,17 @@ def build_wiki(out_dir: str = "docs/wiki", max_specs: int = 500) -> Dict[str, An
         core_page.append("")
         core_page.append(f"{(c.help or c.callback.__doc__ or '').strip()}")
         core_page.append("")
-    (out / "commands-core.md").write_text("\n".join(core_page), encoding="utf-8")
+
+    engine = AWEAIWatermarkEngine()
+    core_content = engine.embed_text("\n".join(core_page), payload="WIKI_CORE")
+    (out / "commands-core.md").write_text(core_content, encoding="utf-8")
     pages += 1
 
-    return {"pages": pages, "out_dir": str(out), "groups": len(domain_groups) + len(bulk.groups())}
+    return {"pages": pages, "out_dir": str(out), "groups": len(domain_groups) + len(bulk.groups()), "watermarked": True}
 
 
 def build_wiki_index(out_dir: str = "docs/wiki") -> Dict[str, Any]:
-    """Generate the wiki home page (index)."""
+    """Generate the watermarked wiki home page (index)."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     from aweai import __version__, bulk
@@ -156,5 +165,8 @@ def build_wiki_index(out_dir: str = "docs/wiki") -> Dict[str, Any]:
     lines.append("")
     lines.append("See [commands-core](commands-core.md) for the full list.")
     lines.append("")
-    (out / "Home.md").write_text("\n".join(lines), encoding="utf-8")
-    return {"page": "Home.md", "out_dir": str(out)}
+
+    engine = AWEAIWatermarkEngine()
+    home_content = engine.embed_text("\n".join(lines), payload="WIKI_HOME")
+    (out / "Home.md").write_text(home_content, encoding="utf-8")
+    return {"page": "Home.md", "out_dir": str(out), "watermarked": True}

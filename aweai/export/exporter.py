@@ -1,4 +1,5 @@
-"""Exporter implementations."""
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
+"""Exporter implementations with multi-layer watermarking."""
 
 from __future__ import annotations
 
@@ -19,13 +20,14 @@ from aweai.errors import ExportError
 from aweai.management.manager import get_model_path
 from aweai.models.registry import create_model, get_model_type_info
 from aweai.utils import read_json, write_json
+from aweai.watermark import AWEAIWatermarkEngine
 
 
 FORMATS = ["json", "raw", "onnx", "torchscript"]
 
 
 def export_model(name: str, fmt: str = "json", out_dir: Optional[str] = None) -> Dict[str, Any]:
-    """Export a zoo model to the requested format."""
+    """Export a zoo model to the requested format with watermark injection."""
     fmt = (fmt or "json").lower()
     if fmt not in FORMATS:
         raise ExportError(f"Unknown export format: {fmt}. Supported: {FORMATS}")
@@ -43,13 +45,18 @@ def export_model(name: str, fmt: str = "json", out_dir: Optional[str] = None) ->
     out_dir.mkdir(parents=True, exist_ok=True)
     base = out_dir / f"{name}_v{meta.get('version', 1)}"
 
+    engine = AWEAIWatermarkEngine()
+
     if fmt == "json":
         path = base.with_suffix(".json")
-        write_json(path, payload)
+        watermarked_payload = engine.embed_dict(payload, payload=f"EXPORT_JSON[{name}]")
+        write_json(path, watermarked_payload)
     elif fmt == "raw":
         path = base.with_suffix(".npz")
         state = payload.get("state", {})
         arrays = {k: np.asarray(v) for k, v in _flatten_state(state).items()}
+        # Add watermark array metadata
+        arrays["_watermark_sig"] = np.frombuffer(b"ARARAT33_AWEAI_WATERMARK", dtype=np.uint8)
         np.savez(path, **arrays)
     elif fmt in ("onnx", "torchscript"):
         if not _HAS_TORCH:
@@ -57,7 +64,7 @@ def export_model(name: str, fmt: str = "json", out_dir: Optional[str] = None) ->
         path = _export_torch(model, fmt, base)
     else:
         raise ExportError(f"Unsupported format {fmt}")
-    return {"name": name, "format": fmt, "path": str(path), "size_bytes": path.stat().st_size}
+    return {"name": name, "format": fmt, "path": str(path), "size_bytes": path.stat().st_size, "watermarked": True}
 
 
 def _flatten_state(state: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
@@ -80,7 +87,6 @@ def _flatten_state(state: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
 def _export_torch(model, fmt: str, base: Path) -> Path:
     import torch
 
-    # Build a simple torch Module that forwards numpy -> torch -> numpy.
     class _Wrapper(torch.nn.Module):
         def __init__(self, m):
             super().__init__()

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 """Autotest: one-command full system self-check.
 
 `aweai autotest` runs:
@@ -9,10 +10,10 @@
   6. i18n           — 10+ languages load
   7. CLI            — all commands registered (incl. v4 groups)
   8. Knowledge      — AI/ASI/AGI knowledge base imports
+  9. Watermark      — multi-layer visible/steganographic watermark verification
 
 Returns a report dict with per-step status, and prints a summary.
 """
-# Copyright (c) 2026 ARARAT33. Based on AWEAI. All rights reserved.
 
 from __future__ import annotations
 
@@ -53,7 +54,7 @@ def check_module_imports() -> Dict[str, Any]:
         "aweai.hardware", "aweai.selector", "aweai.i18n",
         "aweai.data", "aweai.models", "aweai.train", "aweai.eval",
         "aweai.management", "aweai.export", "aweai.rag", "aweai.actions",
-        "aweai.autotest", "aweai.cli",
+        "aweai.autotest", "aweai.cli", "aweai.watermark",
         "aweai.quantize", "aweai.distributed", "aweai.market",
         "aweai.integrations", "aweai.ai", "aweai.bulk", "aweai.wiki",
         "aweai.cmd", "aweai.cmd.data_collect", "aweai.cmd.data_manage",
@@ -149,7 +150,7 @@ def _smoke_train() -> Dict[str, Any]:
             elif mtype == "transformer":
                 from aweai.models.registry import create_model
 
-                Xt = np.random.randint(0, 8, (4, 6))  # token ids (B,T)
+                Xt = np.random.randint(0, 8, (4, 6))
                 yt = np.random.randint(0, 2, (4,))
                 m = create_model(mtype, vocab_size=10, d_model=8, nhead=2, layers=1, num_classes=2)
                 m.fit(Xt, y=yt, epochs=2)
@@ -200,7 +201,6 @@ def check_rag() -> Dict[str, Any]:
                                  "Numpy provides fast array operations for machine learning."])
             hits = eng.search("model factory")
             assert hits, "no hits"
-            # reload from disk (the index_file shadowing fix)
             eng2 = RAGEngine(index_path=f"{td}/index.json")
             stats = eng2.stats()
             assert stats["chunks"] >= 3, "reload lost chunks"
@@ -244,6 +244,34 @@ def check_i18n() -> Dict[str, Any]:
     return r
 
 
+def check_watermark() -> Dict[str, Any]:
+    r = _check("watermark")
+    try:
+        from aweai.watermark import embed_watermark, verify_watermark, extract_watermark, get_watermark_status
+
+        # Test text steganography & verification
+        text = "Hello AWEAI production product."
+        wm_text = embed_watermark(text)
+        v_res = verify_watermark(wm_text)
+        assert v_res["has_watermark"], "watermark text verification failed"
+        assert v_res["signature_valid"], "watermark signature invalid"
+
+        # Test dict watermarking
+        data = {"model": "aweai_test", "accuracy": 0.99}
+        wm_dict = embed_watermark(data)
+        vd_res = verify_watermark(wm_dict)
+        assert vd_res["valid"], "watermark dict verification failed"
+        assert not vd_res["tampered"], "watermark dict reported tampered"
+
+        status = get_watermark_status()
+        assert status["owner"] == "ARARAT33", "owner mismatch"
+
+        r["ok"] = True
+        r["detail"] = "text, dict & steganographic watermark verification OK"
+    except Exception as e:
+        r["detail"] = str(e)
+    return r
+
 
 def check_cli() -> Dict[str, Any]:
     r = _check("cli")
@@ -253,7 +281,6 @@ def check_cli() -> Dict[str, Any]:
         from aweai.cli import app
 
         runner = CliRunner()
-        # introspect registered commands
         info = app.registered_commands
         names = sorted([c.name or c.callback.__name__ for c in info])
         group_names = sorted([g.name for g in app.registered_groups])
@@ -263,23 +290,24 @@ def check_cli() -> Dict[str, Any]:
         required_groups = ["ai", "commands", "wiki", "collect", "data", "model",
                            "providers", "devices", "ops", "math", "string", "json",
                            "file", "net", "time", "crypto", "ml", "text", "image",
-                           "audio", "video", "sys", "db", "cloud", "llm", "rl", "neuro", "knowledge"]
+                           "audio", "video", "sys", "db", "cloud", "llm", "rl", "neuro", "knowledge", "watermark"]
         missing = [x for x in required if x not in names]
         missing += [x for x in required_groups if x not in group_names]
-        # run version + a few lightweight commands through the runner
+
         rv = runner.invoke(app, ["version"])
         assert rv.exit_code == 0, rv.output
         rv2 = runner.invoke(app, ["hardware"])
         assert rv2.exit_code == 0, rv2.output
         rv3 = runner.invoke(app, ["types"])
         assert rv3.exit_code == 0, rv3.output
-        rv4 = runner.invoke(app, ["ai", "explain", "rag"])
+        rv4 = runner.invoke(app, ["watermark", "status"])
         assert rv4.exit_code == 0, rv4.output
+
         if missing:
             r["detail"] = f"missing commands: {missing}; have {len(names)} commands, {len(group_names)} groups"
         else:
             r["ok"] = True
-            r["detail"] = f"{len(names)} commands + {len(group_names)} groups OK (incl. all new v4 commands)"
+            r["detail"] = f"{len(names)} commands + {len(group_names)} groups OK (incl. watermark CLI)"
     except Exception as e:
         r["detail"] = str(e)
     return r
@@ -291,6 +319,7 @@ def run_autotest(quick: bool = False, no_ui: bool = False, verbose: bool = True)
     checks = [
         ("dependencies", check_dependencies),
         ("module_imports", check_module_imports),
+        ("watermark", check_watermark),
     ]
     if not quick:
         checks += [
