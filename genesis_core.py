@@ -22,27 +22,36 @@ from typing import Any, Dict, List, Optional, Tuple
 class QuantumState:
     """
     Ներկայացնում է տվյալը որպես հավանային սուպերպոզիցիա, ոչ թե ֆիքսված արժեք։
-    Չափումը (measure) փլուզում է վիճակը՝ հիմնվելով էնտրոպիայի վրա։
+    Չափումը (measure) փլուզում է վիճակը՝ հիմնվելով էնտրոպիայի և քվանտային փուլի վրա։
     """
-    def __init__(self, data: Any):
+    def __init__(self, data: Any, phase: float = 0.0):
         self.data = data
         self.probability_amplitude = 1.0
+        self.phase = phase  # radians
         self.entropy = 0.0
         self._collapsed = False
+        self.entangled_nodes: List['QuantumState'] = []
 
     def entangle(self, other: 'QuantumState') -> None:
-        """Կապում է երկու քվանտային վիճակներ, փոխելով էնտրոպիան։"""
-        combined_entropy = (self.entropy + other.entropy) / 2 + random.gauss(0, 0.1)
-        self.entropy = max(0.01, combined_entropy)
+        """Կապում է երկու քվանտային վիճակներ, փոխելով էնտրոպիան և փուլերը։"""
+        combined_entropy = (self.entropy + other.entropy) / 2 + random.gauss(0, 0.05)
+        self.entropy = max(0.01, min(1.0, combined_entropy))
         other.entropy = self.entropy
+        avg_phase = (self.phase + other.phase) / 2
+        self.phase = avg_phase
+        other.phase = avg_phase
+        if other not in self.entangled_nodes:
+            self.entangled_nodes.append(other)
+        if self not in other.entangled_nodes:
+            other.entangled_nodes.append(self)
 
     def measure(self) -> Any:
         """Փլուզեցնում է վիճակը՝ վերադարձնելով կոնկրետ արժեք։"""
         if self._collapsed:
             return self.data
         
-        # Էնտրոպիան որոշում է աղավաղման աստիճանը
-        noise_factor = math.sin(self.entropy * math.pi) 
+        # Էնտրոպիան և փուլը որոշում են աղավաղման աստիճանը
+        noise_factor = math.sin(self.entropy * math.pi + self.phase)
         if isinstance(self.data, (int, float)):
             result = self.data * (1 + noise_factor * 0.1)
         else:
@@ -50,12 +59,52 @@ class QuantumState:
             
         self._collapsed = True
         self.probability_amplitude = 0.0
+        for node in self.entangled_nodes:
+            if not node._collapsed:
+                node.entropy = min(1.0, node.entropy + 0.05)
         return result
 
     def evolve(self) -> None:
-        """Թարմացնում է էնտրոպիան ժամանակի ընթացքում։"""
+        """Թարմացնում է էնտրոպիան և փուլը ժամանակի ընթացքում։"""
         self.entropy += random.uniform(-0.05, 0.05)
         self.entropy = max(0.0, min(1.0, self.entropy))
+        self.phase = (self.phase + 0.1) % (2 * math.pi)
+
+
+class QuantumFourierTransformSim:
+    """
+    1D Discrete Quantum Fourier Transform (QFT) simulation on state vectors.
+    Computes exact phase transformations and superposition state distributions.
+    """
+    def __init__(self, num_qubits: int = 4):
+        self.num_qubits = num_qubits
+        self.dim = 1 << num_qubits
+
+    def transform(self, state_vector: List[complex]) -> List[complex]:
+        """Performs QFT on a complex state vector of length N=2^n."""
+        N = len(state_vector)
+        out = [0.0 + 0.0j] * N
+        inv_sqrt_n = 1.0 / math.sqrt(N)
+        for k in range(N):
+            s = 0.0 + 0.0j
+            for j in range(N):
+                angle = 2 * math.pi * j * k / N
+                s += state_vector[j] * complex(math.cos(angle), math.sin(angle))
+            out[k] = s * inv_sqrt_n
+        return out
+
+    def inverse_transform(self, state_vector: List[complex]) -> List[complex]:
+        """Performs Inverse QFT on a complex state vector."""
+        N = len(state_vector)
+        out = [0.0 + 0.0j] * N
+        inv_sqrt_n = 1.0 / math.sqrt(N)
+        for k in range(N):
+            s = 0.0 + 0.0j
+            for j in range(N):
+                angle = -2 * math.pi * j * k / N
+                s += state_vector[j] * complex(math.cos(angle), math.sin(angle))
+            out[k] = s * inv_sqrt_n
+        return out
 
 # ==============================================================================
 # 2. NEURO-PLASTIC GRAPH (Նեյրո-Պլաստիկ Գրաֆ)
@@ -117,24 +166,78 @@ class NeuroPlasticGraph:
             path.append(current)
         return path
 
+    def prune_synapses(self, threshold: float = 0.05) -> int:
+        """Global synaptic pruning: removes connections below weight threshold."""
+        pruned_count = 0
+        for node in self.nodes.values():
+            for neighbor, weight in list(node.connections.items()):
+                if weight < threshold:
+                    del node.connections[neighbor]
+                    pruned_count += 1
+        return pruned_count
+
+    def find_optimal_synaptic_path(self, start: str, target: str) -> List[str]:
+        """Finds path with maximum accumulated Hebbian weight using Dijkstra's algorithm."""
+        if start not in self.nodes or target not in self.nodes:
+            return []
+
+        distances = {node_id: float('inf') for node_id in self.nodes}
+        previous = {node_id: None for node_id in self.nodes}
+        distances[start] = 0.0
+        unvisited = set(self.nodes.keys())
+
+        while unvisited:
+            current = min(unvisited, key=lambda n: distances[n])
+            if current == target or distances[current] == float('inf'):
+                break
+            unvisited.remove(current)
+
+            for neighbor, weight in self.nodes[current].connections.items():
+                if neighbor in unvisited:
+                    # Inverse weight as distance metric
+                    cost = 1.0 / max(0.001, weight)
+                    alt = distances[current] + cost
+                    if alt < distances[neighbor]:
+                        distances[neighbor] = alt
+                        previous[neighbor] = current
+
+        path = []
+        curr = target
+        while curr:
+            path.append(curr)
+            curr = previous[curr]
+        path.reverse()
+        return path if path[0] == start else []
+
 # ==============================================================================
 # 3. CHAOS THEORY ENCODING (Խաոսի Տեսության Կոդավորում)
 # ==============================================================================
 class ChaosEncoder:
     """
-    Օգտագործում է Լորենցի գրավչության հավասարումները տվյալների քաոսային քարտեզագրման համար։
+    Օգտագործում է Լորենցի և Ռյոսլերի գրավչության հավասարումները տվյալների քաոսային քարտեզագրման համար։
     """
-    def __init__(self, sigma=10.0, rho=28.0, beta=8.0/3.0, dt=0.01):
+    def __init__(self, sigma=10.0, rho=28.0, beta=8.0/3.0, dt=0.01, system_type="lorenz"):
         self.sigma = sigma
         self.rho = rho
         self.beta = beta
         self.dt = dt
+        self.system_type = system_type
+
+    def step(self, x, y, z):
+        if self.system_type == "rossler":
+            a, b, c = 0.2, 0.2, 5.7
+            dx = (-y - z) * self.dt
+            dy = (x + a * y) * self.dt
+            dz = (b + z * (x - c)) * self.dt
+            return x + dx, y + dy, z + dz
+        else:
+            dx = self.sigma * (y - x) * self.dt
+            dy = (x * (self.rho - z) - y) * self.dt
+            dz = (x * y - self.beta * z) * self.dt
+            return x + dx, y + dy, z + dz
 
     def lorenz_step(self, x, y, z):
-        dx = self.sigma * (y - x) * self.dt
-        dy = (x * (self.rho - z) - y) * self.dt
-        dz = (x * y - self.beta * z) * self.dt
-        return x + dx, y + dy, z + dz
+        return self.step(x, y, z)
 
     def encode(self, message: str) -> List[Tuple[float, float, float]]:
         """Վերածում է տեքստը 3D խաոսային հետագծի։"""
@@ -152,19 +255,17 @@ class ChaosEncoder:
             
             # Կատարում ենք իտերացիաներ
             for _ in range(5):
-                x, y, z = self.lorenz_step(x, y, z)
+                x, y, z = self.step(x, y, z)
             trajectory.append((x, y, z))
         
         return trajectory
 
     def decode_approx(self, trajectory: List[Tuple[float, float, float]]) -> str:
         """Փորձում է վերականգնել տեքստը (մոտավոր)։"""
-        # Սա դժվար է առանց բանալու, բայց մենք օգտագործում ենք հեռավորությունները
         decoded = ""
         prev_x, prev_y, prev_z = 0.1, 0.0, 0.0
         for x, y, z in trajectory:
             dist = math.sqrt((x-prev_x)**2 + (y-prev_y)**2 + (z-prev_z)**2)
-            # Հակադարձ քարտեզագրում (պարզեցված)
             char_code = int(dist * 100) % 128
             if 32 <= char_code <= 126:
                 decoded += chr(char_code)
@@ -172,6 +273,51 @@ class ChaosEncoder:
                 decoded += '?'
             prev_x, prev_y, prev_z = x, y, z
         return decoded
+
+
+# ==============================================================================
+# 11. HYPER-DIMENSIONAL VECTOR ENGINE (Vector Symbolic Architecture - VSA)
+# ==============================================================================
+class HyperDimensionalVectorEngine:
+    """
+    10,000-D Bipolar Vector Symbolic Architecture (VSA).
+    Implements symbolic binding (*), bundling (+), unbinding, and associative memory.
+    """
+    def __init__(self, dim: int = 10000, seed: int = 42):
+        self.dim = dim
+        self.rng = random.Random(seed)
+        self.memory: Dict[str, List[int]] = {}
+
+    def create_vector(self, name: str) -> List[int]:
+        """Generates a random bipolar hypervector {-1, +1}."""
+        vec = [1 if self.rng.random() > 0.5 else -1 for _ in range(self.dim)]
+        self.memory[name] = vec
+        return vec
+
+    def bind(self, v1: List[int], v2: List[int]) -> List[int]:
+        """Binding operation via Hadamard elementwise multiplication."""
+        return [a * b for a, b in zip(v1, v2)]
+
+    def bundle(self, vectors: List[List[int]]) -> List[int]:
+        """Bundling operation via elementwise addition + majority thresholding."""
+        summed = [sum(col) for col in zip(*vectors)]
+        return [1 if s >= 0 else -1 for s in summed]
+
+    def similarity(self, v1: List[int], v2: List[int]) -> float:
+        """Cosine similarity between two bipolar hypervectors."""
+        dot = sum(a * b for a, b in zip(v1, v2))
+        return dot / float(self.dim)
+
+    def query_memory(self, query_vec: List[int]) -> Tuple[str, float]:
+        """Queries associative memory for the closest concept hypervector."""
+        best_name = ""
+        best_sim = -1.0
+        for name, vec in self.memory.items():
+            sim = self.similarity(query_vec, vec)
+            if sim > best_sim:
+                best_sim = sim
+                best_name = name
+        return best_name, best_sim
 
 # ==============================================================================
 # 4. PSYCHOLOGICAL FEEDBACK LOOP (Հոգեբանական Հետադարձ Կապ)

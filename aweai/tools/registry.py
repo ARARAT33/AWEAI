@@ -82,6 +82,7 @@ def _ensure_loaded() -> None:
         "aweai.tools.monitoring",
         "aweai.tools.creative",
         "aweai.tools.mega",
+        "aweai.tools.genesis_nexus",
     ):
         if mod not in _LOADED:
             try:
