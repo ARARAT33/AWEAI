@@ -123,19 +123,79 @@ class RAGEngine:
         self._load_if_exists()
         return self._index
 
-    # ------------------------------------------------------------- retrieval
-    def search(self, query: str, top_k: Optional[int] = None) -> List[Dict[str, Any]]:
-        q = self._embed(query)
+    # ------------------------------------------------------------- hybrid search & reranking
+    def _bm25_score(self, query_tokens: List[str], chunk_text: str, avg_doc_len: float = 100.0, k1: float = 1.2, b: float = 0.75) -> float:
+        """Lightweight BM25 lexical relevance score."""
+        tokens = tokenize(chunk_text)
+        if not tokens or not query_tokens:
+            return 0.0
+        doc_len = len(tokens)
+        tf = {}
+        for t in tokens:
+            tf[t] = tf.get(t, 0) + 1
+
+        score = 0.0
+        for q_tok in query_tokens:
+            if q_tok in tf:
+                freq = tf[q_tok]
+                numerator = freq * (k1 + 1)
+                denominator = freq + k1 * (1.0 - b + b * (doc_len / avg_doc_len))
+                score += numerator / max(0.001, denominator)
+        return min(1.0, score / max(1.0, len(query_tokens)))
+
+    def deduplicate_chunks(self, threshold: float = 0.95) -> Dict[str, Any]:
+        """Removes duplicate or near-duplicate document chunks based on embedding similarity."""
+        vectors = [np.array(v) for v in self._index["vectors"]]
+        if not vectors:
+            return {"removed": 0, "remaining": 0}
+
+        keep_indices = []
+        for i, vec in enumerate(vectors):
+            is_dup = False
+            for keep_i in keep_indices:
+                sim = float(cosine_similarity(vec, vectors[keep_i]))
+                if sim >= threshold:
+                    is_dup = True
+                    break
+            if not is_dup:
+                keep_indices.append(i)
+
+        removed_count = len(vectors) - len(keep_indices)
+        if removed_count > 0:
+            self._index["chunks"] = [self._index["chunks"][i] for i in keep_indices]
+            self._index["vectors"] = [self._index["vectors"][i] for i in keep_indices]
+            self.save()
+
+        return {"removed": removed_count, "remaining": len(keep_indices)}
+
+    def search(self, query: str, top_k: Optional[int] = None, hybrid: bool = True, alpha: float = 0.6) -> List[Dict[str, Any]]:
+        """Hybrid retrieval: Dense BoW cosine similarity + BM25 lexical reranking."""
+        q_vec = self._embed(query)
+        q_tokens = tokenize(query)
         k = top_k or self.config.top_k
         scored = []
+
+        avg_len = float(np.mean([len(tokenize(c["text"])) for c in self._index["chunks"]])) if self._index["chunks"] else 100.0
+
         for i, vec in enumerate(self._index["vectors"]):
-            sim = cosine_similarity(q, vec)
-            scored.append((sim, i))
+            dense_sim = max(0.0, float(cosine_similarity(q_vec, vec)))
+            if hybrid:
+                bm25_sim = self._bm25_score(q_tokens, self._index["chunks"][i]["text"], avg_doc_len=avg_len)
+                combined_score = alpha * dense_sim + (1.0 - alpha) * bm25_sim
+            else:
+                combined_score = dense_sim
+            scored.append((combined_score, dense_sim, i))
+
         scored.sort(key=lambda t: t[0], reverse=True)
         out = []
-        for sim, i in scored[:k]:
+        for score, dense_sim, i in scored[:k]:
             chunk = self._index["chunks"][i]
-            out.append({"doc_id": chunk["doc_id"], "text": chunk["text"], "score": round(float(sim), 4)})
+            out.append({
+                "doc_id": chunk["doc_id"],
+                "text": chunk["text"],
+                "score": round(float(score), 4),
+                "dense_score": round(float(dense_sim), 4),
+            })
         return out
 
     def ask(self, query: str, top_k: Optional[int] = None) -> Dict[str, Any]:

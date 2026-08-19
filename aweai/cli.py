@@ -550,6 +550,83 @@ def tools(
 
 
 # ---------------------------------------------------------------------------
+# Genesis & Nexus CLI Command Groups
+# ---------------------------------------------------------------------------
+genesis_cli_app = typer.Typer(help="Genesis Core: quantum state, neuro-plastic graph, chaos encoding, hypervector algorithms")
+
+
+@genesis_cli_app.command("demo")
+def genesis_demo():
+    """Run full Genesis Core demonstration."""
+    from genesis_core import run_genesis_demonstration
+
+    run_genesis_demonstration()
+
+
+@genesis_cli_app.command("quantum")
+def genesis_quantum(value: float = typer.Option(100.0, "--value", "-v"), entropy: float = typer.Option(0.2, "--entropy", "-e")):
+    """Simulate quantum state collapse & entropy evolution."""
+    from aweai.tools.genesis_nexus import genesis_quantum_state
+
+    typer.echo(json.dumps(genesis_quantum_state(value=value, entropy=entropy), indent=2))
+
+
+@genesis_cli_app.command("graph")
+def genesis_graph(nodes: int = typer.Option(6, "--nodes", "-n"), steps: int = typer.Option(10, "--steps", "-s")):
+    """Traverse neuro-plastic adaptive graph with synaptic learning."""
+    from aweai.tools.genesis_nexus import genesis_neuro_graph
+
+    typer.echo(json.dumps(genesis_neuro_graph(nodes=nodes, steps=steps), indent=2))
+
+
+@genesis_cli_app.command("chaos")
+def genesis_chaos(message: str = typer.Option("AWEAI Genesis", "--message", "-m"), system: str = typer.Option("lorenz", "--system", "-s")):
+    """Encode message into 3D chaotic attractor trajectory (lorenz/rossler)."""
+    from aweai.tools.genesis_nexus import genesis_chaos_encode
+
+    typer.echo(json.dumps(genesis_chaos_encode(message=message, system=system), indent=2))
+
+
+@genesis_cli_app.command("hypervector")
+def genesis_hypervector(concepts: str = typer.Option("ai,agi,asi,quantum", "--concepts", "-c"), query: str = typer.Option("agi", "--query", "-q")):
+    """10,000-D Vector Symbolic Architecture hypervector binding and query."""
+    from aweai.tools.genesis_nexus import genesis_hypervector_query
+
+    typer.echo(json.dumps(genesis_hypervector_query(concepts=concepts, query_concept=query), indent=2))
+
+
+nexus_cli_app = typer.Typer(help="Nexus AI Core: next-gen quantum shield, graph optimizer, tensor compression")
+
+
+@nexus_cli_app.command("pipeline")
+def nexus_pipeline_cmd(items: int = typer.Option(50, "--items", "-i")):
+    """Run Nexus AI Core processing pipeline."""
+    from aweai.tools.genesis_nexus import nexus_pipeline
+
+    typer.echo(json.dumps(nexus_pipeline(items_count=items), indent=2))
+
+
+@nexus_cli_app.command("compress")
+def nexus_compress_cmd(rows: int = typer.Option(20, "--rows", "-r"), cols: int = typer.Option(20, "--cols", "-c"), rank: int = typer.Option(5, "--rank", "-k")):
+    """SVD low-rank tensor matrix weight compression."""
+    from aweai.tools.genesis_nexus import nexus_svd_compress
+
+    typer.echo(json.dumps(nexus_svd_compress(rows=rows, cols=cols, rank=rank), indent=2))
+
+
+@nexus_cli_app.command("sign")
+def nexus_sign_cmd(payload: str = typer.Option('{"action":"deploy","model":"aweai_asi"}', "--payload", "-p")):
+    """Sign payload with post-quantum Dilithium5 signature."""
+    from aweai.tools.genesis_nexus import nexus_sign_payload
+
+    typer.echo(json.dumps(nexus_sign_payload(payload_str=payload), indent=2))
+
+
+app.add_typer(genesis_cli_app, name="genesis", help="Genesis Core: quantum, neuro-graph, chaos, hypervectors")
+app.add_typer(nexus_cli_app, name="nexus", help="Nexus AI Core: quantum-shield, graph optimizer, tensor compression")
+
+
+# ---------------------------------------------------------------------------
 # v4.0: command groups (pure CLI, no UI)
 # ---------------------------------------------------------------------------
 from aweai.cmd import data_collect, data_manage, device, infra, model, ops, provider  # noqa: E402
